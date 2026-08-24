@@ -1,0 +1,450 @@
+name,aliases,primary,secondary,logo
+St. Benedict's,"st benedicts prep,saint benedicts,SBP,St. Benedict's Prep",#602030,#E0E0E0,st-benedict-s.png
+Delbarton,DHS,#103010,#E0E0E0,delbarton.png
+Pennington,PHS,#B0B0B0,#D0D0D0,pennington.png
+Pingry,"TPS,The Pingry School",#A0B0C0,#7090A0,pingry.png
+Kearny,KHS,#F03030,#101010,kearny.png
+Seton Hall Prep,"seton hall preparatory,SHP",#000030,#006090,seton-hall-prep.png
+Hunterdon Central,HCHS,#F02020,#E0E0E0,hunterdon-central.png
+Montclair,MHS,#100080,#E0E0E0,montclair.png
+Scotch Plains-Fanwood,SPFHS,#303090,#909090,scotch-plains-fanwood.png
+Westfield,WHS,#001070,#405090,westfield.png
+Montclair Kimberley,"montclair kimberley academy,mka,MKA,Montclair Kimberley Academy",#000060,#303080,montclair-kimberley.png
+St. Peter's Prep,"st peters prep,saint peters prep,SPP",#800000,#F0E0E0,st-peter-s-prep.png
+Madison,MHS,#E0E0E0,#301010,madison.png
+Ramapo,RHS,#006030,#308050,ramapo.png
+Colts Neck,CNHS,#202020,#606060,colts-neck.png
+Christian Brothers,"christian brothers academy,cba,CBA,Christian Brothers Academy",#001030,#80A0E0,christian-brothers.png
+Summit,SHS,#703040,#D0A030,summit.png
+Notre Dame,NDHS,#005090,#A0D0E0,notre-dame.png
+Monroe,"MTHS,Monroe Township",#201010,#501050,monroe.png
+Gill St. Bernard's,"gill st bernards,GSBHS",#202010,#005070,gill-st-bernard-s.png
+Randolph,RHS,#C0C0C0,#203060,randolph.png
+Ridgewood,RHS,#702020,#101010,ridgewood.png
+Clifton,CHS,#600010,#E0D0D0,clifton.png
+Princeton,PHS,#1060D0,#E0E0E0,princeton.png
+Elizabeth,EHS,#E01020,#202020,elizabeth.png
+Hun,"the hun school,hun school,HHS",#300030,#F00030,hun.png
+New Providence,NPHS,#E0E0E0,#505050,new-providence.png
+Chatham,CHS,#001040,#D0D0E0,chatham.png
+Manalapan,MHS,#F02000,#B0B0C0,manalapan.png
+Robbinsville,RHS,#101010,#303030,robbinsville.png
+St. Joseph (Met.),"st joseph metuchen,st joseph,SJHS,St. Joseph",#306040,#E0E0E0,st-joseph-met.png
+West Orange,WOHS,#A0C0E0,#002050,west-orange.png
+Watchung Hills,"WHRHS,Watchung Hills Regional",#403010,#F0D000,watchung-hills.png
+Ramsey,RHS,#000030,#E0B010,ramsey.png
+Newark East Side,"NA,Newark Academy",#809080,#D01040,newark-east-side.png
+Oratory,"oratory prep,OP,Oratory Prep",#002050,#E0C070,oratory.png
+Columbia,CHS,#D00000,#D0D0D0,columbia.png
+Harrison,HHS,#000060,#D0D0E0,harrison.png
+Rahway,RHS,#201020,#E01020,rahway.png
+Don Bosco Prep,"don bosco,DBP",#702030,#D0D0D0,don-bosco-prep.png
+Toms River East,TREHS,#101010,#505050,toms-river-east.png
+Morristown,MHS,#603030,#301010,morristown.png
+Mount Olive,MOHS,#C00000,#202010,mount-olive.png
+Hackettstown,HHS,#E05010,#101010,hackettstown.png
+Bergen Catholic,BCHS,#D01040,#E0A010,bergen-catholic.png
+Voorhees,VHS,#B01030,#E08030,voorhees.png
+Manasquan,MHS,#101050,#909090,manasquan.png
+South Brunswick,SBHS,#B0B0B0,#907020,south-brunswick.png
+Ocean Township,OTHS,#E00000,#F0E0E0,ocean-township.png
+Wayne Hills,WHHS,#004070,#5090D0,wayne-hills.png
+Rumson-Fair Haven,RFHHS,#C0C0C0,#303090,rumson-fair-haven.png
+Montgomery,MHS,#005000,#F0F000,montgomery.png
+Bernards,BHS,#F00000,#B0B0B0,bernards.png
+Garfield,GHS,#F0B030,#403070,garfield.png
+Howell,HHS,#034CB2,#737272,howell.svg
+Dover,DHS,#006030,#E01020,dover.png
+Morris Knolls,MKHS,#D02020,#101010,morris-knolls.png
+Holmdel,HHS,#203070,#A0A0A0,holmdel.png
+Roxbury,RHS,#806020,#101010,roxbury.png
+Southern,"SRHS,Southern Regional",#E0C010,#101000,southern.png
+Tenafly,THS,#D05000,#200000,tenafly.png
+Glen Rock,GRHS,#505050,#101010,glen-rock.png
+Sparta,SHS,#001020,#708090,sparta.png
+Newark Academy,NA,#809080,#D01040,newark-academy.png
+Middletown North,MNHS,#709070,#E0E0E0,middletown-north.png
+Glen Ridge,GRHS,#F05050,#606060,glen-ridge.png
+Waldwick,WHS,#6080B0,#E0E0E0,waldwick.png
+Rutherford,RHS,#90A0A0,#405070,rutherford.png
+Union,UHS,#401010,#D0B080,union.png
+Union City,UCHS,#A0A0A0,#003050,union-city.png
+Bridgewater-Raritan,BRHS,#101010,#C0B0C0,bridgewater-raritan.png
+Montville,MHS,#100050,#F0C020,montville.png
+Cranford,CHS,#F0C030,#101010,cranford.png
+Ridge,RHS,#003000,#E0E0E0,ridge.png
+Demarest,"NVDHS,NV - Demarest",#101010,#B0A0B0,demarest.png
+Morris Hills,MHHS,#E03020,#F0E0E0,morris-hills.png
+Lacey,"LTHS,Lacey Township",#001030,#E0E0E0,lacey.png
+Long Branch,LBHS,#E0F0E0,#C0D0C0,long-branch.png
+Paramus,PHS,#303030,#505050,paramus.png
+North Hunterdon,NHHS,#F0A000,#101010,north-hunterdon.png
+Dickinson,DHS,#A0A0A0,#101010,dickinson.png
+Shawnee,SHS,#201060,#706090,shawnee.png
+West Essex,WEHS,#001030,#C0C0C0,west-essex.png
+Middletown South,MSHS,#909090,#000030,middletown-south.png
+Steinert,SHS,#006030,#101010,steinert.png
+Marlboro,MHS,#103060,#F0C000,marlboro.png
+Emerson Boro,"EHS,Emerson",#902020,#101010,emerson-boro.png
+Millburn,MHS,#0030A0,#001060,millburn.png
+Wall,"WTHS,Wall Township",#B0B0B0,#1040B0,wall.png
+Toms River North,TRNHS,#003060,#F0C0C0,toms-river-north.png
+Belleville,BHS,#F0C030,#003060,belleville.png
+Parsippany Hills,PHHS,#101010,#F0D020,parsippany-hills.png
+Passaic Tech,"PHS,Passaic",#C01030,#001060,passaic-tech.png
+St. Augustine,"SAP,St. Augustine Prep",#000020,#A09090,st-augustine.png
+DePaul,"DPCHS,DePaul Catholic",#003000,#E0E0E0,depaul.png
+Dwight-Englewood,DEHS,#D0D0D0,#A0A0B0,dwight-englewood.png
+Old Bridge,OBHS,#600060,#101010,old-bridge.png
+Freehold Township,FTHS,#001050,#00B0E0,freehold-township.png
+Bergenfield,BHS,#F0C000,#D01000,bergenfield.png
+Lyndhurst,LHS,#1060A0,#F0B030,lyndhurst.png
+Central Regional,CRHS,#F0C020,#500000,central-regional.png
+Spotswood,SHS,#004090,#F0C000,spotswood.png
+Bloomfield,BHS,#A01030,#90A0A0,bloomfield.png
+West Milford,WMHS,#F0A020,#101010,west-milford.png
+South Plainfield,SPHS,#004010,#E0E0E0,south-plainfield.png
+Verona,VHS,#700000,#E0D0D0,verona.png
+Indian Hills,IHHS,#002040,#C0A070,indian-hills.png
+Mendham,"WMMHS,West Morris Mendham",#003060,#E0E0E0,mendham.png
+North Plainfield,NPHS,#200000,#E0E0E0,north-plainfield.png
+Livingston,LHS,#106020,#101010,livingston.png
+St. John Vianney,"SJVHS,St. John-Vianney",#F0B010,#101010,st-john-vianney.png
+Passaic,PHS,#C01030,#001060,passaic.png
+Old Tappan,"NVOT,NV - Old Tappan",#C0A060,#405070,old-tappan.png
+Pompton Lakes,PLHS,#E01030,#201010,pompton-lakes.png
+Colonia,CHS,#F0B000,#006080,colonia.png
+West Morris,"WMMHS,West Morris Mendham",#003060,#E0E0E0,west-morris.png
+Toms River South,TRSHS,#C09090,#400000,toms-river-south.png
+Kinnelon,KHS,#001030,#C0C0C0,kinnelon.png
+Mahwah,MHS,#80B0E0,#304050,mahwah.png
+New Brunswick,NBHS,#002040,#8090A0,new-brunswick.png
+Wayne Valley,WVHS,#6090C0,#003060,wayne-valley.png
+East Brunswick,EBHS,#006030,#003000,east-brunswick.png
+Paterson Kennedy,"KHS,Kennedy",#A01010,#E0E0E0,paterson-kennedy.png
+Hanover Park,HPHS,#F0C030,#E0E0E0,hanover-park.png
+Jackson Memorial,JMHS,#F00000,#E0E0E0,jackson-memorial.png
+Johnson,JHS,#000070,#0090C0,johnson.png
+North Arlington,NAHS,#101080,#E0E0E0,north-arlington.png
+Northern Highlands,NHHS,#E00000,#E0E0F0,northern-highlands.png
+Hillsborough,HHS,#700000,#E0C090,hillsborough.png
+Shore,"SRHS,Shore Regional",#E0E0E0,#C0C0C0,shore.png
+Franklin,FHS,#901040,#F3EAD8,franklin.png
+Caldwell,CHS,#003090,#707070,caldwell.png
+Wallington,WHS,#201010,#E0E0E0,wallington.png
+South River,SRHS,#500020,#E0E0E0,south-river.png
+Pequannock,PHS,#E0E0E0,#002060,pequannock.png
+Lawrence,LHS,#C07050,#C0B0B0,lawrence.png
+Fair Lawn,FLHS,#600000,#909090,fair-lawn.png
+Linden,LHS,#F07000,#E0E0E0,linden.png
+Red Bank Regional,RBRHS,#501010,#E0E0E0,red-bank-regional.png
+Cherokee,CHS,#F06030,#A0A0A0,cherokee.png
+Irvington,IHS,#2000A0,#E0E0E0,irvington.png
+Lenape,LHS,#C00000,#E0E0E0,lenape.png
+Hopewell Valley,"HVCHS,Hopewell Valley Central",#909090,#101010,hopewell-valley.png
+North Brunswick,NBHS,#E0E0E0,#909090,north-brunswick.png
+Piscataway,PHS,#222222,#C8880A,piscataway.svg
+Pascack Valley,PVHS,#108030,#E0E0E0,pascack-valley.png
+Moorestown,MHS,#103060,#305080,moorestown.png
+Lawrenceville,"LS,Lawrenceville School",#C04040,#D07060,lawrenceville.png
+Memorial,MHS,#F06000,#E0E0E0,memorial.png
+Delran,DHS,#503604,#C8880A,delran.svg
+Fort Lee,FLHS,#F06000,#202020,fort-lee.png
+Dayton,DHS,#004090,#B0B0B0,dayton.png
+Trenton,"TCHS,Trenton Central",#E02020,#303030,trenton.png
+Eastern,EHS,#900000,#9090C0,eastern.png
+Gov. Livingston,"LHS,Livingston",#106020,#101010,gov-livingston.png
+Bergen Tech,BTHS,#E0A030,#B01040,bergen-tech.png
+Hightstown,HHS,#103050,#F3EAD8,hightstown.png
+Cliffside Park,CPHS,#300030,#E0E0E0,cliffside-park.png
+Manchester Township,"MRHS,Manchester Regional",#B0B0B0,#300000,manchester-township.png
+Westwood,WHS,#800000,#F0C030,westwood.png
+Lakeland,"LRHS,Lakeland Regional",#A00000,#400000,lakeland.png
+Cinnaminson,CHS,#909090,#C0C0C0,cinnaminson.png
+Pope John,"PJXXIII,Pope John XXIII",#203040,#E0E0E0,pope-john.png
+Nutley,NHS,#600000,#C0C0C0,nutley.png
+Mountain Lakes,MLHS,#203060,#F0D0C0,mountain-lakes.png
+Warren Hills,"WHRHS,Warren Hills Regional",#C0C0C0,#E0E0E0,warren-hills.png
+Carteret,CHS,#034CB2,#F3EAD8,carteret.svg
+Jefferson,"JTHS,Jefferson Township",#F0E000,#002050,jefferson.png
+Roselle,RHS,#CC0022,#454444,roselle.svg
+Leonia,LHS,#600020,#200000,leonia.png
+J.P. Stevens,"jp stevens,john p stevens,j p stevens,JPSHS",#006030,#C0C020,j-p-stevens.png
+River Dell,RDHS,#202020,#F0E020,river-dell.png
+Peddie,PHS,#E0D090,#002050,peddie.png
+East Orange,"EOCHS,East Orange Campus",#001030,#C0C0C0,east-orange.png
+Somerville,SHS,#F06030,#201010,somerville.png
+Hasbrouck Heights,HHHS,#C03030,#D06060,hasbrouck-heights.png
+North Bergen,NBHS,#800000,#F0E0E0,north-bergen.png
+Kingsway,KHS,#E01020,#701010,kingsway.png
+Saddle Brook,SBHS,#002040,#E0E0E0,saddle-brook.png
+Brearley,BHS,#203050,#6080B0,brearley.png
+Hackensack,HHS,#003060,#B09010,hackensack.png
+Life Center,"LCA,Life Center Academy",#E0E0E0,#101010,life-center.png
+Barringer,BHS,#001060,#304080,barringer.png
+Newton,NHS,#603030,#705060,newton.png
+Washington Township,WTHS,#C00000,#F0B0B0,washington-township.png
+St. Thomas Aquinas,STAHS,#C02020,#702010,st-thomas-aquinas.png
+Secaucus,SHS,#0030C0,#D0E0F0,secaucus.png
+Cherry Hill East,CHEHS,#F00000,#E0E0E0,cherry-hill-east.png
+Pascack Hills,PHHS,#603010,#E0D0D0,pascack-hills.png
+Weehawken,WHS,#D00030,#E0E0E0,weehawken.png
+Shabazz,SHS,#F0F000,#C0C0C0,shabazz.png
+Allentown,AHS,#101010,#B0B0B0,allentown.png
+Egg Harbor,"EHTHS,Egg Harbor Township",#C0C0C0,#E0E0E0,egg-harbor.png
+Point Pleasant Boro,PPBHS,#101010,#607080,point-pleasant-boro.png
+Wallkill Valley,WVHS,#808080,#B0B0B0,wallkill-valley.png
+Brick Memorial,BMHS,#D0D0A0,#002010,brick-memorial.png
+Cedar Grove,CGHS,#101010,#F0D030,cedar-grove.png
+Neptune,NHS,#103050,#F3EAD8,neptune.png
+Blair,"BA,Blair Academy",#003060,#8090B0,blair.png
+Raritan,RHS,#006030,#707070,raritan.png
+Elmwood Park,EPHS,#C01030,#601010,elmwood-park.png
+West Windsor-Plainsboro South,WWPS,#004030,#F0D040,west-windsor-plainsboro-south.png
+Rancocas Valley,RVHS,#C00030,#F0E0E0,rancocas-valley.png
+Haddon Township,HTHS,#C01020,#F0E0E0,haddon-township.png
+Haddon Heights,HHHS,#808080,#E01020,haddon-heights.png
+Rutgers Prep,RP,#A00000,#F0E0E0,rutgers-prep.png
+Point Pleasant Beach,PPBHS,#B0B0B0,#707070,point-pleasant-beach.png
+Manville,MHS,#3040C0,#F0F000,manville.png
+West Deptford,WDHS,#103010,#506050,west-deptford.png
+Parsippany,PHS,#C00030,#709070,parsippany.png
+West Windsor-Plainsboro North,WWPN,#000090,#0030C0,west-windsor-plainsboro-north.png
+Seneca,SHS,#104010,#C0B080,seneca.png
+Cresskill,CHS,#F0C000,#907000,cresskill.png
+Whippany Park,WPHS,#303030,#101010,whippany-park.png
+Moorestown Friends,MFHS,#103060,#305080,moorestown-friends.png
+Northern Burlington,NBHS,#034CB2,#454444,northern-burlington.svg
+Delaware Valley,DVHS,#909090,#C0C0C0,delaware-valley.png
+Deptford,DHS,#E0E0E0,#101010,deptford.png
+Wood-Ridge,WRHS,#3060C0,#C0D0F0,wood-ridge.png
+Cherry Hill West,CHWHS,#E0E0E0,#502090,cherry-hill-west.png
+Brick Township,BTHS,#E0F0E0,#007030,brick-township.png
+Lenape Valley,LVHS,#203070,#D02030,lenape-valley.png
+Hammonton,HHS,#003090,#B0B0B0,hammonton.png
+Burlington Township,BTHS,#101010,#505050,burlington-township.png
+Delsea,DHS,#D0D0D0,#300000,delsea.png
+Bound Brook,BBHS,#D0D0D0,#101010,bound-brook.png
+Clearview,CHS,#F0B030,#205020,clearview.png
+Ridgefield,"RHS,Ridge",#003000,#E0E0E0,ridgefield.png
+Monmouth,"MRHS,Monmouth Regional",#222222,#C8880A,monmouth.svg
+Bergen Charter,BC,#5C2E2E,#E6D5C3,bergen-charter.svg
+Barnegat,BHS,#222222,#CC4E10,barnegat.svg
+Woodbridge,WHS,#6B2B1F,#F0D9B5,woodbridge.svg
+Florence,"FTMHS,Florence Township Memorial",#002050,#F0C000,florence.png
+Haddonfield,HHS,#C00010,#E0E0E0,haddonfield.png
+Phillipsburg,PHS,#707070,#C0C0C0,phillipsburg.png
+Roselle Park,RPHS,#CC0022,#F3EAD8,roselle-park.svg
+Perth Amboy,PAHS,#D0D0D0,#101010,perth-amboy.png
+Becton,BHS,#907030,#800000,becton.png
+Ridgefield Park,RPHS,#101010,#E02030,ridgefield-park.png
+Hudson Catholic,HCHS,#C09060,#300030,hudson-catholic.png
+Matawan,"MRHS,Matawan Regional",#8F0018,#737272,matawan.svg
+Lakewood,LHS,#034CB2,#F3EAD8,lakewood.svg
+Bordentown,BHS,#F09010,#101010,bordentown.png
+Schalick,SHS,#105010,#E0E0E0,schalick.png
+Williamstown,WHS,#0030C0,#5070D0,williamstown.png
+Plainfield,PHS,#802030,#F0A000,plainfield.png
+Boonton,BHS,#D0D0C0,#800000,boonton.png
+Bayonne,BHS,#601010,#E0E0E0,bayonne.png
+Dwight-Morrow,"DMHS,Dwight Morrow",#600000,#909090,dwight-morrow.png
+Nottingham,NHS,#000030,#E09000,nottingham.png
+Sterling,SHS,#103090,#909090,sterling.png
+Palisades Park,PPHS,#202030,#E0E0E0,palisades-park.png
+High Point,HPHS,#F00000,#101010,high-point.png
+Sayreville,SHS,#C0C0C0,#A0A0A0,sayreville.png
+Middlesex,MHS,#203060,#E0E0E0,middlesex.png
+Ranney,RHS,#D0E0E0,#708090,ranney.png
+Passaic Valley,PVHS,#206020,#A0C0A0,passaic-valley.png
+Palmyra,PHS,#A01020,#D08080,palmyra.png
+Newark Central,NCHS,#0070B0,#003040,newark-central.png
+Hawthorne,HHS,#006030,#E01020,hawthorne.png
+Princeton Day,PDHS,#101010,#808080,princeton-day.png
+Edison,EHS,#CC0022,#C8880A,edison.svg
+Paul VI,PVIHS,#000020,#9090A0,paul-vi.png
+Morristown-Beard,MBHS,#C07070,#D0A0A0,morristown-beard.png
+Hamilton West,"HHS,Hamilton",#F07020,#E0E0E0,hamilton-west.png
+Park Ridge,PRHS,#603030,#201010,park-ridge.png
+Newark Tech,NTHS,#603090,#E0D0E0,newark-tech.png
+College Achieve Central,"CRHS,Central Regional",#F0C020,#500000,college-achieve-central.png
+Kittatinny,"KRHS,Kittatinny Regional",#808080,#303030,kittatinny.png
+Freehold Borough,"FTHS,Freehold Township",#001050,#00B0E0,freehold-borough.png
+Ocean City,OCHS,#C01030,#E0E0E0,ocean-city.png
+Mainland,"MRHS,Mainland Regional",#007050,#409080,mainland.png
+Lodi,LHS,#304090,#D0E0E0,lodi.png
+Lindenwold,LHS,#303060,#F09000,lindenwold.png
+Timber Creek,"TCRHS,Timber Creek Regional",#000060,#E0E0E0,timber-creek.png
+Vineland,VHS,#C00000,#E0E0E0,vineland.png
+West Side,WSHS,#601030,#D0D0D0,west-side.png
+North Warren,"NWRHS,North Warren Regional",#304060,#D04060,north-warren.png
+St. Joseph (Mont.),"SJRHS,St. Joseph Regional",#F0C000,#104030,st-joseph-mont.png
+Immaculata,IHS,#202050,#B0B0C0,immaculata.png
+Highland Park,HPHS,#801010,#E0E0E0,highland-park.png
+Metuchen,MHS,#C0C0C0,#E0E0E0,metuchen.png
+Ferris,FHS,#909090,#003030,ferris.png
+Union Catholic,UCHS,#034CB2,#F3EAD8,union-catholic.svg
+St. Rose,SRHS,#0E4D5C,#F4C542,st-rose.svg
+Gloucester Tech,"THS,Tech",#505050,#E0E0E0,gloucester-tech.png
+Teaneck,THS,#034CB2,#F3EAD8,teaneck.svg
+Wardlaw-Hartridge,"WHHS,Wardlaw Hartridge",#D0A010,#206010,wardlaw-hartridge.png
+Hopatcong,HHS,#006040,#E0E0E0,hopatcong.png
+Cumberland,CHS,#C07010,#E0E0E0,cumberland.png
+New Milford,NMHS,#003010,#809080,new-milford.png
+Hawthorne Christian,HCHS,#006030,#E01020,hawthorne-christian.png
+Technology,"PCSSAT,Paterson Charter School for Science and Technology",#022C66,#C8880A,technology.svg
+Millville,MHS,#003080,#F05020,millville.png
+Science Park,SPHS,#F0C030,#2070C0,science-park.png
+Donovan Catholic,DCHS,#003060,#909060,donovan-catholic.png
+Camden Catholic,CCHS,#008050,#002030,camden-catholic.png
+Westampton Tech,WTHS,#101010,#303030,westampton-tech.png
+Cedar Creek,CCHS,#C09090,#300000,cedar-creek.png
+Asbury Park,APHS,#5090B0,#506070,asbury-park.png
+Gloucester Christian,"GCCHS,Gloucester County Christian",#000030,#E0E0E0,gloucester-christian.png
+Hoboken,HHS,#C00020,#B0A0A0,hoboken.png
+Butler,BHS,#B0C0C0,#002050,butler.png
+Piscataway Tech,"PHS,Piscataway",#222222,#C8880A,piscataway-tech.svg
+Riverside,RHS,#700020,#B0A0B0,riverside.png
+Middle Township,MTHS,#D02010,#F0B0B0,middle-township.png
+Absegami,AHS,#E0E0F0,#809090,absegami.png
+Jackson Liberty,"LHS,Liberty",#300000,#900000,jackson-liberty.png
+Pilgrim Academy,"TPA,The Pilgrim Academy",#E0E0E0,#101010,pilgrim-academy.png
+McNair,"MNAHS,McNair Academic",#C0C060,#E0E0E0,mcnair.png
+Paterson Charter,"PCSSAT,Paterson Charter School for Science and Technology",#E00000,#C0C0C0,paterson-charter.png
+Pinelands,"PRHS,Pinelands Regional",#F0C090,#608040,pinelands.png
+Vernon,VHS,#F0C000,#E0B090,vernon.png
+Red Bank Catholic,RBCHS,#003030,#F09000,red-bank-catholic.png
+Iselin Kennedy,"KHS,Kennedy",#A01010,#E0E0E0,iselin-kennedy.png
+Audubon,AHS,#002010,#D09000,audubon.png
+Pennsauken,PHS,#90C0F0,#C03030,pennsauken.png
+Maple Shade,MSHS,#004080,#F0A000,maple-shade.png
+South Hunterdon,SHHS,#C0C0F0,#203090,south-hunterdon.png
+Woodstown,WHS,#000080,#F06010,woodstown.png
+Timothy Christian,TCHS,#0010E0,#F0C000,timothy-christian.png
+Dunellen,DHS,#000030,#C00000,dunellen.png
+Holy Cross Prep,"HCHS,Holy Cross",#909090,#C0C0C0,holy-cross-prep.png
+Manchester Regional,MRHS,#B0B0B0,#300000,manchester-regional.png
+Wildwood,WHS,#300000,#C0C0C0,wildwood.png
+Pleasantville,PHS,#603030,#E0E0E0,pleasantville.png
+Noor-ul-iman,"NUIHS,Noor-Ul-Iman",#CC0022,#F3EAD8,noor-ul-iman.svg
+BelovED Charter,"BCC,Beloved Community Charter",#002030,#606060,beloved-charter.png
+Orange,OHS,#F09040,#D0D0D0,orange.png
+Morris Catholic,MCHS,#000030,#C0C0D0,morris-catholic.png
+Camden Tech,"THS,Tech",#505050,#E0E0E0,camden-tech.png
+Hillside,HHS,#500000,#B0B0B0,hillside.png
+King's Christian,KCHS,#300000,#808080,king-s-christian.png
+Dumont,DHS,#603020,#908070,dumont.png
+Morris Tech,"THS,Tech",#505050,#E0E0E0,morris-tech.png
+Paramus Catholic,PCHS,#C0C060,#101010,paramus-catholic.png
+Ewing,EHS,#003070,#506070,ewing.png
+West Caldwell Tech,WCTHS,#CC0022,#F3EAD8,west-caldwell-tech.svg
+Eastern Christian,ECHS,#102040,#F0B050,eastern-christian.png
+Bridgeton,BHS,#C0C0C0,#909090,bridgeton.png
+Midland Park,MPHS,#00824B,#F3EAD8,midland-park.svg
+American History,Eagles,#3D1F4A,#E2D4A8,american-history.svg
+Winslow,"WTHS,Winslow Township",#105020,#E0E0E0,winslow.png
+Pitman,PHS,#222222,#CC4E10,pitman.svg
+Triton,THS,#D0D0D0,#B0B0B0,triton.png
+Highland,"HRHS,Highland Regional",#F0C090,#0020E0,highland.png
+Bishop Eustace,"BEP,Bishop Eustace Prep",#101010,#303030,bishop-eustace.png
+Overbrook,OHS,#F08020,#304040,overbrook.png
+Newark Collegiate,"NCA,Newark Collegiate Academy",#E07010,#404070,newark-collegiate.png
+South Amboy,Governors,#300040,#C0A000,south-amboy.png
+Collingswood,CHS,#C0C090,#101010,collingswood.png
+Wildwood Catholic,WCHS,#034CB2,#022C66,wildwood-catholic.svg
+Atlantic Christian,ACHS,#006000,#E0E0E0,atlantic-christian.png
+New Egypt,NEHS,#202070,#C0B040,new-egypt.png
+Doane Academy,DA,#505040,#303020,doane-academy.png
+Keyport,KHS,#CC0022,#F3EAD8,keyport.svg
+Henry Hudson,HHHS,#A09060,#E0E0E0,henry-hudson.png
+Newark Data Science,"NA,Newark Academy",#809080,#D01040,newark-data-science.png
+Pennsauken Tech,PTHS,#700010,#707070,pennsauken-tech.png
+Payne Tech,PTHS,#F0C000,#003060,payne-tech.png
+Atlantic Tech,"THS,Tech",#505050,#E0E0E0,atlantic-tech.png
+Penns Grove,PGHS,#F00000,#300000,penns-grove.png
+Calvary Christian (Old Bridge),"CCHS,Calvary Christian",#103090,#A09060,calvary-christian-old-bridge.png
+Gateway,"GRHS,Gateway Regional",#0020A0,#0080F0,gateway.png
+Roselle Catholic,RCHS,#206030,#A090A0,roselle-catholic.png
+Atlantic City,ACHS,#707070,#505050,atlantic-city.png
+St. Mary (Ruth.),"SMHS,St. Mary",#A0A0A0,#C0C0C0,st-mary-ruth.png
+Thrive Charter,,#1F3D2B,#C9D4C0,thrive-charter.svg
+Golda Och,"GOA,Golda Och Academy",#034CB2,#F3EAD8,golda-och.svg
+Glassboro,GHS,#900030,#F0C030,glassboro.png
+North Star Academy,NSA,#002060,#A090B0,north-star-academy.png
+Paterson Eastside,"EHS,Eastside",#E07010,#D0D0E0,paterson-eastside.png
+Calvary Academy,CA,#808080,#302080,calvary-academy.png
+Pioneer Academy,PA,#1580A5,#F3EAD8,pioneer-academy.svg
+Belvidere,BHS,#300000,#900000,belvidere.png
+Abundant Life,"ALA,Abundant Life Academy",#808090,#B0B0B0,abundant-life.png
+Trinity Christian,TCHS,#000040,#F0B020,trinity-christian.png
+Pennsville,"PMHS,Pennsville Memorial",#F0F000,#0000C0,pennsville.png
+Wilberforce,WHS,#002050,#305070,wilberforce.png
+Veritas Christian,"VCA,Veritas Christian Academy",#003030,#C09060,veritas-christian.png
+Willingboro,WHS,#E02020,#E0E0E0,willingboro.png
+Woodbury,WHS,#001040,#E0E0E0,woodbury.png
+Saddle River Day,SRDHS,#034CB2,#CC0022,saddle-river-day.svg
+KIPP Cooper Norcross Academy,"KIPPCN,KIPP Cooper Norcross",#0E4D5C,#F4C542,kipp-cooper-norcross-academy.svg
+Medford Tech,MTHS,#101000,#403010,medford-tech.png
+Woodbridge Academy,"WHS,Woodbridge",#222222,#CC0022,woodbridge-academy.svg
+Newark Global Studies,"NA,Newark Academy",#809080,#D01040,newark-global-studies.png
+Bogota,BHS,#200060,#F0F000,bogota.png
+Sussex Tech,"THS,Tech",#505050,#E0E0E0,sussex-tech.png
+Trenton Catholic,"TCA,Trenton Catholic Academy",#202060,#F0C090,trenton-catholic.png
+Oakcrest,OHS,#001040,#606060,oakcrest.png
+Somerset Tech,STHS,#101010,#F0C000,somerset-tech.png
+Lower Cape May,LCMHS,#E0A000,#202010,lower-cape-may.png
+Marion P. Thomas Charter,,#7A1F1F,#F2E6C9,marion-p-thomas-charter.svg
+East Brunswick Tech,"EBHS,East Brunswick",#006030,#003000,east-brunswick-tech.png
+St. Joseph (Hamm.),"SJHS,St. Joseph",#C0C0C0,#101010,st-joseph-hamm.png
+Solid Rock Christian,"SRCS,Solid Rock Christian School",#400020,#D0D0D0,solid-rock-christian.png
+Salem Tech,"THS,Tech",#505050,#E0E0E0,salem-tech.png
+Gloucester,"GCTHS,Gloucester County Tech",#003050,#A0B0C0,gloucester.png
+Hudson School,"HCHS,Hudson Catholic",#C09060,#300030,hudson-school.png
+Edison Academy,"EHS,Edison",#CC0022,#C8880A,edison-academy.svg
+Clayton,CHS,#E0D040,#102070,clayton.png
+Pemberton,PHS,#205020,#C0D0C0,pemberton.png
+Central Jersey College Charter,"CRHS,Central Regional",#F0C020,#500000,central-jersey-college-charter.png
+Holy Spirit,HSHS,#001030,#E0E0E0,holy-spirit.png
+Weequahic,WHS,#907050,#403030,weequahic.png
+Thomas Edison Energy Charter,"EHS,Edison",#CC0022,#C8880A,thomas-edison-energy-charter.svg
+Burlington City,BCHS,#034CB2,#F3EAD8,burlington-city.svg
+STEM Civics,,#234E70,#A7C7E7,stem-civics.svg
+Perth Amboy Tech,"PAHS,Perth Amboy",#D0D0D0,#101010,perth-amboy-tech.png
+Buena,BHS,#1040A0,#F0C000,buena.png
+Paulsboro,PHS,#601010,#E0E0E0,paulsboro.png
+Passaic Charter,"PHS,Passaic",#C01030,#001060,passaic-charter.png
+Cumberland Christian,CCHS,#303060,#9090C0,cumberland-christian.png
+Snyder,SHS,#F03030,#101010,snyder.png
+Cape May Tech,"THS,Tech",#505050,#E0E0E0,cape-may-tech.png
+Gloucester Catholic,GCHS,#600010,#A06020,gloucester-catholic.png
+Warren Tech,"THS,Tech",#505050,#E0E0E0,warren-tech.png
+University,UHS,#201020,#F3EAD8,university.png
+Eagle Academy,EA,#0E4D5C,#F4C542,eagle-academy.svg
+Salem,SHS,#0000E0,#7070E0,salem.png
+Mastery Camden,"MHS,Mastery",#3778B4,#F3EAD8,mastery-camden.svg
+American Christian,"ACS,American Christian School",#002060,#C0C0F0,american-christian.png
+Marist,Royal Knights,#0070C0,#F0D060,marist.png
+LEAP Academy,Lancers,#C0C0C0,#000030,leap-academy.png
+METS Charter,,#234E70,#A7C7E7,mets-charter.svg
+Cristo Rey,Saints,#500060,#200020,cristo-rey.png
+Katzenbach,Katzenbach School for the Deaf,#034CB2,#C8880A,katzenbach.svg
+Foundation Collegiate,"Knights,Foundation Collegiate Academy",#F0A020,#0060A0,foundation-collegiate.png
+Bergen Arts and Sciences Charter,,#163A2C,#D7C48A,bergen-arts-and-sciences-charter.svg
+Bergen County Christian,,#0E4D5C,#F4C542,bergen-county-christian.svg
+Lewis,,#034CB2,#F3EAD8,lewis.svg
+Baptist Regional,,#202020,#505050,baptist-regional.png
+United Christian,United Christian Academy,#022C66,#52000E,united-christian.svg
+North 13th Street Tech,"THS,Tech",#505050,#E0E0E0,north-13th-street-tech.png
+Bloomfield Tech,"BHS,Bloomfield",#A01030,#90A0A0,bloomfield-tech.png
+Parsippany Christian,"PHS,Parsippany",#C00030,#709070,parsippany-christian.png
+Barnstable,Barnstable Academy,#222222,#CC4E10,barnstable.svg
+Community,"BCC,Beloved Community Charter",#002030,#606060,community.png
+Al-Ghazaly,,#163A2C,#D7C48A,al-ghazaly.svg
+Queen of Peace,Golden Griffins,#000020,#303040,queen-of-peace.png
+Woodrow Wilson,Flying Eagles,#600000,#B09090,woodrow-wilson.png
+St. Mary (Eliz.),"SMHS,St. Mary",#A0A0A0,#C0C0C0,st-mary-eliz.png
+Salem County Christian,"SHS,Salem",#0000E0,#7070E0,salem-county-christian.png
+Kearny Christian,"KCA,Kearny Christian Academy",#003030,#808080,kearny-christian.png
+Madison Avenue Baptist,"MHS,Madison",#E0E0E0,#301010,madison-avenue-baptist.png
+Cape Christian,Cape Christian Academy,#022C66,#F3EAD8,cape-christian.svg
+The Hill School,"CHEHS,Cherry Hill East",#F00000,#E0E0E0,the-hill-school.png
+Mater Dei,Seraphs,#002040,#70B0E0,mater-dei.png

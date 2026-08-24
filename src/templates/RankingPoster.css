@@ -1,0 +1,354 @@
+.poster {
+  --grid:
+    var(--rank-width)
+    var(--logo-size)
+    minmax(0, 1.7fr)
+    var(--stat-col-width)
+    var(--stat-col-width)
+    var(--stat-col-width)
+    var(--pts-box)
+    var(--stat-col-width)
+    var(--stat-col-width)
+    var(--stat-col-width);
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--poster-bg);
+  color: var(--poster-fg);
+  padding: var(--poster-pad);
+  overflow: hidden;
+  font-family: var(--font-body);
+}
+
+.poster.is-simple {
+  --grid: var(--rank-width) var(--logo-size) minmax(0, 1fr);
+}
+
+.poster.is-ratings {
+  --grid:
+    var(--rank-width)
+    var(--logo-size)
+    minmax(0, 1.6fr)
+    var(--pts-box)
+    var(--stat-col-width)
+    var(--stat-col-width)
+    var(--stat-col-width)
+    var(--stat-col-width);
+}
+
+.poster.is-simple .poster-stat,
+.poster.is-simple .poster-pts {
+  display: none;
+}
+
+.poster-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 108%, color-mix(in srgb, var(--poster-accent) 38%, transparent), transparent 70%),
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--poster-accent) 16%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--poster-accent) 12%, transparent), transparent 24%);
+}
+
+.poster-glitter {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  left: 8%;
+  top: 12%;
+  border-radius: 50%;
+  background: #f7e08a;
+  opacity: var(--sparkle-opacity);
+  pointer-events: none;
+  box-shadow:
+    70px 40px 0 0 #f7e08a,
+    160px 18px 0 1px #ffe9a8,
+    240px 90px 0 0 #e4b53c,
+    320px 36px 0 1px #fff6c8,
+    410px 120px 0 0 #f7e08a,
+    520px 28px 0 1px #ffe9a8,
+    610px 160px 0 0 #e4b53c,
+    700px 70px 0 1px #fff6c8,
+    780px 210px 0 0 #f7e08a,
+    860px 48px 0 0 #ffe9a8,
+    40px 280px 0 1px #f7e08a,
+    130px 360px 0 0 #e4b53c,
+    220px 430px 0 1px #fff6c8,
+    310px 510px 0 0 #f7e08a,
+    400px 590px 0 1px #ffe9a8,
+    490px 670px 0 0 #e4b53c,
+    580px 740px 0 1px #fff6c8,
+    670px 820px 0 0 #f7e08a,
+    760px 900px 0 1px #ffe9a8,
+    850px 980px 0 0 #e4b53c,
+    90px 1050px 0 1px #fff6c8,
+    200px 1120px 0 0 #f7e08a,
+    340px 1180px 0 2px #ffe9a8,
+    480px 1220px 0 1px #e4b53c,
+    620px 1160px 0 2px #fff6c8,
+    760px 1240px 0 1px #f7e08a,
+    880px 1100px 0 2px #ffe9a8,
+    140px 700px 0 0 #e4b53c,
+    820px 640px 0 1px #fff6c8,
+    50px 500px 0 0 #f7e08a;
+}
+
+.poster-deco {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  color: var(--poster-accent);
+  opacity: var(--deco-opacity);
+  display: grid;
+  place-items: center;
+}
+
+.poster-deco svg,
+.poster-deco img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.poster-deco-a {
+  left: var(--deco-a-x);
+  top: var(--deco-a-y);
+  width: var(--deco-a-size);
+  height: var(--deco-a-size);
+  transform: rotate(calc(var(--deco-a-rotate) * 1deg));
+}
+
+.poster-deco-b {
+  left: var(--deco-b-x);
+  top: var(--deco-b-y);
+  width: var(--deco-b-size);
+  height: var(--deco-b-size);
+  transform: rotate(calc(var(--deco-b-rotate) * 1deg));
+}
+
+.poster-header {
+  position: relative;
+  z-index: 1;
+  height: var(--header-height);
+  flex: 0 0 var(--header-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 8px;
+  transform: translate(var(--title-x), var(--title-y));
+}
+
+.poster-kicker {
+  margin: 0 0 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--poster-accent);
+}
+
+.poster-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--title-size);
+  font-weight: 400;
+  letter-spacing: var(--title-tracking);
+  line-height: 0.88;
+  text-transform: uppercase;
+  color: var(--poster-accent);
+  text-shadow: 0 2px 0 color-mix(in srgb, #000 45%, transparent);
+}
+
+.poster-cols {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--grid);
+  align-items: stretch;
+  height: var(--col-head-height);
+  margin: 8px 0 10px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.poster-cols::after {
+  content: "";
+  grid-column: 4 / -1;
+  grid-row: 1;
+  background: var(--header-bar);
+}
+
+.poster-cols span {
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.poster-cols .col-rank {
+  color: var(--rank-fg);
+}
+
+.poster-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--row-gap);
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+  transform: translate(var(--list-x), var(--list-y));
+}
+
+.poster-row {
+  --team-primary: #2a2a2e;
+  --team-secondary: #111;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--grid);
+  align-items: stretch;
+  height: var(--row-height);
+}
+
+.poster-row::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--row-gap) / -2);
+  border-bottom: 2px dashed color-mix(in srgb, var(--poster-accent) 70%, transparent);
+  pointer-events: none;
+}
+
+.poster-row:last-child::after {
+  display: none;
+}
+
+.poster-row.is-unmatched .poster-name {
+  outline: 1px dashed color-mix(in srgb, var(--poster-fg) 40%, transparent);
+}
+
+.poster-rank {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-body);
+  font-size: var(--rank-size);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--rank-fg);
+  text-shadow: 0 1px 0 color-mix(in srgb, #000 50%, transparent);
+}
+
+.poster-mark {
+  width: var(--logo-size);
+  background: var(--team-secondary);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.poster-mark img {
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+}
+
+.lettermark {
+  width: 70%;
+  height: 70%;
+  display: grid;
+  place-items: center;
+  background: var(--team-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: calc(var(--logo-size) * 0.38);
+}
+
+.poster-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: var(--team-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: var(--name-size);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  transform: skewX(calc(var(--name-skew) * 1deg));
+  transform-origin: center left;
+}
+
+.poster-name > span {
+  transform: skewX(calc(var(--name-skew) * -1deg));
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.poster-missing {
+  margin-left: 8px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffe9a8;
+}
+
+.poster-stat {
+  display: grid;
+  place-items: center;
+  font-size: var(--stat-size);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.poster-pts {
+  display: grid;
+  place-items: center;
+  margin: 8px 4px;
+  background: var(--pts-bg);
+  color: var(--pts-fg);
+  font-size: calc(var(--stat-size) + 8px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.poster-move.is-up {
+  color: #7dffb3;
+}
+
+.poster-move.is-down {
+  color: #ff8d7a;
+}
+
+.poster-footer {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  height: var(--footer-height);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  font-family: var(--font-footer);
+  font-size: var(--footer-size);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--poster-accent);
+  text-align: center;
+}

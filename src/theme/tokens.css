@@ -1,0 +1,49 @@
+/*
+  Demi: visual contract for the GMC-style ranking poster.
+  Inspector sliders write these same names. Add a token instead of one-off CSS.
+*/
+
+.poster {
+  --poster-bg: #07080c;
+  --poster-fg: #ffffff;
+  --poster-muted: #d8d0c4;
+  --poster-accent: #e4b53c;
+  --poster-pad: 48px;
+  --header-height: 150px;
+  --title-size: 92px;
+  --title-tracking: 0.02em;
+  --title-x: 0px;
+  --title-y: 0px;
+  --list-x: 0px;
+  --list-y: 0px;
+  --footer-size: 22px;
+  --footer-height: 72px;
+  --col-head-height: 38px;
+  --row-height: 92px;
+  --row-gap: 14px;
+  --name-size: 28px;
+  --stat-size: 22px;
+  --stat-col-width: 52px;
+  --pts-box: 64px;
+  --pts-bg: #ffffff;
+  --pts-fg: #e4b53c;
+  --header-bar: #e4b53c;
+  --logo-size: 92px;
+  --rank-width: 56px;
+  --rank-size: 28px;
+  --rank-fg: #e4b53c;
+  --name-skew: -8;
+  --sparkle-opacity: 0.85;
+  --deco-opacity: 0.55;
+  --deco-a-x: 760px;
+  --deco-a-y: -30px;
+  --deco-a-size: 300px;
+  --deco-a-rotate: 18;
+  --deco-b-x: -70px;
+  --deco-b-y: 1080px;
+  --deco-b-size: 240px;
+  --deco-b-rotate: -24;
+  --font-display: "Permanent Marker", "Comic Sans MS", cursive;
+  --font-body: "Oswald", "Arial Narrow", sans-serif;
+  --font-footer: "Oswald", "Arial Narrow", sans-serif;
+}

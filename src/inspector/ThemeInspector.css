@@ -1,0 +1,128 @@
+.inspector {
+  height: 100%;
+  overflow: auto;
+  padding: 18px 16px 32px;
+  background: #141416;
+  border-left: 1px solid #2a2a2e;
+}
+
+.inspector-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.inspector h2,
+.inspector h3 {
+  margin: 0;
+  font-weight: 500;
+}
+
+.inspector h2 {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c4a574;
+}
+
+.inspector h3 {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7d776d;
+  margin-bottom: 10px;
+}
+
+.inspector-help {
+  margin: 10px 0 16px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #8c867c;
+}
+
+.text-btn {
+  border: 0;
+  background: transparent;
+  color: #c4a574;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  color: #d8d0c4;
+}
+
+.token-group {
+  margin-bottom: 22px;
+  padding-top: 4px;
+  border-top: 1px solid #2a2a2e;
+}
+
+.token-control {
+  margin-bottom: 12px;
+}
+
+.token-control label {
+  display: block;
+  font-size: 12px;
+  color: #d8d0c4;
+}
+
+.token-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.token-value {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: #8c867c;
+}
+
+.token-control input[type="range"] {
+  width: 100%;
+  margin-top: 6px;
+  accent-color: #c4a574;
+}
+
+.token-control input[type="text"],
+.token-control select,
+.token-color input:not([type="color"]) {
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid #2a2a2e;
+  background: #1c1c1f;
+  color: #f3ead8;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.token-color {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.token-color input[type="color"] {
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #2a2a2e;
+  background: transparent;
+  cursor: pointer;
+}
+
+.token-color input:not([type="color"]) {
+  margin-top: 0;
+}

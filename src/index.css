@@ -1,0 +1,286 @@
+:root {
+  color-scheme: dark;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  background: #0e0e10;
+  color: #f3ead8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.studio {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 300px 1fr 280px;
+  grid-template-areas:
+    "top top top"
+    "left stage right";
+}
+
+.topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  background: #141416;
+  border-bottom: 1px solid #2a2a2e;
+}
+
+.brand {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+
+.brand span {
+  color: #c4a574;
+}
+
+.topbar-status {
+  flex: 1;
+  font-size: 12px;
+  color: #8c867c;
+}
+
+.topbar-status.is-error {
+  color: #d4897a;
+}
+
+.export-btn {
+  border: 0;
+  background: #c4a574;
+  color: #121212;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sidebar {
+  grid-area: left;
+  overflow: auto;
+  background: #141416;
+  border-right: 1px solid #2a2a2e;
+  padding: 16px;
+}
+
+.stage {
+  grid-area: stage;
+  overflow: auto;
+  background:
+    linear-gradient(#1a1a1c 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, #1a1a1c 1px, transparent 1px) 0 0 / 32px 32px,
+    #101012;
+  position: relative;
+  cursor: grab;
+  user-select: none;
+}
+
+.stage:active {
+  cursor: grabbing;
+}
+
+.zoom-bar {
+  position: sticky;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0 12px;
+  padding: 4px 6px;
+  background: #1c1c1f;
+  border: 1px solid #2a2a2e;
+  border-radius: 6px;
+  color: #f3ead8;
+  font-size: 12px;
+}
+
+.zoom-bar button {
+  border: 0;
+  background: #2a2a2e;
+  color: #f3ead8;
+  width: 28px;
+  height: 26px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.zoom-bar button:last-child {
+  width: auto;
+  padding: 0 8px;
+}
+
+.zoom-bar span {
+  min-width: 40px;
+  text-align: center;
+  color: #c4a574;
+}
+
+.stage-sizer {
+  position: relative;
+  margin: 24px auto 48px;
+}
+
+.stage-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  box-shadow: 0 0 0 1px #2a2a2e;
+}
+
+.inspector-slot {
+  grid-area: right;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c4a574;
+}
+
+.panel-block {
+  margin-bottom: 22px;
+}
+
+.hint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #8c867c;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  color: #8c867c;
+  margin-bottom: 4px;
+}
+
+.field + .field {
+  margin-top: 10px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid #2a2a2e;
+  background: #1c1c1f;
+  color: #f3ead8;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.field textarea {
+  min-height: 220px;
+  resize: vertical;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.row-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.ghost-btn {
+  border: 1px solid #2a2a2e;
+  background: transparent;
+  color: #f3ead8;
+  padding: 7px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.ghost-btn:hover {
+  border-color: #c4a574;
+}
+
+.dropzone {
+  border: 1px dashed #3a3a40;
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+  color: #8c867c;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.dropzone.is-hot {
+  border-color: #c4a574;
+  color: #c4a574;
+}
+
+.pack-meta {
+  font-size: 12px;
+  color: #d8d0c4;
+  margin: 0 0 8px;
+}
+
+.logo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.logo-strip img,
+.logo-fallback {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  background: #1c1c1f;
+  border-radius: 4px;
+}
+
+.logo-fallback {
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: #c4a574;
+}
+
+.warn-list {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  color: #d4897a;
+  font-size: 12px;
+}
+
+.hidden-file {
+  display: none;
+}
