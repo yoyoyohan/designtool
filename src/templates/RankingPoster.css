@@ -3,6 +3,8 @@
     var(--rank-width)
     var(--logo-size)
     minmax(0, 1.7fr)
+    auto;
+  --metrics:
     var(--stat-col-width)
     var(--stat-col-width)
     var(--stat-col-width)
@@ -26,15 +28,7 @@
 }
 
 .poster.is-ratings {
-  --grid:
-    var(--rank-width)
-    var(--logo-size)
-    minmax(0, 1.6fr)
-    var(--pts-box)
-    var(--stat-col-width)
-    var(--stat-col-width)
-    var(--stat-col-width)
-    var(--stat-col-width);
+  --metrics: var(--pts-box) var(--stat-col-width) var(--stat-col-width) var(--stat-col-width) var(--stat-col-width);
 }
 
 .poster.is-simple .poster-stat,
@@ -59,40 +53,40 @@
   left: 8%;
   top: 12%;
   border-radius: 50%;
-  background: #f7e08a;
+  background: var(--sparkle-color);
   opacity: var(--sparkle-opacity);
   pointer-events: none;
   box-shadow:
-    70px 40px 0 0 #f7e08a,
-    160px 18px 0 1px #ffe9a8,
-    240px 90px 0 0 #e4b53c,
-    320px 36px 0 1px #fff6c8,
-    410px 120px 0 0 #f7e08a,
-    520px 28px 0 1px #ffe9a8,
-    610px 160px 0 0 #e4b53c,
-    700px 70px 0 1px #fff6c8,
-    780px 210px 0 0 #f7e08a,
-    860px 48px 0 0 #ffe9a8,
-    40px 280px 0 1px #f7e08a,
-    130px 360px 0 0 #e4b53c,
-    220px 430px 0 1px #fff6c8,
-    310px 510px 0 0 #f7e08a,
-    400px 590px 0 1px #ffe9a8,
-    490px 670px 0 0 #e4b53c,
-    580px 740px 0 1px #fff6c8,
-    670px 820px 0 0 #f7e08a,
-    760px 900px 0 1px #ffe9a8,
-    850px 980px 0 0 #e4b53c,
-    90px 1050px 0 1px #fff6c8,
-    200px 1120px 0 0 #f7e08a,
-    340px 1180px 0 2px #ffe9a8,
-    480px 1220px 0 1px #e4b53c,
-    620px 1160px 0 2px #fff6c8,
-    760px 1240px 0 1px #f7e08a,
-    880px 1100px 0 2px #ffe9a8,
-    140px 700px 0 0 #e4b53c,
-    820px 640px 0 1px #fff6c8,
-    50px 500px 0 0 #f7e08a;
+    70px 40px 0 0 var(--sparkle-color),
+    160px 18px 0 1px color-mix(in srgb, var(--sparkle-color) 70%, var(--plate-bg)),
+    240px 90px 0 0 color-mix(in srgb, var(--sparkle-color) 60%, var(--poster-accent)),
+    320px 36px 0 1px color-mix(in srgb, var(--sparkle-color) 40%, var(--plate-bg)),
+    410px 120px 0 0 var(--sparkle-color),
+    520px 28px 0 1px color-mix(in srgb, var(--sparkle-color) 70%, var(--plate-bg)),
+    610px 160px 0 0 color-mix(in srgb, var(--sparkle-color) 60%, var(--poster-accent)),
+    700px 70px 0 1px color-mix(in srgb, var(--sparkle-color) 40%, var(--plate-bg)),
+    780px 210px 0 0 var(--sparkle-color),
+    860px 48px 0 0 color-mix(in srgb, var(--sparkle-color) 70%, var(--plate-bg)),
+    40px 280px 0 1px var(--sparkle-color),
+    130px 360px 0 0 color-mix(in srgb, var(--sparkle-color) 60%, var(--poster-accent)),
+    220px 430px 0 1px color-mix(in srgb, var(--sparkle-color) 40%, var(--plate-bg)),
+    310px 510px 0 0 var(--sparkle-color),
+    400px 590px 0 1px color-mix(in srgb, var(--sparkle-color) 70%, var(--plate-bg)),
+    490px 670px 0 0 color-mix(in srgb, var(--sparkle-color) 60%, var(--poster-accent)),
+    580px 740px 0 1px color-mix(in srgb, var(--sparkle-color) 40%, var(--plate-bg)),
+    670px 820px 0 0 var(--sparkle-color),
+    760px 900px 0 1px color-mix(in srgb, var(--sparkle-color) 70%, var(--plate-bg)),
+    850px 980px 0 0 color-mix(in srgb, var(--sparkle-color) 60%, var(--poster-accent)),
+    90px 1050px 0 1px color-mix(in srgb, var(--sparkle-color) 40%, var(--plate-bg)),
+    200px 1120px 0 0 var(--sparkle-color),
+    340px 1180px 0 2px color-mix(in srgb, var(--sparkle-color) 70%, var(--plate-bg)),
+    480px 1220px 0 1px color-mix(in srgb, var(--sparkle-color) 60%, var(--poster-accent)),
+    620px 1160px 0 2px color-mix(in srgb, var(--sparkle-color) 40%, var(--plate-bg)),
+    760px 1240px 0 1px var(--sparkle-color),
+    880px 1100px 0 2px color-mix(in srgb, var(--sparkle-color) 70%, var(--plate-bg)),
+    140px 700px 0 0 color-mix(in srgb, var(--sparkle-color) 60%, var(--poster-accent)),
+    820px 640px 0 1px color-mix(in srgb, var(--sparkle-color) 40%, var(--plate-bg)),
+    50px 500px 0 0 var(--sparkle-color);
 }
 
 .poster-deco {
@@ -128,24 +122,178 @@
   transform: rotate(calc(var(--deco-b-rotate) * 1deg));
 }
 
+.poster-deco-c {
+  left: var(--deco-c-x);
+  top: var(--deco-c-y);
+  width: var(--deco-c-size);
+  height: var(--deco-c-size);
+  transform: rotate(calc(var(--deco-c-rotate) * 1deg));
+}
+
+.poster-deco-d {
+  left: var(--deco-d-x);
+  top: var(--deco-d-y);
+  width: var(--deco-d-size);
+  height: var(--deco-d-size);
+  transform: rotate(calc(var(--deco-d-rotate) * 1deg));
+}
+
+.poster-bg-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.poster-bg-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--poster-bg) calc(var(--bg-dim) * 100%), transparent);
+}
+
+.poster-watermark {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: calc(var(--watermark-size) * 1%);
+  max-height: 68%;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  opacity: var(--watermark-opacity);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.poster-hero-panel {
+  display: none;
+}
+
+.poster-hero-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.poster.is-hero-front .poster-hero-wrap {
+  z-index: 5;
+}
+
+.poster.is-live .poster-hero-wrap {
+  z-index: 4;
+}
+
+.poster.is-live.is-hero-front .poster-hero-wrap {
+  z-index: 6;
+}
+
+.poster.is-live .poster-deco {
+  z-index: 7;
+}
+
+.poster-hero-box {
+  position: absolute;
+  left: var(--hero-x);
+  top: var(--hero-y);
+  width: var(--hero-size);
+  pointer-events: none;
+}
+
+.poster.has-hero-h .poster-hero-box {
+  height: var(--hero-h);
+  overflow: hidden;
+}
+
+.poster.is-live .poster-hero-box,
+.poster.is-live .poster-deco {
+  pointer-events: auto;
+  cursor: move;
+}
+
+.poster.is-live .poster-board {
+  pointer-events: none;
+}
+
+.poster.is-live .poster-header,
+.poster.is-live .poster-list,
+.poster.is-live .poster-footer,
+.poster.is-live .poster-meta,
+.poster.is-live .poster-cols {
+  pointer-events: auto;
+  cursor: move;
+}
+
+.poster-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 50%;
+  object-fit: cover;
+  object-position: calc(var(--hero-focus-x) * 1%) calc(var(--hero-focus-y) * 1%);
+  filter: contrast(var(--photo-contrast)) saturate(var(--photo-saturate));
+}
+
+.poster.has-hero-h .poster-hero {
+  height: 100%;
+  min-height: 0;
+}
+
+.poster-board {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: calc(var(--board-width) * 1%);
+  max-width: 100%;
+  transform: translate(var(--list-x), var(--list-y));
+}
+
+.poster-trend {
+  display: none;
+}
+
 .poster-header {
   position: relative;
   z-index: 1;
   height: var(--header-height);
   flex: 0 0 var(--header-height);
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 16px;
   padding-bottom: 8px;
   transform: translate(var(--title-x), var(--title-y));
+}
+
+.poster-header-mark {
+  width: var(--header-mark-size);
+  height: var(--header-mark-size);
+  object-fit: contain;
+  flex: 0 0 var(--header-mark-size);
+}
+
+.poster-header-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 .poster-kicker {
   margin: 0 0 6px;
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--kicker-size);
   font-weight: 600;
-  letter-spacing: 0.34em;
+  letter-spacing: var(--kicker-tracking);
   text-transform: uppercase;
   color: var(--poster-accent);
 }
@@ -159,7 +307,7 @@
   line-height: 0.88;
   text-transform: uppercase;
   color: var(--poster-accent);
-  text-shadow: 0 2px 0 color-mix(in srgb, #000 45%, transparent);
+  text-shadow: 0 var(--title-shade-depth) 0 color-mix(in srgb, var(--title-shade) 45%, transparent);
 }
 
 .poster-cols {
@@ -171,21 +319,20 @@
   height: var(--col-head-height);
   margin: 8px 0 10px;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: var(--col-head-size);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--col-head-fg);
 }
 
 .poster-cols::after {
-  content: "";
-  grid-column: 4 / -1;
-  grid-row: 1;
-  background: var(--header-bar);
+  display: none;
 }
 
-.poster-cols span {
+.poster-cols span.col-rank,
+.poster-cols span.col-fill,
+.poster-cols > span:not(.poster-metrics) {
   display: grid;
   place-items: center;
   position: relative;
@@ -194,6 +341,41 @@
 
 .poster-cols .col-rank {
   color: var(--rank-fg);
+}
+
+.poster-cols > span.col-trend {
+  display: none;
+}
+
+.poster-cols .col-team {
+  visibility: visible;
+  justify-self: start;
+  padding-left: var(--name-pad);
+}
+
+.poster-meta {
+  position: relative;
+  z-index: 2;
+  display: none;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  font-family: var(--font-body);
+  font-size: var(--meta-size);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--poster-muted);
+}
+
+.poster-eyebrow {
+  margin: 0 0 2px;
+  font-family: var(--font-display);
+  font-size: var(--eyebrow-size);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .poster-list {
@@ -207,7 +389,6 @@
   min-height: 0;
   position: relative;
   z-index: 1;
-  transform: translate(var(--list-x), var(--list-y));
 }
 
 .poster-row {
@@ -218,6 +399,8 @@
   grid-template-columns: var(--grid);
   align-items: stretch;
   height: var(--row-height);
+  border-left: var(--row-edge) solid var(--team-primary);
+  border-radius: var(--row-radius);
 }
 
 .poster-row::after {
@@ -247,11 +430,14 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
   color: var(--rank-fg);
-  text-shadow: 0 1px 0 color-mix(in srgb, #000 50%, transparent);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--title-shade) 50%, transparent);
 }
 
 .poster-mark {
-  width: var(--logo-size);
+  width: var(--mark-size);
+  height: var(--mark-size);
+  align-self: center;
+  justify-self: center;
   background: var(--team-secondary);
   display: grid;
   place-items: center;
@@ -270,32 +456,39 @@
   display: grid;
   place-items: center;
   background: var(--team-primary);
-  color: #fff;
+  color: var(--team-ink);
   font-family: var(--font-display);
-  font-size: calc(var(--logo-size) * 0.38);
+  font-size: calc(var(--mark-size) * 0.38);
 }
 
 .poster-name {
   min-width: 0;
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  background: var(--team-primary);
-  color: #fff;
+  padding: 0 var(--name-pad);
+  background: var(--team-fill, var(--team-primary));
+  color: var(--team-ink);
   font-family: var(--font-display);
   font-size: var(--name-size);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
+  text-shadow: 0 1px 1px color-mix(in srgb, var(--title-shade) 32%, transparent);
   transform: skewX(calc(var(--name-skew) * 1deg));
   transform-origin: center left;
+}
+
+.poster-name-ghost {
+  display: none;
 }
 
 .poster-name > span {
   transform: skewX(calc(var(--name-skew) * -1deg));
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .poster-missing {
@@ -304,7 +497,7 @@
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #ffe9a8;
+  color: var(--poster-muted);
 }
 
 .poster-stat {
@@ -313,13 +506,13 @@
   font-size: var(--stat-size);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: #fff;
+  color: var(--stat-fg);
 }
 
 .poster-pts {
   display: grid;
   place-items: center;
-  margin: 8px 4px;
+  margin: max(2px, calc(var(--row-height) * 0.08)) 4px;
   background: var(--pts-bg);
   color: var(--pts-fg);
   font-size: calc(var(--stat-size) + 8px);
@@ -328,11 +521,21 @@
 }
 
 .poster-move.is-up {
-  color: #7dffb3;
+  color: var(--move-up);
 }
 
 .poster-move.is-down {
-  color: #ff8d7a;
+  color: var(--move-down);
+}
+
+.poster-metrics {
+  display: grid;
+  grid-template-columns: var(--metrics);
+  min-width: 0;
+}
+
+.poster-cols .poster-metrics {
+  background: var(--header-bar);
 }
 
 .poster-footer {
@@ -343,12 +546,1321 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  gap: 12px;
   padding-bottom: 4px;
   font-family: var(--font-footer);
   font-size: var(--footer-size);
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--footer-tracking);
   text-transform: uppercase;
   color: var(--poster-accent);
   text-align: center;
+}
+
+.poster-footer-badge {
+  height: var(--footer-badge-size);
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.poster-footer-handle {
+  color: color-mix(in srgb, var(--poster-fg) 55%, transparent);
+}
+
+/* Broadcast — TV lower-third / circle crests */
+.tmpl-broadcast .poster-row {
+  background: color-mix(in srgb, var(--poster-fg) 5%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--poster-fg) 8%, transparent);
+}
+
+.tmpl-broadcast .poster-row::after {
+  display: none;
+}
+
+.tmpl-broadcast .poster-mark {
+  border-radius: 50%;
+  background: var(--plate-bg);
+}
+
+.tmpl-broadcast .poster-name {
+  background: transparent;
+  color: var(--poster-fg);
+}
+
+.tmpl-broadcast .poster-rank {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+/* Ticker — newsprint / box score */
+.tmpl-ticker .poster-glow,
+.tmpl-ticker .poster-glitter {
+  display: none;
+}
+
+.tmpl-ticker .poster-header-copy::after {
+  content: "";
+  display: block;
+  height: var(--rule-height);
+  margin-top: 10px;
+  border-top: 3px solid var(--poster-fg);
+  border-bottom: 1px solid var(--poster-fg);
+}
+
+.tmpl-ticker .poster-title,
+.tmpl-ticker .poster-kicker,
+.tmpl-ticker .poster-footer {
+  text-shadow: none;
+}
+
+.tmpl-ticker .poster-cols {
+  color: var(--poster-fg);
+}
+
+.tmpl-ticker .poster-rank {
+  text-shadow: none;
+}
+
+.tmpl-ticker .poster-row:nth-child(odd) {
+  background: color-mix(in srgb, var(--poster-fg) 5%, transparent);
+}
+
+.tmpl-ticker .poster-row::after {
+  border-bottom: 1px solid color-mix(in srgb, var(--poster-fg) 16%, transparent);
+  border-style: solid;
+}
+
+.tmpl-ticker .poster-name {
+  background: transparent;
+  color: var(--poster-fg);
+}
+
+.tmpl-ticker .poster-stat {
+  color: var(--poster-fg);
+}
+
+.tmpl-ticker .poster-mark {
+  background: transparent;
+}
+
+.tmpl-ticker .poster-missing {
+  color: #8b1a1a;
+}
+
+/* Story — giant rank ghosts */
+.tmpl-story .poster-row {
+  overflow: hidden;
+}
+
+.tmpl-story .poster-row::before {
+  content: attr(data-rank);
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-54%);
+  font-family: var(--font-display);
+  font-size: var(--ghost-size);
+  line-height: 1;
+  color: var(--poster-accent);
+  opacity: var(--ghost-opacity);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tmpl-story .poster-row > * {
+  position: relative;
+  z-index: 1;
+}
+
+.tmpl-story .poster-row::after {
+  border-bottom: 1px solid color-mix(in srgb, var(--poster-accent) 40%, transparent);
+  border-style: solid;
+}
+
+.tmpl-story .poster-name {
+  background: transparent;
+  color: var(--poster-fg);
+}
+
+.tmpl-story .poster-mark {
+  background: color-mix(in srgb, var(--team-secondary) 80%, var(--title-shade));
+}
+
+/* State — gray field, sticker headline, full-bleed team bars */
+.tmpl-board {
+  --grid:
+    var(--trend-width)
+    var(--rank-width)
+    var(--logo-size)
+    minmax(0, 1fr)
+    auto;
+}
+
+.tmpl-board.is-simple {
+  --grid: var(--trend-width) var(--rank-width) var(--logo-size) minmax(0, 1fr);
+}
+
+/* Trend already carries movement. Rating posters only show RATING / OFF / DEF. */
+.tmpl-board.is-ratings {
+  --metrics: var(--pts-box) var(--stat-col-width) var(--stat-col-width);
+}
+
+.tmpl-board .poster-stat.is-move,
+.tmpl-board .poster-stat.is-games,
+.tmpl-board .poster-cols .col-fill.is-move,
+.tmpl-board .poster-cols .col-fill.is-games {
+  display: none;
+}
+
+.tmpl-board .poster-glitter,
+.tmpl-board .poster-glow {
+  display: none;
+}
+
+.tmpl-board .poster-meta {
+  display: flex;
+  padding: 0 2px 4px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--poster-fg);
+}
+
+.tmpl-board .poster-header {
+  align-items: flex-end;
+  padding-bottom: 0;
+}
+
+.tmpl-board .poster-header-copy {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.tmpl-board .poster-eyebrow,
+.tmpl-board .poster-title {
+  color: var(--poster-accent);
+  -webkit-text-stroke: var(--outline-width) var(--title-outline);
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+
+.tmpl-board .poster-eyebrow {
+  margin-bottom: 0;
+  -webkit-text-stroke-width: calc(var(--outline-width) * 0.55);
+}
+
+.tmpl-board .poster-title {
+  line-height: 0.9;
+  text-shadow:
+    calc(var(--outline-width) * -1) 0 0 var(--title-outline),
+    var(--outline-width) 0 0 var(--title-outline),
+    0 calc(var(--outline-width) * -1) 0 var(--title-outline),
+    0 var(--outline-width) 0 var(--title-outline);
+}
+
+.tmpl-board .poster-cols {
+  margin: 2px 0 4px;
+  font-family: var(--font-display);
+  font-size: calc(var(--col-head-size) + 6px);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--poster-accent);
+}
+
+.tmpl-board .poster-cols > span.col-trend {
+  display: block;
+}
+
+.tmpl-board .poster-cols .col-rank {
+  visibility: hidden;
+}
+
+.tmpl-board .poster-cols .col-team {
+  visibility: visible;
+  padding-left: 0;
+}
+
+.tmpl-board .poster-cols .col-team,
+.tmpl-board .poster-cols .col-fill {
+  -webkit-text-stroke: calc(var(--outline-width) * 0.35) var(--title-outline);
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+
+.tmpl-board .poster-cols .poster-metrics {
+  background: transparent;
+}
+
+.tmpl-board .poster-row {
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.tmpl-board .poster-row.is-unmatched .poster-name {
+  outline: none;
+}
+
+.tmpl-board .poster-row::after {
+  display: none;
+}
+
+.tmpl-board .poster-trend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-right: 8px;
+  background: transparent;
+  color: var(--poster-fg);
+  font-family: var(--font-display);
+  font-size: calc(var(--stat-size) + 2px);
+  box-shadow: none;
+}
+
+.tmpl-board .poster-trend::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: calc(var(--arrow-size) * 0.32) solid transparent;
+  border-right: calc(var(--arrow-size) * 0.32) solid transparent;
+}
+
+.tmpl-board .poster-trend.is-up::before {
+  border-bottom: calc(var(--arrow-size) * 0.5) solid var(--move-up);
+}
+
+.tmpl-board .poster-trend.is-down::before {
+  border-top: calc(var(--arrow-size) * 0.5) solid var(--move-down);
+}
+
+.tmpl-board .poster-trend.is-flat {
+  color: transparent;
+  justify-content: center;
+  padding-right: 0;
+}
+
+.tmpl-board .poster-trend.is-flat::before {
+  border: 0;
+  width: 14px;
+  height: 3px;
+  background: var(--move-flat);
+}
+
+.tmpl-board .poster-rank {
+  background: var(--team-fill, var(--team-primary));
+  color: var(--bar-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  text-shadow: none;
+  letter-spacing: 0;
+}
+
+.tmpl-board .poster-mark {
+  align-self: stretch;
+  justify-self: stretch;
+  width: auto;
+  height: auto;
+  background: var(--team-fill, var(--team-primary));
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.tmpl-board .poster-mark img,
+.tmpl-board .poster-mark .lettermark {
+  width: var(--mark-size);
+  height: var(--mark-size);
+  border-radius: 50%;
+  background: var(--plate-bg);
+  object-fit: contain;
+  padding: 7%;
+  box-sizing: border-box;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--title-shade) 16%, transparent);
+}
+
+.tmpl-board .poster-mark .lettermark {
+  color: var(--team-primary);
+  font-size: calc(var(--mark-size) * 0.4);
+}
+
+.tmpl-board .poster-name {
+  background: var(--team-fill, var(--team-primary));
+  color: var(--bar-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  transform: none;
+  padding: 0 var(--name-pad);
+  line-height: 0.95;
+  white-space: normal;
+  text-shadow: none;
+  word-spacing: 0.12em;
+}
+
+.tmpl-board .poster-name > span {
+  transform: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--font-body);
+  word-spacing: 0.12em;
+}
+
+.tmpl-board .poster-metrics {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--plate-bg) calc(var(--stat-tint) * 1%), transparent),
+      color-mix(in srgb, var(--plate-bg) calc(var(--stat-tint) * 0.4%), transparent)
+    ),
+    var(--team-fill, var(--team-primary));
+}
+
+.tmpl-board .poster-stat,
+.tmpl-board .poster-pts {
+  margin: 0;
+  background: transparent;
+  color: var(--bar-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--stat-size);
+  text-shadow: none;
+}
+
+.tmpl-board .poster-pts {
+  font-size: calc(var(--stat-size) + 1px);
+}
+
+.tmpl-board .poster-row.is-light-bar .poster-rank,
+.tmpl-board .poster-row.is-light-bar .poster-name,
+.tmpl-board .poster-row.is-light-bar .poster-stat,
+.tmpl-board .poster-row.is-light-bar .poster-pts {
+  color: var(--bar-ink-on-light);
+}
+
+.tmpl-board .poster-move.is-up,
+.tmpl-board .poster-move.is-down {
+  color: inherit;
+}
+
+.tmpl-board .poster-missing {
+  display: none;
+}
+
+.tmpl-board .poster-row.is-hot {
+  outline: var(--hot-edge) solid var(--poster-fg);
+  outline-offset: calc(var(--hot-edge) * -1);
+}
+
+/* Movers — segmented plates, movement leads */
+.tmpl-movers {
+  --grid:
+    var(--trend-width)
+    var(--rank-width)
+    var(--logo-size)
+    minmax(0, 1fr)
+    var(--pts-box);
+}
+
+.tmpl-movers.is-simple {
+  --grid: var(--trend-width) var(--rank-width) var(--logo-size) minmax(0, 1fr);
+}
+
+.tmpl-movers .poster-glitter {
+  display: none;
+}
+
+.tmpl-movers .poster-glow {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--plate-bg) 26%, transparent), transparent 70%);
+}
+
+.tmpl-movers .poster-board {
+  margin: 0 auto;
+}
+
+.tmpl-movers .poster-meta {
+  display: flex;
+  color: var(--poster-accent);
+}
+
+.tmpl-movers .poster-header {
+  align-items: center;
+  padding-bottom: 0;
+}
+
+.tmpl-movers .poster-header-copy {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.tmpl-movers .poster-eyebrow {
+  color: var(--poster-accent);
+  letter-spacing: 0.06em;
+  text-shadow: 0 3px 0 color-mix(in srgb, var(--poster-accent) 18%, transparent);
+}
+
+.tmpl-movers .poster-title {
+  color: var(--poster-accent);
+  line-height: 0.92;
+  text-shadow: 0 5px 0 color-mix(in srgb, var(--poster-accent) 18%, transparent);
+}
+
+.tmpl-movers .poster-cols {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: calc(var(--stat-size) + 1px);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--poster-accent);
+}
+
+.tmpl-movers .poster-cols > span.col-trend {
+  display: block;
+}
+
+.tmpl-movers .poster-cols .col-rank {
+  visibility: hidden;
+}
+
+.tmpl-movers .poster-cols .col-team {
+  visibility: visible;
+  grid-column: 3 / 5;
+}
+
+.tmpl-movers .poster-cols .poster-metrics {
+  background: transparent;
+  grid-template-columns: var(--pts-box);
+}
+
+.tmpl-movers .poster-cols .col-fill:not(.is-primary) {
+  display: none;
+}
+
+.tmpl-movers .poster-list {
+  flex: 0 1 auto;
+  justify-content: flex-start;
+}
+
+.tmpl-movers .poster-row {
+  border-radius: 0;
+}
+
+.tmpl-movers .poster-row::after {
+  display: none;
+}
+
+.tmpl-movers .poster-trend,
+.tmpl-movers .poster-rank {
+  background: var(--plate-bg);
+  border-radius: var(--row-radius);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--poster-fg) 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--title-shade) 12%, transparent);
+}
+
+.tmpl-movers .poster-trend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-right: var(--seg-gap);
+  color: var(--rank-fg);
+  font-family: var(--font-display);
+  font-size: calc(var(--stat-size) + 1px);
+}
+
+.tmpl-movers .poster-trend::before {
+  content: "";
+  flex: 0 0 auto;
+  width: calc(var(--arrow-size) * 0.8);
+  height: var(--arrow-size);
+  background: var(--move-up);
+  clip-path: polygon(50% 0, 100% 46%, 71% 46%, 71% 100%, 29% 100%, 29% 46%, 0 46%);
+}
+
+.tmpl-movers .poster-trend.is-down::before {
+  background: var(--move-down);
+  transform: scaleY(-1);
+}
+
+.tmpl-movers .poster-trend.is-flat {
+  color: transparent;
+}
+
+.tmpl-movers .poster-trend.is-flat::before {
+  width: calc(var(--arrow-size) * 0.65);
+  height: 4px;
+  clip-path: none;
+  background: var(--move-flat);
+}
+
+.tmpl-movers .poster-rank {
+  margin-right: var(--seg-gap);
+  font-family: var(--font-display);
+  text-shadow: none;
+  letter-spacing: 0;
+}
+
+.tmpl-movers .poster-mark {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--plate-bg) 12%, transparent), transparent 60%),
+    var(--team-fill, var(--team-primary));
+  border-radius: var(--row-radius) 0 0 var(--row-radius);
+}
+
+.tmpl-movers .poster-name {
+  background: var(--team-fill, var(--team-primary));
+  color: var(--team-ink);
+  transform: none;
+  margin-right: var(--seg-gap);
+  padding: 0 var(--name-pad);
+  border-radius: 0 var(--row-radius) var(--row-radius) 0;
+}
+
+.tmpl-movers .poster-name > span {
+  transform: none;
+}
+
+.tmpl-movers .poster-missing {
+  color: var(--team-ink-soft);
+}
+
+.tmpl-movers .poster-metrics {
+  grid-template-columns: var(--pts-box);
+}
+
+.tmpl-movers .poster-stat {
+  display: none;
+}
+
+.tmpl-movers .poster-pts {
+  margin: 0;
+  border-radius: var(--row-radius);
+  background:
+    linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--plate-bg) calc(var(--stat-tint) * 1%), transparent),
+      color-mix(in srgb, var(--plate-bg) calc(var(--stat-tint) * 1%), transparent)
+    ),
+    var(--team-fill, var(--team-primary));
+  color: var(--team-ink);
+}
+
+.tmpl-movers .poster-row.is-hot .poster-name {
+  box-shadow: 0 0 0 var(--hot-edge) var(--poster-accent);
+}
+
+/* Power — USL-style: white chamfered header, tagged ranks, color bars, player slab */
+.tmpl-power {
+  --grid: var(--trend-width) var(--rank-width) minmax(0, 1fr) var(--pts-box);
+}
+
+.tmpl-power .poster-glitter,
+.tmpl-power .poster-mark {
+  display: none;
+}
+
+.tmpl-power .poster-glow {
+  background:
+    radial-gradient(ellipse 50% 40% at 78% 70%, color-mix(in srgb, var(--poster-accent) 22%, transparent), transparent 70%);
+}
+
+.tmpl-power .poster-hero-panel,
+.tmpl-power .poster-hero-wrap {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  clip-path: polygon(
+    calc(var(--cut-left) * 1%) calc(var(--cut-top) * 1%),
+    100% calc(var(--cut-top) * 1%),
+    100% 100%,
+    calc((var(--cut-left) - var(--cut-lean)) * 1%) 100%
+  );
+}
+
+.tmpl-power .poster-hero-panel {
+  z-index: 1;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--title-shade) 18%, transparent), transparent 28%),
+    repeating-linear-gradient(
+      -18deg,
+      color-mix(in srgb, var(--title-shade) 10%, transparent) 0 2px,
+      transparent 2px 11px
+    ),
+    var(--poster-accent);
+}
+
+.tmpl-power .poster-hero-wrap {
+  z-index: 2;
+  clip-path: polygon(
+    calc(var(--cut-left) * 1% + var(--cut-pad) * 1px) calc(var(--cut-top) * 1%),
+    100% calc(var(--cut-top) * 1%),
+    100% 100%,
+    calc((var(--cut-left) - var(--cut-lean)) * 1% + var(--cut-pad) * 1px) 100%
+  );
+}
+
+.tmpl-power .poster-hero-box {
+  height: 100%;
+}
+
+.tmpl-power .poster-hero {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  object-fit: cover;
+}
+
+.tmpl-power .poster-hero-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--poster-bg) 42%, transparent), transparent 24%),
+    linear-gradient(180deg, color-mix(in srgb, var(--title-shade) 22%, transparent), transparent 18%);
+}
+
+.tmpl-power .poster-board {
+  width: calc(var(--board-width) * 1%);
+  max-width: calc(var(--cut-left) * 1% - 12px);
+  justify-content: flex-start;
+}
+
+.tmpl-power .poster-header {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  background: var(--header-bar);
+  color: var(--plate-ink);
+  padding: 16px 18px 14px;
+  clip-path: polygon(22px 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%, 0 22px);
+  box-shadow: 0 16px 32px color-mix(in srgb, var(--title-shade) 42%, transparent);
+}
+
+.tmpl-power .poster-header-mark {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tmpl-power .poster-header-copy {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.tmpl-power .poster-kicker {
+  color: var(--plate-ink);
+  text-shadow: none;
+  margin-bottom: 4px;
+}
+
+.tmpl-power .poster-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--plate-ink);
+  text-shadow: none;
+  line-height: 0.9;
+}
+
+.tmpl-power .poster-title::before,
+.tmpl-power .poster-title::after {
+  content: "";
+  width: 0;
+  height: 0;
+  flex: 0 0 auto;
+}
+
+.tmpl-power .poster-title::before {
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 12px solid var(--move-up);
+}
+
+.tmpl-power .poster-title::after {
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 12px solid var(--move-down);
+}
+
+.tmpl-power .poster-week {
+  margin: 8px 0 0;
+  max-width: 92%;
+  font-family: var(--font-body);
+  font-size: var(--kicker-size);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: var(--plate-ink);
+}
+
+.tmpl-power .poster-list {
+  width: 100%;
+  flex: 1 1 auto;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.tmpl-power .poster-cols {
+  display: none;
+}
+
+.tmpl-power .poster-row {
+  gap: 8px;
+  border-left: 0;
+}
+
+.tmpl-power .poster-row::after {
+  display: none;
+}
+
+.tmpl-power .poster-trend {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--poster-fg);
+}
+
+.tmpl-power .poster-trend::before {
+  display: none;
+}
+
+.tmpl-power .poster-trend.is-up {
+  background: var(--move-up);
+  clip-path: polygon(50% 8%, 100% 92%, 0 92%);
+}
+
+.tmpl-power .poster-trend.is-down {
+  background: var(--move-down);
+  clip-path: polygon(0 8%, 100% 8%, 50% 92%);
+}
+
+.tmpl-power .poster-trend.is-flat {
+  background: var(--move-flat);
+  clip-path: none;
+  color: transparent;
+}
+
+.tmpl-power .poster-rank {
+  background: var(--plate-bg);
+  color: var(--plate-ink);
+  text-shadow: none;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  font-family: var(--font-display);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--title-shade) 30%, transparent);
+}
+
+.tmpl-power .poster-name {
+  position: relative;
+  justify-content: flex-start;
+  background: var(--team-fill, var(--team-primary));
+  color: var(--team-ink);
+  transform: none;
+  padding: 0 var(--name-pad);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--title-shade) 32%, transparent);
+}
+
+.tmpl-power .poster-name > span {
+  position: relative;
+  z-index: 2;
+  transform: none;
+}
+
+.tmpl-power .poster-name-ghost {
+  display: block;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  height: 72%;
+  width: auto;
+  max-width: 28%;
+  object-fit: contain;
+  opacity: var(--ghost-opacity);
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tmpl-power .poster-metrics {
+  display: grid;
+  grid-template-columns: var(--pts-box);
+  background: transparent;
+}
+
+.tmpl-power .poster-pts {
+  display: grid;
+  margin: 0;
+  border-radius: 0;
+  background: var(--plate-bg);
+  color: var(--plate-ink);
+  font-family: var(--font-display);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--title-shade) 30%, transparent);
+}
+
+.tmpl-power.is-simple .poster-pts {
+  display: none;
+}
+
+.tmpl-power .poster-stat {
+  display: none;
+}
+
+.tmpl-power .poster-row.is-hot .poster-name {
+  box-shadow:
+    0 0 0 var(--hot-edge) var(--poster-fg),
+    0 8px 0 color-mix(in srgb, var(--title-shade) 32%, transparent);
+}
+
+.tmpl-power .poster-footer {
+  justify-content: flex-end;
+}
+
+.tmpl-power .poster-footer-copy {
+  display: none;
+}
+
+
+/* Split — photo cut on a down-right diagonal, rows stepped to match it */
+.tmpl-split {
+  --grid:
+    var(--rank-width)
+    var(--trend-width)
+    var(--logo-size)
+    minmax(0, 1fr)
+    var(--pts-box);
+}
+
+.tmpl-split.is-simple {
+  --grid: var(--rank-width) var(--trend-width) var(--logo-size) minmax(0, 1fr);
+}
+
+.tmpl-split .poster-glitter {
+  display: none;
+}
+
+.tmpl-split .poster-cols {
+  margin: 0 0 6px;
+  padding-left: calc(var(--split-slant) + var(--split-edge) + var(--name-pad));
+  color: color-mix(in srgb, var(--poster-fg) 48%, transparent);
+}
+
+.tmpl-split .poster-cols > span.col-trend {
+  display: block;
+  visibility: hidden;
+}
+
+.tmpl-split .poster-cols .col-team,
+.tmpl-split .poster-cols .col-fill {
+  visibility: visible;
+}
+
+.tmpl-split .poster-cols .col-rank,
+.tmpl-split .poster-cols .col-fill {
+  color: color-mix(in srgb, var(--poster-fg) 48%, transparent);
+}
+
+.tmpl-split .poster-cols .col-team {
+  padding-left: 0;
+}
+
+.tmpl-split .poster-cols .poster-metrics {
+  background: transparent;
+  grid-template-columns: var(--pts-box);
+  justify-items: end;
+}
+
+.tmpl-split .poster-cols .col-fill {
+  width: 100%;
+  place-items: center end;
+  letter-spacing: 0.12em;
+}
+
+.tmpl-split .poster-glow {
+  background:
+    radial-gradient(ellipse 60% 50% at 100% 0%, color-mix(in srgb, var(--poster-accent) 16%, transparent), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 82% 100%, color-mix(in srgb, var(--plate-bg) 5%, transparent), transparent 70%);
+}
+
+/* Photo fills the diagonal polygon so there is no empty slab under the players. */
+.tmpl-split .poster-hero-wrap {
+  z-index: 4;
+  clip-path: polygon(
+    0 0,
+    var(--split-cut-x) 0,
+    calc(var(--split-cut-x) + var(--split-shift)) 100%,
+    0 100%
+  );
+}
+
+.tmpl-split .poster-hero-box {
+  height: 100%;
+}
+
+.tmpl-split .poster-hero {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  object-fit: cover;
+}
+
+.tmpl-split .poster-hero-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 55%,
+    color-mix(in srgb, var(--poster-bg) 28%, transparent)
+  );
+}
+
+/* Accent rule sitting exactly on the cut, so the eye reads one continuous slope. */
+.tmpl-split .poster-hero-panel {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--poster-accent);
+  clip-path: polygon(
+    var(--split-cut-x) 0,
+    calc(var(--split-cut-x) + var(--split-edge)) 0,
+    calc(var(--split-cut-x) + var(--split-shift) + var(--split-edge)) 100%,
+    calc(var(--split-cut-x) + var(--split-shift)) 100%
+  );
+}
+
+/* Indent is the cut's position at the top row, resolved in px by RankingPoster. Keep the
+   vertical padding at zero — the row geometry is measured from the poster pad and header. */
+.tmpl-split .poster-board {
+  box-sizing: border-box;
+  margin-left: auto;
+  padding: 0 0 0 var(--split-pad-left);
+}
+
+.tmpl-split .poster-header {
+  align-items: flex-end;
+  padding-bottom: 16px;
+}
+
+.tmpl-split .poster-kicker {
+  margin-bottom: 10px;
+  color: var(--poster-accent);
+}
+
+.tmpl-split .poster-title {
+  color: var(--poster-fg);
+  text-shadow: none;
+  line-height: 0.88;
+}
+
+.tmpl-split .poster-header-copy::after {
+  content: "";
+  display: block;
+  width: var(--rule-width);
+  height: var(--rule-height);
+  margin-top: 16px;
+  background: var(--poster-accent);
+}
+
+.tmpl-split .poster-list {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+}
+
+/* Each row steps right by one row-pitch of the slope, and its own bottom-left corner is cut
+   by exactly the slope's travel over one row. Row i's bottom-left then lands on row i+1's
+   top-left, so the stack of trapezoids traces the cut as one unbroken line. */
+.tmpl-split .poster-row {
+  margin-left: calc(var(--row-i) * var(--row-step));
+  padding-left: calc(var(--split-slant) + var(--split-edge) + var(--name-pad));
+  overflow: hidden;
+  border-radius: 0 var(--row-radius) var(--row-radius) 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--split-slant) 100%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--poster-fg) 10%, transparent),
+    color-mix(in srgb, var(--poster-fg) 3%, transparent) 62%,
+    transparent
+  );
+}
+
+/* Team colour rides the cut as a parallelogram; a plain border-left would taper to nothing
+   against the slanted clip. */
+.tmpl-split .poster-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--team-primary);
+  clip-path: polygon(
+    0 0,
+    var(--split-edge) 0,
+    calc(var(--split-slant) + var(--split-edge)) 100%,
+    var(--split-slant) 100%
+  );
+}
+
+.tmpl-split .poster-row::after {
+  display: none;
+}
+
+.tmpl-split .poster-rank {
+  order: 1;
+  font-family: var(--font-display);
+  color: var(--poster-fg);
+  text-shadow: none;
+  letter-spacing: 0;
+}
+
+.tmpl-split .poster-trend {
+  order: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: var(--font-body);
+  font-size: calc(var(--stat-size) - 1px);
+  font-weight: 700;
+}
+
+.tmpl-split .poster-trend::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
+.tmpl-split .poster-trend.is-up {
+  color: var(--move-up);
+}
+
+.tmpl-split .poster-trend.is-up::before {
+  border-bottom: 8px solid var(--move-up);
+}
+
+.tmpl-split .poster-trend.is-down {
+  color: var(--move-down);
+}
+
+.tmpl-split .poster-trend.is-down::before {
+  border-top: 8px solid var(--move-down);
+}
+
+.tmpl-split .poster-trend.is-flat {
+  color: transparent;
+}
+
+.tmpl-split .poster-trend.is-flat::before {
+  border: 0;
+  width: 11px;
+  height: 2px;
+  background: var(--move-flat);
+}
+
+.tmpl-split .poster-mark {
+  order: 3;
+  border-radius: 4px;
+  background: var(--plate-bg);
+}
+
+.tmpl-split .poster-name {
+  order: 4;
+  background: transparent;
+  color: var(--poster-fg);
+  transform: none;
+  padding-left: var(--name-pad);
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--title-shade) 70%, transparent);
+}
+
+.tmpl-split .poster-name > span {
+  transform: none;
+}
+
+.tmpl-split .poster-metrics {
+  order: 5;
+  grid-template-columns: var(--pts-box);
+  justify-items: end;
+}
+
+.tmpl-split .poster-stat {
+  display: none;
+}
+
+.tmpl-split .poster-pts {
+  margin: 0;
+  width: 100%;
+  background: transparent;
+  color: var(--poster-accent);
+  font-family: var(--font-display);
+  font-size: calc(var(--stat-size) + 8px);
+  font-weight: 400;
+  place-items: center end;
+}
+
+.tmpl-split .poster-row.is-hot::before {
+  background: var(--poster-accent);
+}
+
+.tmpl-split .poster-row.is-hot {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--poster-accent) 92%, transparent),
+    color-mix(in srgb, var(--poster-accent) 26%, transparent) 70%,
+    transparent
+  );
+}
+
+.tmpl-split .poster-row.is-hot .poster-rank,
+.tmpl-split .poster-row.is-hot .poster-name,
+.tmpl-split .poster-row.is-hot .poster-pts {
+  color: var(--plate-ink);
+  text-shadow: none;
+}
+
+.tmpl-split .poster-row.is-hot .poster-trend.is-flat::before {
+  background: color-mix(in srgb, var(--title-shade) 40%, transparent);
+}
+
+/* The cut keeps travelling past the last row, so the footer has to clear it too. */
+.tmpl-split .poster-footer {
+  margin-left: var(--split-foot-shift);
+  justify-content: flex-start;
+  color: color-mix(in srgb, var(--poster-fg) 58%, transparent);
+}
+
+/* Tables with no movement data collapse the trend column. The cell has to stay in
+   the grid flow, or every later cell slides one column to the left. */
+.poster.is-no-trend .poster-trend,
+.poster.is-no-trend .poster-cols > span.col-trend {
+  visibility: hidden;
+  overflow: hidden;
+}
+
+.poster.is-live [data-text] {
+  min-width: 1ch;
+  cursor: text;
+}
+
+.poster.is-live [data-text].is-empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.38;
+}
+
+.poster.is-live [data-cell],
+.poster.is-live [data-text] {
+  cursor: text;
+}
+
+.poster.is-live [data-logo] {
+  cursor: pointer;
+}
+
+.poster.is-live .poster-name-ghost {
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.poster.is-live [data-drag="board"]:has([data-cell]:hover),
+.poster.is-live [data-drag="board"]:has([data-text]:hover),
+.poster.is-live [data-drag="board"]:has([data-logo]:hover),
+.poster.is-live [data-drag="header"]:has([data-text]:hover) {
+  outline: none;
+}
+
+.poster.is-live [data-cell]:hover,
+.poster.is-live [data-text]:hover,
+.poster.is-live [data-logo]:hover {
+  outline: 1px dashed color-mix(in srgb, #c4a574 80%, transparent);
+  outline-offset: 2px;
+}
+
+.poster.is-live [data-drag] {
+  cursor: grab;
+}
+
+.poster.is-live [data-drag]:active {
+  cursor: grabbing;
+}
+
+.poster.is-live [contenteditable] {
+  outline: none;
+  caret-color: #c4a574;
+}
+
+.poster.is-live [data-drag]:hover {
+  outline: 2px dashed color-mix(in srgb, #c4a574 80%, transparent);
+  outline-offset: 4px;
+}
+
+.poster.is-live [data-cell],
+.poster.is-live [data-text],
+.poster.is-live [data-logo] {
+  cursor: text;
+}
+
+.poster.is-live [data-logo] {
+  cursor: pointer;
+}
+
+.poster.is-live.is-picked-header [data-drag="header"],
+.poster.is-live.is-picked-board [data-drag="board"],
+.poster.is-live.is-picked-hero [data-drag="hero"],
+.poster.is-live.is-picked-deco-a [data-drag="deco-a"],
+.poster.is-live.is-picked-deco-b [data-drag="deco-b"],
+.poster.is-live.is-picked-deco-c [data-drag="deco-c"],
+.poster.is-live.is-picked-deco-d [data-drag="deco-d"] {
+  outline: 2px solid #c4a574;
+  outline-offset: 4px;
+}
+
+.edit-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  background: #c4a574;
+  box-shadow: 0 0 0 1px #111;
+  z-index: 8;
+  pointer-events: auto;
+}
+
+.edit-handle.is-se {
+  right: 2px;
+  bottom: 2px;
+  cursor: nwse-resize;
+}
+
+.edit-handle.is-e {
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.edit-handle.is-s {
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.poster.is-exporting .edit-handle,
+.poster:not(.is-live) .edit-handle {
+  display: none;
 }

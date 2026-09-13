@@ -11,3 +11,6 @@ Demi-facing files:
 
 Engine files (`src/engine/`) parse tables, match names, and export PNG. Leave
 those alone unless matching or export is broken.
+
+After shipping studio or poster changes, rebuild `ranking-studio-netlify.zip`
+(`npm run zip:netlify`) and give it to the user. Do not wait to be asked.

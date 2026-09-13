@@ -1,12 +1,46 @@
 export const SAMPLE_TABLE = `Team	W	L	D	PTS	GF	GA	GD
-South Brunswick	6	10	1	19	13	20	-7
-New Brunswick	5	10	0	15	10	20	-10
+St. Joseph (Met.)	18	1	0	54	36	2	+34
+Monroe	15	5	1	46	31	10	+21
+North Brunswick	11	9	1	34	23	18	+5
+East Brunswick	11	8	0	33	22	16	+6
 Old Bridge	10	6	2	32	22	12	+10
 J.P. Stevens	9	7	3	30	21	14	+7
-Monroe	15	5	1	46	31	10	+21
-East Brunswick	11	8	0	33	22	16	+6
-St. Joseph (Met.)	18	1	0	54	36	2	+34
-North Brunswick	11	9	1	34	23	18	+5
+South Brunswick	6	10	1	19	13	20	-7
+New Brunswick	5	10	0	15	10	20	-10
+`;
+
+export const SAMPLE_BOYS_LAX = `1	Lawrenceville	26.3166	19.2344	7.0822	·
+2	Summit	26.0339	16.4511	9.5888	▲3
+3	Chatham	26.0100	19.1300	6.8800	▼1
+4	Seton Hall Prep	25.9255	17.4355	8.4899	▼1
+5	Delbarton	25.8200	17.3122	8.5088	▼1
+6	Don Bosco Prep	23.9366	16.1566	7.7800	·
+7	St. Augustine	23.5599	16.6655	6.8955	·
+8	Shawnee	22.7311	17.4277	5.3044	▲1
+9	Rumson-Fair Haven	22.7044	16.5933	6.1111	▼1
+10	Westfield	22.0488	16.3255	5.7233	·
+11	Scotch Plains-Fanwood	20.9977	15.8711	5.1266	▼1
+12	Christian Brothers	20.6666	15.0401	5.6255	▲1
+13	Bridgewater-Raritan	20.6211	14.9288	5.6933	▼1
+14	Ridgewood	20.5440	14.8677	5.6733	·
+15	Gill St. Bernard's	20.1544	14.8200	5.3344	·
+`;
+
+export const SAMPLE_GIRLS_LAX = `1	Kent Place	28.0466	18.0099	10.0377	▲1
+2	Oak Knoll	28.0322	18.3088	9.7244	▼1
+3	Westfield	27.8449	18.7377	9.1122	·
+4	Ridgewood	27.3055	18.2099	9.0966	▲1
+5	Morristown	27.1044	18.1222	8.9822	▲1
+6	Mendham	26.4866	18.5633	7.9233	▲2
+7	Chatham	25.9333	18.0433	7.8900	▼1
+8	Moorestown	25.8044	16.1455	9.6599	▲1
+9	Trinity Hall	25.6566	17.6711	7.9855	▼2
+10	Rumson-Fair Haven	25.2233	18.5400	6.6833	▲1
+11	Haddonfield	25.0522	18.4711	6.5811	▼1
+12	Pingry	24.6100	17.0833	7.5277	·
+13	Summit	23.6788	15.8399	7.8399	·
+14	Shawnee	23.0399	14.9999	8.0400	▲2
+15	Montclair Kimberley	22.7077	16.5655	6.1422	▼1
 `;
 
 export const SAMPLE_RANKING_TABLE = `1	St. Benedict's	9.36	6.75	2.61	·	13	2024-11-01

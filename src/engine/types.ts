@@ -40,6 +40,8 @@ export type ParsedTable = {
   headers: string[];
   rows: string[][];
   roles: TableColumnRole[];
+  hasHeader: boolean;
+  delimiter: string;
 };
 
 export type RankingStats = {
@@ -66,6 +68,7 @@ export type RankingRow = {
   extras: { label: string; value: string }[];
   stats: RankingStats;
   team: TeamRecord | null;
+  sourceIndex: number;
 };
 
 export type TokenValue = string;

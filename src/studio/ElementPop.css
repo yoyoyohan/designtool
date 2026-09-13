@@ -1,0 +1,186 @@
+.element-pop {
+  position: absolute;
+  z-index: 30;
+  width: 248px;
+  max-height: min(72vh, 560px);
+  overflow: auto;
+  padding: 12px 12px 14px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  box-shadow: 0 12px 32px rgba(28, 28, 31, 0.16);
+  cursor: default;
+  user-select: none;
+}
+
+.element-pop-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.element-pop-head h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ui-accent);
+}
+
+.element-pop-head button {
+  border: 0;
+  background: transparent;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.element-pop-hint {
+  margin: 0 0 12px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ui-muted);
+}
+
+.element-pop-label {
+  margin: 12px 0 6px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ui-muted);
+}
+
+.element-pop-scale {
+  display: grid;
+  gap: 6px;
+}
+
+.element-pop-scale-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  gap: 6px;
+}
+
+.element-pop-scale-row span {
+  font-size: 12px;
+  text-align: center;
+}
+
+.element-pop-scale-row button,
+.element-pop-btns button,
+.element-pop-replace {
+  border: 1px solid var(--ui-line-strong);
+  background: var(--ui-fill);
+  color: var(--ui-ink);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.element-pop-scale-row button {
+  height: 28px;
+}
+
+.element-pop-scale-row button:hover,
+.element-pop-btns button:hover,
+.element-pop-replace:hover {
+  border-color: var(--ui-accent);
+}
+
+.element-pop-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.element-pop-btns button {
+  padding: 7px 8px;
+}
+
+.element-pop-btns button.is-on {
+  background: var(--ui-ink);
+  border-color: var(--ui-ink);
+  color: #fff;
+}
+
+.element-pop-replace {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 10px;
+}
+
+.element-pop-colors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 10px;
+}
+
+.element-pop-color {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.element-pop-color span {
+  font-size: 11px;
+  color: var(--ui-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.element-pop-color input[type="color"] {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  flex: 0 0 28px;
+}
+
+.element-pop-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.element-pop-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-line-strong);
+  padding: 0;
+  cursor: pointer;
+}
+
+.element-pop-slider {
+  margin-bottom: 8px;
+}
+
+.element-pop-slider-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ui-muted);
+  margin-bottom: 2px;
+}
+
+.element-pop-slider input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--ui-accent);
+}

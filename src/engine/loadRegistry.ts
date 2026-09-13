@@ -121,7 +121,3 @@ export async function loadUploadedRegistry(fileList: FileList | File[]): Promise
     };
   });
 }
-
-export const TEAMS_CSV_TEMPLATE = `name,aliases,primary,secondary,logo
-Kearny,"Kardinals,KHS",#C8102E,#111111,kearny.png
-`;

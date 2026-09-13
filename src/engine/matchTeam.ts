@@ -20,15 +20,35 @@ function parseNumber(value: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function parseStat(value: string): number | null {
+  const cleaned = value.replace(/[+#,]/g, "").trim();
+  if (!cleaned || cleaned === "·" || cleaned === "•") return null;
+  const n = Number.parseFloat(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
+function compareStandings(a: RankingRow, b: RankingRow): number {
+  const keys: (keyof RankingRow["stats"])[] = ["pts", "rating", "gd", "gf", "w"];
+  for (const key of keys) {
+    const left = parseStat(a.stats[key]);
+    const right = parseStat(b.stats[key]);
+    if (left === null && right === null) continue;
+    const delta = (right ?? Number.NEGATIVE_INFINITY) - (left ?? Number.NEGATIVE_INFINITY);
+    if (delta !== 0) return delta;
+  }
+  return 0;
+}
+
 function parseMovement(value: string): number | null {
   const trimmed = value.trim();
   if (!trimmed || trimmed === "·" || trimmed === "•" || trimmed === "-" || trimmed === "–") {
     return 0;
   }
   const down = /[▼↓v]/i.test(trimmed);
-  const n = Number.parseFloat(trimmed.replace(/[^0-9.]/g, ""));
+  const n = Number.parseFloat(trimmed.replace(/[^0-9.+-]/g, ""));
   if (!Number.isFinite(n)) return null;
   if (n === 0) return 0;
+  if (n < 0) return n;
   return down ? -n : n;
 }
 
@@ -69,10 +89,13 @@ export function buildFuse(teams: TeamRecord[]): Fuse<TeamRecord> | null {
 
 export function decorateRows(table: ParsedTable, teams: TeamRecord[]): RankingRow[] {
   const fuse = buildFuse(teams);
-  return table.rows
-    .filter((row) => row.some((cell) => cell.trim()))
-    .map((row, index) => {
-      const rank = parseNumber(cellByRole(row, table.roles, "rank")) ?? index + 1;
+  const hasRankColumn = table.roles.includes("rank");
+  const rows = table.rows
+    .map((row, sourceIndex) => ({ row, sourceIndex }))
+    .filter(({ row }) => row.some((cell) => cell.trim()))
+    .map(({ row, sourceIndex }, index) => {
+      const explicitRank = parseNumber(cellByRole(row, table.roles, "rank"));
+      const rank = explicitRank ?? index + 1;
       const teamQuery = cellByRole(row, table.roles, "team") || row[1] || row[0] || "";
       const record = cellByRole(row, table.roles, "record");
       const prev = parseNumber(cellByRole(row, table.roles, "prev"));
@@ -117,6 +140,23 @@ export function decorateRows(table: ParsedTable, teams: TeamRecord[]): RankingRo
           date: cellByRole(row, table.roles, "date"),
         },
         team: matchTeam(teamQuery, teams, fuse),
+        sourceIndex,
       };
     });
+
+  if (hasRankColumn && rows.some((row) => Number.isFinite(row.rank))) {
+    return [...rows].sort((a, b) => a.rank - b.rank);
+  }
+
+  const canStandingsSort = rows.some(
+    (row) =>
+      parseStat(row.stats.pts) !== null ||
+      parseStat(row.stats.rating) !== null ||
+      parseStat(row.stats.w) !== null,
+  );
+  if (!canStandingsSort) return rows;
+
+  return [...rows]
+    .sort(compareStandings)
+    .map((row, index) => ({ ...row, rank: index + 1 }));
 }

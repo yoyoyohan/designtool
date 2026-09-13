@@ -1,0 +1,248 @@
+.post-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 18, 20, 0.55);
+  cursor: default;
+}
+
+.post-preview-panel {
+  width: min(420px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 18px 18px 22px;
+  border-radius: 16px;
+  background: var(--ui-panel);
+  box-shadow: 0 24px 64px rgba(16, 16, 18, 0.28);
+}
+
+.post-preview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.post-preview-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.post-preview-head p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ui-muted);
+}
+
+.post-preview-close {
+  border: 0;
+  background: transparent;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.post-preview-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.post-preview-tabs button {
+  flex: 1;
+  border: 1px solid var(--ui-line-strong);
+  background: var(--ui-fill);
+  color: var(--ui-ink);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.post-preview-tabs button.is-on {
+  background: var(--ui-ink);
+  border-color: var(--ui-ink);
+  color: #fff;
+}
+
+.ig-phone {
+  position: relative;
+  margin: 0 auto;
+  padding: 14px 10px 18px;
+  width: min(360px, 100%);
+  border-radius: 36px;
+  background: #111;
+  box-shadow: 0 0 0 2px #2a2a2e, 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.ig-notch {
+  width: 108px;
+  height: 18px;
+  margin: 0 auto 8px;
+  border-radius: 12px;
+  background: #000;
+}
+
+.ig-feed,
+.ig-story {
+  overflow: hidden;
+  border-radius: 22px;
+  background: #fff;
+  color: #111;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.ig-story {
+  background: #050505;
+  color: #fff;
+  padding-bottom: 10px;
+}
+
+.ig-feed-top {
+  padding: 10px 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 650;
+  border-bottom: 1px solid #eee;
+}
+
+.ig-post-user,
+.ig-story-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.ig-avatar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ig-post-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.ig-post-meta em {
+  font-style: normal;
+  color: #8a8a8a;
+  font-size: 11px;
+}
+
+.ig-more {
+  margin-left: auto;
+  letter-spacing: 1px;
+}
+
+.ig-art {
+  position: relative;
+  overflow: hidden;
+  background: #111;
+}
+
+.ig-art-scale {
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.ig-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 4px;
+}
+
+.ig-actions svg,
+.ig-story-reply svg {
+  width: 22px;
+  height: 22px;
+}
+
+.ig-actions-end {
+  margin-left: auto;
+  display: flex;
+}
+
+.ig-likes,
+.ig-caption,
+.ig-muted {
+  margin: 0;
+  padding: 0 12px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ig-likes {
+  font-weight: 650;
+  padding-top: 2px;
+}
+
+.ig-caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.ig-muted {
+  color: #8a8a8a;
+  padding-bottom: 12px;
+}
+
+.ig-story-bar {
+  display: flex;
+  gap: 4px;
+  padding: 10px 10px 4px;
+}
+
+.ig-story-bar span {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.ig-story-bar span.is-on {
+  background: #fff;
+}
+
+.ig-story .ig-art {
+  margin: 0 8px;
+  border-radius: 8px;
+}
+
+.ig-story-reply {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 10px 4px;
+  color: #fff;
+}
+
+.ig-story-reply span {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}

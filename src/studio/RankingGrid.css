@@ -1,0 +1,144 @@
+.rank-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rank-grid-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.rank-grid-paste {
+  width: 100%;
+  min-height: 168px;
+  height: 22vh;
+  max-height: 240px;
+  resize: vertical;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-fill);
+  color: var(--ui-ink);
+  padding: 10px 12px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.rank-grid-paste:focus {
+  outline: none;
+  border-color: var(--ui-accent-fill);
+}
+
+.rank-grid-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ui-muted);
+}
+
+.quiet-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.rank-grid-setup {
+  padding: 10px;
+  border: 1px solid var(--ui-accent-fill);
+  border-radius: 8px;
+  background: var(--ui-fill);
+}
+
+.rank-grid-setup p {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--ui-ink);
+}
+
+.rank-grid-dims {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rank-grid-dims label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ui-muted);
+}
+
+.rank-grid-dims input {
+  width: 100%;
+  border: 1px solid var(--ui-line);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.rank-grid-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ui-ink);
+}
+
+.ghost-btn.is-solid {
+  background: var(--ui-ink);
+  border-color: var(--ui-ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.rank-grid-scroll {
+  overflow: auto;
+  max-height: 280px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+}
+
+.rank-grid table {
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+.rank-grid td {
+  padding: 0;
+  border: 1px solid var(--ui-line);
+}
+
+.rank-grid tr.is-head td {
+  background: var(--ui-fill);
+}
+
+.rank-grid tr.is-head input {
+  font-weight: 600;
+  color: var(--ui-accent);
+}
+
+.rank-grid input {
+  width: 100%;
+  min-width: 52px;
+  border: 0;
+  background: transparent;
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: 11px;
+  padding: 6px 7px;
+}
+
+.rank-grid input:focus {
+  outline: 1px solid var(--ui-accent-fill);
+  outline-offset: -1px;
+  background: var(--ui-fill);
+}
