@@ -2,7 +2,7 @@ import type { ParsedTable, TableColumnRole } from "./types";
 
 const ROLE_PATTERNS: { role: TableColumnRole; pattern: RegExp }[] = [
   { role: "rank", pattern: /^(rank|#|rk|pos|position|r)$/i },
-  { role: "team", pattern: /^(team|school|club|name|side)$/i },
+  { role: "team", pattern: /^(team|teamname|school|club|name|side)$/i },
   { role: "record", pattern: /^(record|rec|w-l|wl|w_l)$/i },
   { role: "prev", pattern: /^(prev|previous|last|old|lw|last\s*week)$/i },
   { role: "movement", pattern: /^(move|movement|chg|change|delta|mover)$/i },
@@ -59,24 +59,20 @@ function inferHeaderlessRoles(width: number, sample: string[]): TableColumnRole[
     roles[pair.rank] = "rank";
     roles[pair.team] = "team";
 
-    const after = sample.slice(pair.team + 1);
-    const ratingAt = after.findIndex((cell) => isDecimalCell(cell));
-    if (ratingAt >= 0) roles[pair.team + 1 + ratingAt] = "rating";
-    const dateAt = after.findIndex((cell) => isDateCell(cell));
-    if (dateAt >= 0) roles[pair.team + 1 + dateAt] = "date";
+    assignTrailingMetrics(roles, sample, pair.team + 1);
 
     const before = sample.slice(0, pair.rank);
     const leading = before
       .map((cell, index) => ({ index, value: parseDecimal(cell) }))
       .filter((item): item is { index: number; value: number } => item.value !== null);
-    const rating = ratingAt >= 0 ? parseDecimal(after[ratingAt] ?? "") : null;
+    const rating = parseDecimal(sample[roles.indexOf("rating")] ?? "");
 
     if (leading.length >= 2) {
       const [first, second] = leading;
       const summed =
         rating !== null && Math.abs(first.value + second.value - rating) < 0.05;
       roles[first.index] = "off";
-      roles[second.index] = summed ? "movement" : "def";
+      roles[second.index] = summed || Math.abs(second.value) < 10 ? "movement" : "def";
     } else if (leading.length === 1) {
       roles[leading[0].index] = Math.abs(leading[0].value) < 10 ? "movement" : "off";
     }
@@ -94,8 +90,28 @@ function inferHeaderlessRoles(width: number, sample: string[]): TableColumnRole[
 
   if (width >= 1 && isTeamCell(sample[0] ?? "")) {
     roles[0] = "team";
+    assignTrailingMetrics(roles, sample, 1);
   }
   return roles;
+}
+
+function assignTrailingMetrics(roles: TableColumnRole[], sample: string[], start: number): void {
+  const order: TableColumnRole[] = ["rating", "off", "def"];
+  let next = 0;
+  for (let i = start; i < sample.length && next < order.length; i += 1) {
+    if (roles[i] !== "extra") continue;
+    const cell = sample[i] ?? "";
+    if (isDateCell(cell)) {
+      roles[i] = "date";
+      break;
+    }
+    if (isDecimalCell(cell)) {
+      roles[i] = order[next];
+      next += 1;
+      continue;
+    }
+    if (cell.trim()) break;
+  }
 }
 
 function labelsForRoles(roles: TableColumnRole[]): string[] {
@@ -126,12 +142,47 @@ function detectDelimiter(text: string): string {
   const first = text.split(/\r?\n/).find((line) => line.trim()) ?? "";
   const tabs = (first.match(/\t/g) ?? []).length;
   const commas = (first.match(/,/g) ?? []).length;
-  return tabs >= commas ? "\t" : ",";
+  if (tabs > 0) return "\t";
+  if (commas > tabs) return ",";
+  return "\t";
+}
+
+function isTeamToken(value: string): boolean {
+  return /[a-zA-Z]/.test(value) && !isDecimalCell(value) && !isDateCell(value);
+}
+
+/** Turn a space-separated ranking line into cells so "1 Old Bridge 19.45" still parses. */
+function reconstructSpaceLine(line: string): string[] | null {
+  const tokens = line.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length < 2) return null;
+
+  let rankAt = -1;
+  for (let i = 0; i < tokens.length; i += 1) {
+    if (isRankCell(tokens[i] ?? "") && i + 1 < tokens.length && isTeamToken(tokens[i + 1] ?? "")) {
+      rankAt = i;
+      break;
+    }
+  }
+
+  if (rankAt >= 0) {
+    let teamEnd = rankAt + 1;
+    while (teamEnd < tokens.length && isTeamToken(tokens[teamEnd] ?? "")) teamEnd += 1;
+    const team = tokens.slice(rankAt + 1, teamEnd).join(" ");
+    return [...tokens.slice(0, rankAt), tokens[rankAt], team, ...tokens.slice(teamEnd)];
+  }
+
+  if (!isTeamToken(tokens[0] ?? "")) return null;
+  let teamEnd = 1;
+  while (teamEnd < tokens.length && isTeamToken(tokens[teamEnd] ?? "")) teamEnd += 1;
+  if (teamEnd === tokens.length) return [tokens.join(" ")];
+  return [tokens.slice(0, teamEnd).join(" "), ...tokens.slice(teamEnd)];
 }
 
 function splitLine(line: string, delimiter: string): string[] {
   if (delimiter === "\t") {
-    return line.split("\t").map((cell) => cell.trim());
+    if (line.includes("\t")) return line.split("\t").map((cell) => cell.trim());
+    if (/\s{2,}/.test(line)) return line.trim().split(/\s{2,}/).map((cell) => cell.trim());
+    return reconstructSpaceLine(line) ?? line.split("\t").map((cell) => cell.trim());
   }
   const cells: string[] = [];
   let current = "";

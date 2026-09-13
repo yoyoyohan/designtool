@@ -109,6 +109,8 @@ function fitListToCanvas(
   tokens: Record<string, string>,
   extraChrome: number,
   omitColHeads = false,
+  maxRowHeight = 140,
+  tightChrome = false,
 ): Record<string, string> {
   if (listCount <= 0) return {};
 
@@ -125,10 +127,10 @@ function fitListToCanvas(
   let pad = parsePx(tokens["--poster-pad"], 48);
   let header = headerPref;
   let footer = parsePx(tokens["--footer-height"], 72);
-  const colHead = omitColHeads ? 0 : parsePx(tokens["--col-head-height"], 38) + 18;
+  const colHead = omitColHeads ? 0 : parsePx(tokens["--col-head-height"], 38) + (tightChrome ? 6 : 18);
   const gaps = Math.max(0, listCount - 1);
 
-  const chrome = () => pad * 2 + header + colHead + footer + 14 + extraChrome;
+  const chrome = () => pad * 2 + header + colHead + footer + (tightChrome ? 0 : 14) + extraChrome;
   let avail = canvasHeight - chrome();
 
   if (avail < listCount * 20) {
@@ -146,10 +148,10 @@ function fitListToCanvas(
   if (listCount > 0 && avail > 0) {
     gap = gaps > 0 ? clamp(Math.round(Math.min(preferredGap, avail * 0.1 / gaps)), 0, preferredGap) : 0;
     rowH = Math.floor((avail - gap * gaps) / listCount);
-    rowH = clamp(rowH, 16, 140);
+    rowH = clamp(rowH, 16, maxRowHeight);
     if (rowH * listCount + gap * gaps > avail && gaps > 0) {
       gap = clamp(Math.floor((avail - 16 * listCount) / gaps), 0, preferredGap);
-      rowH = clamp(Math.floor((avail - gap * gaps) / listCount), 16, 140);
+      rowH = clamp(Math.floor((avail - gap * gaps) / listCount), 16, maxRowHeight);
     }
   }
 
@@ -173,6 +175,23 @@ function fitListToCanvas(
     "--title-size": `${titleSize}px`,
     "--col-head-size": `${clamp(Math.round(Math.min(colSizePref, Math.max(9, rowH * 0.22))), 8, colSizePref)}px`,
   };
+}
+
+function wrapBoardName(name: string): string {
+  const text = name.trim();
+  const hyphen = text.indexOf("-");
+  if (hyphen > 0) {
+    const left = text.slice(0, hyphen);
+    const right = text.slice(hyphen + 1);
+    if (left.includes(" ") || right.includes(" ") || text.length > 20) {
+      return `${left}-\n${right}`;
+    }
+  }
+  if (text.length > 18) {
+    const space = text.lastIndexOf(" ");
+    if (space > 6) return `${text.slice(0, space)}\n${text.slice(space + 1)}`;
+  }
+  return text;
 }
 
 function trendLabel(movement: number | null, unsigned = false): string {
@@ -330,16 +349,55 @@ function formatMove(value: number | null): string {
 }
 
 const STAT_KEYS = ["w", "l", "d", "pts", "gf", "ga", "gd"] as const;
+const RATING_KEYS = ["rating", "off", "def"] as const;
+
+type VisibleMetrics = {
+  rating: boolean;
+  off: boolean;
+  def: boolean;
+  games: boolean;
+  w: boolean;
+  l: boolean;
+  d: boolean;
+  pts: boolean;
+  gf: boolean;
+  ga: boolean;
+  gd: boolean;
+};
+
+function filledStat(value: string | undefined): boolean {
+  const v = (value ?? "").trim();
+  return v !== "" && v !== "·" && v !== "•" && v !== "-" && v !== "–";
+}
+
+function visibleMetricsFrom(rows: RankingRow[]): VisibleMetrics {
+  const any = (key: keyof RankingRow["stats"]) => rows.some((row) => filledStat(row.stats[key]));
+  return {
+    rating: any("rating"),
+    off: any("off"),
+    def: any("def"),
+    games: any("games"),
+    w: any("w") || rows.some((row) => filledStat(row.record)),
+    l: any("l"),
+    d: any("d"),
+    pts: any("pts"),
+    gf: any("gf"),
+    ga: any("ga"),
+    gd: any("gd"),
+  };
+}
 
 function RowMetrics({
   row,
   mode,
+  visible,
   rowIndex,
   live,
   onRowEdit,
 }: {
   row: RankingRow;
   mode: "stats" | "ratings" | "simple";
+  visible: VisibleMetrics;
   rowIndex: number;
   live?: boolean;
   onRowEdit?: (rowIndex: number, field: TableColumnRole, value: string) => void;
@@ -354,26 +412,30 @@ function RowMetrics({
   const wins = row.stats.w || row.record || "";
   const winField: TableColumnRole = row.stats.w ? "w" : row.record ? "record" : "w";
   if (mode === "stats") {
+    if (!visible.w && !visible.l && !visible.d && !visible.pts && !visible.gf && !visible.ga && !visible.gd) {
+      return null;
+    }
     return (
       <span className="poster-metrics">
-        <LiveCell className="poster-stat" value={wins} field={winField} {...cell} />
-        <LiveCell className="poster-stat" value={row.stats.l} field="l" {...cell} />
-        <LiveCell className="poster-stat" value={row.stats.d} field="d" {...cell} />
-        <LiveCell className="poster-pts" value={row.stats.pts} field="pts" {...cell} />
-        <LiveCell className="poster-stat" value={row.stats.gf} field="gf" {...cell} />
-        <LiveCell className="poster-stat" value={row.stats.ga} field="ga" {...cell} />
-        <LiveCell className="poster-stat" value={row.stats.gd} field="gd" {...cell} />
+        {visible.w ? <LiveCell className="poster-stat" value={wins} field={winField} {...cell} /> : null}
+        {visible.l ? <LiveCell className="poster-stat" value={row.stats.l} field="l" {...cell} /> : null}
+        {visible.d ? <LiveCell className="poster-stat" value={row.stats.d} field="d" {...cell} /> : null}
+        {visible.pts ? <LiveCell className="poster-pts" value={row.stats.pts} field="pts" {...cell} /> : null}
+        {visible.gf ? <LiveCell className="poster-stat" value={row.stats.gf} field="gf" {...cell} /> : null}
+        {visible.ga ? <LiveCell className="poster-stat" value={row.stats.ga} field="ga" {...cell} /> : null}
+        {visible.gd ? <LiveCell className="poster-stat" value={row.stats.gd} field="gd" {...cell} /> : null}
       </span>
     );
   }
   if (mode === "ratings") {
+    if (!visible.rating && !visible.off && !visible.def) return null;
     return (
       <span className="poster-metrics">
-        <LiveCell className="poster-pts" value={row.stats.rating} field="rating" {...cell} />
-        <LiveCell className="poster-stat" value={row.stats.off} field="off" {...cell} />
-        <LiveCell className="poster-stat" value={row.stats.def} field="def" {...cell} />
+        {visible.rating ? <LiveCell className="poster-pts" value={row.stats.rating} field="rating" {...cell} /> : null}
+        {visible.off ? <LiveCell className="poster-stat" value={row.stats.off} field="off" {...cell} /> : null}
+        {visible.def ? <LiveCell className="poster-stat" value={row.stats.def} field="def" {...cell} /> : null}
         <span className={`poster-stat poster-move is-move ${moveClass}`}>{formatMove(row.movement)}</span>
-        <LiveCell className="poster-stat is-games" value={row.stats.games} field="games" {...cell} />
+        {visible.games ? <LiveCell className="poster-stat is-games" value={row.stats.games} field="games" {...cell} /> : null}
       </span>
     );
   }
@@ -383,26 +445,31 @@ function RowMetrics({
 function PosterRow({
   row,
   mode,
+  visible,
   index,
   className,
   compactName = false,
   unsignedTrend = false,
+  naturalNames = false,
   live,
   onRowEdit,
   onLogoPick,
 }: {
   row: RankingRow;
   mode: "stats" | "ratings" | "simple";
+  visible: VisibleMetrics;
   index: number;
   className?: string;
   compactName?: boolean;
   unsignedTrend?: boolean;
+  naturalNames?: boolean;
   live?: boolean;
   onRowEdit?: (rowIndex: number, field: TableColumnRole, value: string) => void;
   onLogoPick?: (teamId: string | null, teamQuery: string) => void;
 }) {
   const source = row.team?.name ?? row.teamQuery;
-  const label = (compactName ? source.replace(/\s*\(.*?\)\s*/g, " ").trim() : source).toUpperCase();
+  const cleaned = compactName ? source.replace(/\s*\(.*?\)\s*/g, " ").trim() : source;
+  const label = naturalNames ? wrapBoardName(cleaned) : cleaned.toUpperCase();
   const moveClass =
     row.movement && row.movement > 0 ? "is-up" : row.movement && row.movement < 0 ? "is-down" : "is-flat";
   const primary = row.team?.primary ?? "#3a3a40";
@@ -500,7 +567,7 @@ function PosterRow({
         />
         {!row.team ? <span className="poster-missing">no match</span> : null}
       </span>
-      <RowMetrics row={row} mode={mode} rowIndex={row.sourceIndex} live={live} onRowEdit={onRowEdit} />
+      <RowMetrics row={row} mode={mode} visible={visible} rowIndex={row.sourceIndex} live={live} onRowEdit={onRowEdit} />
     </li>
   );
 }
@@ -508,19 +575,21 @@ function PosterRow({
 function ColumnHeads({
   mode,
   variant,
+  visible,
 }: {
   mode: "stats" | "ratings" | "simple";
   variant: "full" | "power" | "split" | "board";
+  visible: VisibleMetrics;
 }) {
   if (mode !== "stats" && mode !== "ratings") return null;
-  const lead = mode === "stats" ? "PTS" : "RTG";
+  const lead = mode === "stats" ? "PTS" : visible.rating ? "RATING" : visible.off ? "OFF" : "RTG";
   if (variant === "power") {
     return (
       <div className="poster-cols is-lead" aria-hidden>
         <span className="col-trend" />
         <span className="col-rank">#</span>
         <span className="col-team">TEAM</span>
-        <span className="col-fill is-primary">{lead}</span>
+        <span className="col-fill is-primary">{mode === "stats" ? "PTS" : lead}</span>
       </div>
     );
   }
@@ -532,7 +601,7 @@ function ColumnHeads({
         <span className="col-mark" />
         <span className="col-team">TEAM</span>
         <span className="poster-metrics">
-          <span className="col-fill is-primary">{lead}</span>
+          <span className="col-fill is-primary">{mode === "stats" ? "PTS" : lead}</span>
         </span>
       </div>
     );
@@ -547,19 +616,19 @@ function ColumnHeads({
         <span className="poster-metrics">
           {mode === "stats" ? (
             <>
-              <span className="col-fill">W</span>
-              <span className="col-fill">L</span>
-              <span className="col-fill">D</span>
-              <span className="col-fill is-primary">{lead}</span>
-              <span className="col-fill">GF</span>
-              <span className="col-fill">GA</span>
-              <span className="col-fill">GD</span>
+              {visible.w ? <span className="col-fill">W</span> : null}
+              {visible.l ? <span className="col-fill">L</span> : null}
+              {visible.d ? <span className="col-fill">D</span> : null}
+              {visible.pts ? <span className="col-fill is-primary">PTS</span> : null}
+              {visible.gf ? <span className="col-fill">GF</span> : null}
+              {visible.ga ? <span className="col-fill">GA</span> : null}
+              {visible.gd ? <span className="col-fill">GD</span> : null}
             </>
           ) : (
             <>
-              <span className="col-fill is-primary">RATING</span>
-              <span className="col-fill">OFF</span>
-              <span className="col-fill">DEF</span>
+              {visible.rating ? <span className="col-fill is-primary">RATING</span> : null}
+              {visible.off ? <span className="col-fill">OFF</span> : null}
+              {visible.def ? <span className="col-fill">DEF</span> : null}
             </>
           )}
         </span>
@@ -575,21 +644,21 @@ function ColumnHeads({
       <span className="poster-metrics">
         {mode === "stats" ? (
           <>
-            <span className="col-fill">W</span>
-            <span className="col-fill">L</span>
-            <span className="col-fill">D</span>
-            <span className="col-fill is-primary">{lead}</span>
-            <span className="col-fill">GF</span>
-            <span className="col-fill">GA</span>
-            <span className="col-fill">GD</span>
+            {visible.w ? <span className="col-fill">W</span> : null}
+            {visible.l ? <span className="col-fill">L</span> : null}
+            {visible.d ? <span className="col-fill">D</span> : null}
+            {visible.pts ? <span className="col-fill is-primary">PTS</span> : null}
+            {visible.gf ? <span className="col-fill">GF</span> : null}
+            {visible.ga ? <span className="col-fill">GA</span> : null}
+            {visible.gd ? <span className="col-fill">GD</span> : null}
           </>
         ) : (
           <>
-            <span className="col-fill is-primary">{lead}</span>
-            <span className="col-fill">OFF</span>
-            <span className="col-fill">DEF</span>
+            {visible.rating ? <span className="col-fill is-primary">RATING</span> : null}
+            {visible.off ? <span className="col-fill">OFF</span> : null}
+            {visible.def ? <span className="col-fill">DEF</span> : null}
             <span className="col-fill is-move">+/-</span>
-            <span className="col-fill">GP</span>
+            {visible.games ? <span className="col-fill">GP</span> : null}
           </>
         )}
       </span>
@@ -649,13 +718,44 @@ export function RankingPoster({
   const headVariant =
     templateId === "power" ? "power" : templateId === "split" ? "split" : templateId === "board" ? "board" : "full";
 
-  const showStats = rows.some((row) => STAT_KEYS.some((key) => row.stats[key]));
-  const showRatings = !showStats && rows.some((row) => row.stats.rating);
+  const visible = visibleMetricsFrom(rows);
+  const showStats = STAT_KEYS.some((key) => visible[key]);
+  const showRatings = !showStats && RATING_KEYS.some((key) => visible[key]);
   const mode = showStats ? "stats" : showRatings ? "ratings" : "simple";
   const showHeads = mode !== "simple" && templateId !== "power";
+  const metricCols =
+    mode === "stats"
+      ? [
+          visible.w ? "var(--stat-col-width)" : "",
+          visible.l ? "var(--stat-col-width)" : "",
+          visible.d ? "var(--stat-col-width)" : "",
+          visible.pts ? "var(--pts-box)" : "",
+          visible.gf ? "var(--stat-col-width)" : "",
+          visible.ga ? "var(--stat-col-width)" : "",
+          visible.gd ? "var(--stat-col-width)" : "",
+        ].filter(Boolean)
+      : [
+          visible.rating ? "var(--pts-box)" : "",
+          visible.off ? "var(--stat-col-width)" : "",
+          visible.def ? "var(--stat-col-width)" : "",
+        ].filter(Boolean);
+  if (metricCols.length) style["--metrics"] = metricCols.join(" ");
 
   if (listRows.length > 0) {
-    Object.assign(style, fitListToCanvas(height, listRows.length, tokens, 0, !showHeads));
+    const metaChrome = templateId === "movers" ? 22 : 0;
+    const preferredRow = parsePx(tokens["--row-height"], 92);
+    Object.assign(
+      style,
+      fitListToCanvas(
+        height,
+        listRows.length,
+        tokens,
+        metaChrome,
+        !showHeads,
+        templateId === "board" ? preferredRow : 140,
+        templateId === "board",
+      ),
+    );
   }
 
   // Total diagonal travel across the poster, so the slope holds at any row count.
@@ -756,7 +856,9 @@ export function RankingPoster({
             ) : null}
           </div>
         </header>
-        {listRows.length > 0 && showHeads ? <ColumnHeads mode={mode} variant={headVariant} /> : null}
+        {listRows.length > 0 && showHeads ? (
+          <ColumnHeads mode={mode} variant={headVariant} visible={visible} />
+        ) : null}
         {listRows.length > 0 ? (
           <ol className="poster-list">
             {listRows.map((row, i) => (
@@ -766,8 +868,10 @@ export function RankingPoster({
                 mode={mode}
                 index={i}
                 className={row.rank === highlight ? "is-hot" : undefined}
+                visible={visible}
                 compactName={compactList}
                 unsignedTrend={templateId === "board"}
+                naturalNames={templateId === "board"}
                 live={live}
                 onRowEdit={onRowEdit}
                 onLogoPick={onLogoPick}

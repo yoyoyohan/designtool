@@ -413,7 +413,7 @@ export default function App() {
 
   function applyStateSample(kind: "boys" | "girls") {
     remember();
-    const accent = kind === "boys" ? "#b7d4f4" : "#e8d4a8";
+    const accent = kind === "boys" ? "#b4caef" : "#e6d09a";
     if (templateId !== "board") setTemplateId("board");
     setTokens({
       ...tokensForTemplate("board"),

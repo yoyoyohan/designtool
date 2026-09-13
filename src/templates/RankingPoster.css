@@ -701,9 +701,9 @@
   --grid: var(--trend-width) var(--rank-width) var(--logo-size) minmax(0, 1fr);
 }
 
-/* Trend already carries movement. Rating posters only show RATING / OFF / DEF. */
+/* Rating posters show only the stat columns that exist in the paste. */
 .tmpl-board.is-ratings {
-  --metrics: var(--pts-box) var(--stat-col-width) var(--stat-col-width);
+  --metrics: var(--pts-box);
 }
 
 .tmpl-board .poster-stat.is-move,
@@ -719,8 +719,12 @@
 }
 
 .tmpl-board .poster-meta {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
-  padding: 0 2px 4px;
+  padding: 0;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--poster-fg);
@@ -742,29 +746,32 @@
   color: var(--poster-accent);
   -webkit-text-stroke: var(--outline-width) var(--title-outline);
   paint-order: stroke fill;
-  text-shadow: none;
-}
-
-.tmpl-board .poster-eyebrow {
-  margin-bottom: 0;
-  -webkit-text-stroke-width: calc(var(--outline-width) * 0.55);
-}
-
-.tmpl-board .poster-title {
-  line-height: 0.9;
   text-shadow:
+    calc(var(--outline-width) * -0.85) calc(var(--outline-width) * -0.85) 0 var(--title-outline),
+    var(--outline-width) calc(var(--outline-width) * -0.85) 0 var(--title-outline),
+    calc(var(--outline-width) * -0.85) var(--outline-width) 0 var(--title-outline),
+    var(--outline-width) var(--outline-width) 0 var(--title-outline),
     calc(var(--outline-width) * -1) 0 0 var(--title-outline),
     var(--outline-width) 0 0 var(--title-outline),
     0 calc(var(--outline-width) * -1) 0 var(--title-outline),
     0 var(--outline-width) 0 var(--title-outline);
 }
 
+.tmpl-board .poster-eyebrow {
+  margin-bottom: 2px;
+  -webkit-text-stroke-width: calc(var(--outline-width) * 0.62);
+}
+
+.tmpl-board .poster-title {
+  line-height: 0.86;
+}
+
 .tmpl-board .poster-cols {
-  margin: 2px 0 4px;
+  margin: 0 0 2px;
   font-family: var(--font-display);
-  font-size: calc(var(--col-head-size) + 6px);
+  font-size: var(--col-head-size);
   font-weight: 400;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   color: var(--poster-accent);
 }
 
@@ -783,13 +790,21 @@
 
 .tmpl-board .poster-cols .col-team,
 .tmpl-board .poster-cols .col-fill {
-  -webkit-text-stroke: calc(var(--outline-width) * 0.35) var(--title-outline);
+  -webkit-text-stroke: 2px var(--title-outline);
   paint-order: stroke fill;
-  text-shadow: none;
+  text-shadow:
+    -1.5px 0 0 var(--title-outline),
+    1.5px 0 0 var(--title-outline),
+    0 -1.5px 0 var(--title-outline),
+    0 1.5px 0 var(--title-outline);
 }
 
 .tmpl-board .poster-cols .poster-metrics {
   background: transparent;
+}
+
+.tmpl-board .poster-list {
+  flex: 0 0 auto;
 }
 
 .tmpl-board .poster-row {
@@ -809,43 +824,44 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
-  padding-right: 8px;
+  gap: 4px;
+  padding-right: 6px;
   background: transparent;
   color: var(--poster-fg);
   font-family: var(--font-display);
-  font-size: calc(var(--stat-size) + 2px);
+  font-size: calc(var(--stat-size) + 4px);
   box-shadow: none;
 }
 
 .tmpl-board .poster-trend::before {
-  content: "";
+  content: "↑";
   flex: 0 0 auto;
-  width: 0;
-  height: 0;
-  border-left: calc(var(--arrow-size) * 0.32) solid transparent;
-  border-right: calc(var(--arrow-size) * 0.32) solid transparent;
-}
-
-.tmpl-board .poster-trend.is-up::before {
-  border-bottom: calc(var(--arrow-size) * 0.5) solid var(--move-up);
+  width: auto;
+  height: auto;
+  border: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--arrow-size);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--move-up);
 }
 
 .tmpl-board .poster-trend.is-down::before {
-  border-top: calc(var(--arrow-size) * 0.5) solid var(--move-down);
+  content: "↓";
+  color: var(--move-down);
 }
 
 .tmpl-board .poster-trend.is-flat {
-  color: transparent;
   justify-content: center;
   padding-right: 0;
+  color: transparent;
 }
 
 .tmpl-board .poster-trend.is-flat::before {
-  border: 0;
-  width: 14px;
-  height: 3px;
-  background: var(--move-flat);
+  content: "–";
+  color: var(--move-flat);
+  font-size: calc(var(--arrow-size) * 1.2);
+  font-weight: 700;
 }
 
 .tmpl-board .poster-rank {
@@ -888,23 +904,26 @@
   background: var(--team-fill, var(--team-primary));
   color: var(--bar-ink);
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: 600;
   transform: none;
   padding: 0 var(--name-pad);
-  line-height: 0.95;
+  line-height: 1.02;
   white-space: normal;
+  text-transform: none;
   text-shadow: none;
-  word-spacing: 0.12em;
+  word-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .tmpl-board .poster-name > span {
   transform: none;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  display: block;
+  white-space: pre-line;
   overflow: hidden;
   font-family: var(--font-body);
-  word-spacing: 0.12em;
+  text-transform: none;
+  word-spacing: 0.04em;
+  line-height: 1.05;
 }
 
 .tmpl-board .poster-metrics {
