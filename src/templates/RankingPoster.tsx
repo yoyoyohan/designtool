@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import type { RankingRow, TableColumnRole } from "../engine/types";
 import { type TemplateId } from "./catalog";
 import { OrnamentGraphic, type OrnamentId } from "./ornaments";
+import { graphicBarFor } from "../theme/graphicBars";
 import "./RankingPoster.css";
 import "../theme/tokens.css";
 
@@ -87,7 +88,12 @@ function mixHex(hex: string, toward: string, amount: number): string {
 }
 
 /** Pick black or white ink, then push the bar fill until the name stays readable. */
-function barTone(color: string | undefined): { ink: string; soft: string; fill: string; lightBar: boolean } {
+function barTone(color: string | undefined): {
+  ink: string;
+  soft: string;
+  fill: string;
+  lightBar: boolean;
+} {
   const dark = { ink: "#101114", soft: "rgba(16, 17, 20, 0.78)" };
   const light = { ink: "#ffffff", soft: "rgba(255, 255, 255, 0.84)" };
   const hex = parseHex(color);
@@ -101,6 +107,42 @@ function barTone(color: string | undefined): { ink: string; soft: string; fill: 
     fillHex = mixHex(fillHex, toward, 0.18).slice(1);
   }
   return { ...tone, fill: `#${fillHex}`, lightBar: !useLightInk };
+}
+
+/*
+  Graphic skins (State, Movers) paint the team colour exactly as published, so no contrast
+  nudging on the bar itself. Three inks come off that one colour:
+  - name ink is the team's second colour, dropped when it disappears into the bar
+  - rank and movement digits sit on the white plate, so the colour is pushed dark enough to read
+  - the stat panel is the bar pulled toward neutral, which darkens pale bars and lifts dark ones
+*/
+function graphicTone(
+  primary: string | undefined,
+  secondary: string | undefined,
+  statTint: number,
+): { fill: string; ink: string; soft: string; plateInk: string; statFill: string; lightBar: boolean } {
+  const fill = parseHex(primary) ?? "2a2a32";
+  const lightBar = hexLuminance(fill) > 0.4;
+  const secondaryHex = parseHex(secondary);
+  const readable = secondaryHex && contrastRatio(secondaryHex, fill) >= 3;
+  const ink = readable ? `#${secondaryHex}` : lightBar ? "var(--bar-ink-on-light)" : "var(--bar-ink)";
+
+  return {
+    fill: `#${fill}`,
+    ink,
+    soft: lightBar ? "rgba(26, 39, 72, 0.8)" : "rgba(255, 255, 255, 0.8)",
+    // The graphic prints every rank and movement number in one ink, not the team colour.
+    plateInk: "var(--plate-ink)",
+    statFill: mixHex(fill, "808080", clamp(statTint / 100, 0, 0.7)),
+    lightBar,
+  };
+}
+
+function formatRating(value: string): string {
+  if (!/-?\d+\.\d{4,}/.test(value.trim())) return value;
+  const n = Number.parseFloat(value);
+  if (!Number.isFinite(n)) return value;
+  return (Math.trunc(n * 1000) / 1000).toFixed(3);
 }
 
 function fitListToCanvas(
@@ -127,7 +169,9 @@ function fitListToCanvas(
   let pad = parsePx(tokens["--poster-pad"], 48);
   let header = headerPref;
   let footer = parsePx(tokens["--footer-height"], 72);
-  const colHead = omitColHeads ? 0 : parsePx(tokens["--col-head-height"], 38) + (tightChrome ? 6 : 18);
+  // Graphic skins measure their column-head band exactly; the looser templates want breathing
+  // room above and below the labels.
+  const colHead = omitColHeads ? 0 : parsePx(tokens["--col-head-height"], 38) + (tightChrome ? 0 : 18);
   const gaps = Math.max(0, listCount - 1);
 
   const chrome = () => pad * 2 + header + colHead + footer + (tightChrome ? 0 : 14) + extraChrome;
@@ -155,16 +199,20 @@ function fitListToCanvas(
     }
   }
 
-  const nameSize = clamp(Math.round(Math.min(namePref, rowH * 0.44)), 9, namePref);
-  const rankSize = clamp(Math.round(Math.min(rankPref, rowH * 0.5)), 9, rankPref);
-  const statSize = clamp(Math.round(Math.min(statPref, rowH * 0.34)), 8, statPref);
+  // Graphic skins run type nearly as tall as the bar, so their ceilings are a different ratio.
+  const nameCap = tightChrome ? 0.62 : 0.44;
+  const rankCap = tightChrome ? 0.58 : 0.5;
+  const statCap = tightChrome ? 0.5 : 0.34;
+  const nameSize = clamp(Math.round(Math.min(namePref, rowH * nameCap)), 9, namePref);
+  const rankSize = clamp(Math.round(Math.min(rankPref, rowH * rankCap)), 9, rankPref);
+  const statSize = clamp(Math.round(Math.min(statPref, rowH * statCap)), 8, statPref);
   const titleSize =
     header < headerPref ? clamp(Math.round(titlePref * (header / headerPref)), 28, titlePref) : titlePref;
 
-  return {
+  const colHeadCap = tightChrome ? 0.55 : 0.22;
+  const fitted: Record<string, string> = {
     "--row-height": `${rowH}px`,
     "--row-gap": `${gap}px`,
-    "--logo-size": `${rowH}px`,
     "--mark-size": `${Math.max(8, Math.round((rowH * clamp(logoScale, 20, 100)) / 100))}px`,
     "--name-size": `${nameSize}px`,
     "--rank-size": `${rankSize}px`,
@@ -173,21 +221,29 @@ function fitListToCanvas(
     "--footer-height": `${Math.round(footer)}px`,
     "--poster-pad": `${Math.round(pad)}px`,
     "--title-size": `${titleSize}px`,
-    "--col-head-size": `${clamp(Math.round(Math.min(colSizePref, Math.max(9, rowH * 0.22))), 8, colSizePref)}px`,
+    "--col-head-size": `${clamp(Math.round(Math.min(colSizePref, Math.max(9, rowH * colHeadCap))), 8, colSizePref)}px`,
   };
+  // Graphic skins set the crest cell wider than the bar is tall, so squaring it off the row
+  // height would pull the team name out of its measured column.
+  if (!tightChrome) fitted["--logo-size"] = `${rowH}px`;
+  return fitted;
 }
 
+/*
+  The published graphics break a name onto two lines only when a hyphen joins two multi-word
+  halves ("Rumson-Fair Haven", "Scotch Plains-Fanwood"). A plain compound such as
+  "Bridgewater-Raritan" stays on one line, so length alone is the wrong test — the hyphen
+  break comes first and a space break is the last resort for names that cannot fit.
+*/
 function wrapBoardName(name: string): string {
   const text = name.trim();
   const hyphen = text.indexOf("-");
   if (hyphen > 0) {
     const left = text.slice(0, hyphen);
     const right = text.slice(hyphen + 1);
-    if (left.includes(" ") || right.includes(" ") || text.length > 20) {
-      return `${left}-\n${right}`;
-    }
+    if (left.includes(" ") || right.includes(" ")) return `${left}-\n${right}`;
   }
-  if (text.length > 18) {
+  if (text.length > 20) {
     const space = text.lastIndexOf(" ");
     if (space > 6) return `${text.slice(0, space)}\n${text.slice(space + 1)}`;
   }
@@ -431,9 +487,15 @@ function RowMetrics({
     if (!visible.rating && !visible.off && !visible.def) return null;
     return (
       <span className="poster-metrics">
-        {visible.rating ? <LiveCell className="poster-pts" value={row.stats.rating} field="rating" {...cell} /> : null}
-        {visible.off ? <LiveCell className="poster-stat" value={row.stats.off} field="off" {...cell} /> : null}
-        {visible.def ? <LiveCell className="poster-stat" value={row.stats.def} field="def" {...cell} /> : null}
+        {visible.rating ? (
+          <LiveCell className="poster-pts" value={row.stats.rating} display={formatRating(row.stats.rating)} field="rating" {...cell} />
+        ) : null}
+        {visible.off ? (
+          <LiveCell className="poster-stat" value={row.stats.off} display={formatRating(row.stats.off)} field="off" {...cell} />
+        ) : null}
+        {visible.def ? (
+          <LiveCell className="poster-stat" value={row.stats.def} display={formatRating(row.stats.def)} field="def" {...cell} />
+        ) : null}
         <span className={`poster-stat poster-move is-move ${moveClass}`}>{formatMove(row.movement)}</span>
         {visible.games ? <LiveCell className="poster-stat is-games" value={row.stats.games} field="games" {...cell} /> : null}
       </span>
@@ -450,7 +512,8 @@ function PosterRow({
   className,
   compactName = false,
   unsignedTrend = false,
-  naturalNames = false,
+  graphicSkin = false,
+  statTint = 0,
   live,
   onRowEdit,
   onLogoPick,
@@ -462,18 +525,30 @@ function PosterRow({
   className?: string;
   compactName?: boolean;
   unsignedTrend?: boolean;
-  naturalNames?: boolean;
+  graphicSkin?: boolean;
+  statTint?: number;
   live?: boolean;
   onRowEdit?: (rowIndex: number, field: TableColumnRole, value: string) => void;
   onLogoPick?: (teamId: string | null, teamQuery: string) => void;
 }) {
   const source = row.team?.name ?? row.teamQuery;
   const cleaned = compactName ? source.replace(/\s*\(.*?\)\s*/g, " ").trim() : source;
-  const label = naturalNames ? wrapBoardName(cleaned) : cleaned.toUpperCase();
+  const label = graphicSkin ? wrapBoardName(cleaned) : cleaned.toUpperCase();
+  const markLetter = cleaned.trim().charAt(0).toUpperCase();
   const moveClass =
     row.movement && row.movement > 0 ? "is-up" : row.movement && row.movement < 0 ? "is-down" : "is-flat";
-  const primary = row.team?.primary ?? "#3a3a40";
-  const tone = barTone(primary);
+  // Sampled bar colours come straight off the published art, so they outrank whatever the
+  // logo pack guessed for the same school.
+  const graphic = graphicBarFor(row.teamQuery, row.team?.name);
+  const primary = graphic?.primary ?? row.team?.primary ?? "#3a3a40";
+  const secondary = graphic?.secondary ?? row.team?.secondary ?? "#111111";
+  const tone = graphicSkin ? graphicTone(primary, secondary, statTint) : barTone(primary);
+  const graphicVars: Record<string, string> = graphicSkin
+    ? {
+        "--plate-team-ink": (tone as ReturnType<typeof graphicTone>).plateInk,
+        "--stat-fill": (tone as ReturnType<typeof graphicTone>).statFill,
+      }
+    : {};
   return (
     <li
       data-rank={row.rank}
@@ -487,11 +562,12 @@ function PosterRow({
       style={
         {
           "--team-primary": primary,
-          "--team-secondary": row.team?.secondary ?? "#111111",
+          "--team-secondary": secondary,
           "--team-fill": tone.fill,
           "--team-ink": tone.ink,
           "--team-ink-soft": tone.soft,
           "--row-i": String(index),
+          ...graphicVars,
         } as CSSProperties
       }
     >
@@ -522,7 +598,7 @@ function PosterRow({
         {row.team?.logoUrl ? (
           <img src={row.team.logoUrl} alt="" />
         ) : (
-          <span className="lettermark">{label.trim().charAt(0)}</span>
+          <span className="lettermark">{markLetter}</span>
         )}
       </span>
       <span
@@ -565,7 +641,7 @@ function PosterRow({
           live={live}
           onRowEdit={onRowEdit}
         />
-        {!row.team ? <span className="poster-missing">no match</span> : null}
+        {!row.team && !graphicSkin ? <span className="poster-missing">no match</span> : null}
       </span>
       <RowMetrics row={row} mode={mode} visible={visible} rowIndex={row.sourceIndex} live={live} onRowEdit={onRowEdit} />
     </li>
@@ -611,8 +687,8 @@ function ColumnHeads({
       <div className="poster-cols" aria-hidden>
         <span className="col-trend" />
         <span className="col-rank" />
-        <span />
-        <span className="col-team">{mode === "ratings" ? "TEAMNAME" : "TEAM"}</span>
+        <span className="col-mark" />
+        <span className="col-team">TEAM</span>
         <span className="poster-metrics">
           {mode === "stats" ? (
             <>
@@ -715,8 +791,18 @@ export function RankingPoster({
   const listRows = rows;
   const compactList = templateId === "power" || templateId === "split";
   const metaBar = templateId === "board" || templateId === "movers";
+  // State and Movers are the published Instagram graphics: exact team colours, title-case
+  // names, unsigned movement, and a stat panel tinted off the bar.
+  const graphicSkin = templateId === "board" || templateId === "movers";
+  const statTint = parsePx(tokens["--stat-tint"], 0);
   const headVariant =
-    templateId === "power" ? "power" : templateId === "split" ? "split" : templateId === "board" ? "board" : "full";
+    templateId === "power"
+      ? "power"
+      : templateId === "split"
+        ? "split"
+        : graphicSkin
+          ? "board"
+          : "full";
 
   const visible = visibleMetricsFrom(rows);
   const showStats = STAT_KEYS.some((key) => visible[key]);
@@ -742,7 +828,6 @@ export function RankingPoster({
   if (metricCols.length) style["--metrics"] = metricCols.join(" ");
 
   if (listRows.length > 0) {
-    const metaChrome = templateId === "movers" ? 22 : 0;
     const preferredRow = parsePx(tokens["--row-height"], 92);
     Object.assign(
       style,
@@ -750,10 +835,10 @@ export function RankingPoster({
         height,
         listRows.length,
         tokens,
-        metaChrome,
+        0,
         !showHeads,
-        templateId === "board" ? preferredRow : 140,
-        templateId === "board",
+        graphicSkin ? preferredRow : 140,
+        graphicSkin,
       ),
     );
   }
@@ -797,7 +882,7 @@ export function RankingPoster({
 
   return (
     <article
-      className={`poster is-${mode} tmpl-${templateId}${heroFront ? " is-hero-front" : " is-hero-behind"}${media.hero ? " has-hero" : ""}${heroH > 0 ? " has-hero-h" : ""}${hasMovement ? "" : " is-no-trend"}${live ? " is-live" : ""}${selected ? ` is-picked-${selected}` : ""}`}
+      className={`poster is-${mode} tmpl-${templateId}${graphicSkin ? " is-graphic" : ""}${heroFront ? " is-hero-front" : " is-hero-behind"}${media.hero ? " has-hero" : ""}${heroH > 0 ? " has-hero-h" : ""}${hasMovement ? "" : " is-no-trend"}${live ? " is-live" : ""}${selected ? ` is-picked-${selected}` : ""}`}
       id={artboardId}
       style={style}
     >
@@ -870,8 +955,9 @@ export function RankingPoster({
                 className={row.rank === highlight ? "is-hot" : undefined}
                 visible={visible}
                 compactName={compactList}
-                unsignedTrend={templateId === "board"}
-                naturalNames={templateId === "board"}
+                unsignedTrend={graphicSkin}
+                graphicSkin={graphicSkin}
+                statTint={statTint}
                 live={live}
                 onRowEdit={onRowEdit}
                 onLogoPick={onLogoPick}

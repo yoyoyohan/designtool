@@ -688,7 +688,7 @@
 }
 
 /* State — gray field, sticker headline, full-bleed team bars */
-.tmpl-board {
+.poster.is-graphic {
   --grid:
     var(--trend-width)
     var(--rank-width)
@@ -697,30 +697,31 @@
     auto;
 }
 
-.tmpl-board.is-simple {
+.poster.is-graphic.is-simple {
   --grid: var(--trend-width) var(--rank-width) var(--logo-size) minmax(0, 1fr);
 }
 
 /* Rating posters show only the stat columns that exist in the paste. */
-.tmpl-board.is-ratings {
+.poster.is-graphic.is-ratings {
   --metrics: var(--pts-box);
 }
 
-.tmpl-board .poster-stat.is-move,
-.tmpl-board .poster-stat.is-games,
-.tmpl-board .poster-cols .col-fill.is-move,
-.tmpl-board .poster-cols .col-fill.is-games {
+.poster.is-graphic .poster-stat.is-move,
+.poster.is-graphic .poster-stat.is-games,
+.poster.is-graphic .poster-cols .col-fill.is-move,
+.poster.is-graphic .poster-cols .col-fill.is-games {
   display: none;
 }
 
-.tmpl-board .poster-glitter,
-.tmpl-board .poster-glow {
+.poster.is-graphic .poster-glitter,
+.poster.is-graphic .poster-glow {
   display: none;
 }
 
-.tmpl-board .poster-meta {
+/* The credit line rides above the poster padding, tight to the top edge. */
+.poster.is-graphic .poster-meta {
   position: absolute;
-  top: 0;
+  top: var(--meta-y);
   left: 0;
   right: 0;
   display: flex;
@@ -730,445 +731,289 @@
   color: var(--poster-fg);
 }
 
-.tmpl-board .poster-header {
+.poster.is-graphic .poster-header {
   align-items: flex-end;
   padding-bottom: 0;
 }
 
-.tmpl-board .poster-header-copy {
+.poster.is-graphic .poster-header-copy {
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   text-align: center;
 }
 
-.tmpl-board .poster-eyebrow,
-.tmpl-board .poster-title {
+.poster.is-graphic .poster-eyebrow,
+.poster.is-graphic .poster-title {
   color: var(--poster-accent);
   -webkit-text-stroke: var(--outline-width) var(--title-outline);
   paint-order: stroke fill;
-  text-shadow:
-    calc(var(--outline-width) * -0.85) calc(var(--outline-width) * -0.85) 0 var(--title-outline),
-    var(--outline-width) calc(var(--outline-width) * -0.85) 0 var(--title-outline),
-    calc(var(--outline-width) * -0.85) var(--outline-width) 0 var(--title-outline),
-    var(--outline-width) var(--outline-width) 0 var(--title-outline),
-    calc(var(--outline-width) * -1) 0 0 var(--title-outline),
-    var(--outline-width) 0 0 var(--title-outline),
-    0 calc(var(--outline-width) * -1) 0 var(--title-outline),
-    0 var(--outline-width) 0 var(--title-outline);
+  text-shadow: 0 var(--title-shade-depth) 0 color-mix(in srgb, var(--title-shade) 30%, transparent);
 }
 
-.tmpl-board .poster-eyebrow {
-  margin-bottom: 2px;
-  -webkit-text-stroke-width: calc(var(--outline-width) * 0.62);
+.poster.is-graphic .poster-eyebrow {
+  margin-bottom: 0;
+  -webkit-text-stroke-width: var(--eyebrow-outline);
 }
 
-.tmpl-board .poster-title {
-  line-height: 0.86;
+.poster.is-graphic .poster-title {
+  line-height: 0.84;
 }
 
-.tmpl-board .poster-cols {
-  margin: 0 0 2px;
+/* The Top Offenses / Top Defenses cuts carry a tapered rule under the headline. */
+.poster.is-graphic .poster-header-copy::after {
+  content: "";
+  display: block;
+  width: var(--rule-width);
+  height: var(--rule-height);
+  margin: 6px auto 0;
+  border-radius: 50%;
+  background: var(--title-outline);
+}
+
+.poster.is-graphic .poster-cols {
+  margin: 0;
+  align-items: end;
   font-family: var(--font-display);
   font-size: var(--col-head-size);
   font-weight: 400;
-  letter-spacing: 0.01em;
-  color: var(--poster-accent);
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--col-head-fg);
 }
 
-.tmpl-board .poster-cols > span.col-trend {
+.poster.is-graphic .poster-cols > span.col-trend {
   display: block;
 }
 
-.tmpl-board .poster-cols .col-rank {
+.poster.is-graphic .poster-cols .col-rank,
+.poster.is-graphic .poster-cols .col-mark {
   visibility: hidden;
 }
 
-.tmpl-board .poster-cols .col-team {
+/* TEAM sits over the crest and the name together, the way the published graphic centres it. */
+.poster.is-graphic .poster-cols .col-team {
   visibility: visible;
+  grid-column: 3 / 5;
+  justify-self: stretch;
+  place-items: end center;
   padding-left: 0;
 }
 
-.tmpl-board .poster-cols .col-team,
-.tmpl-board .poster-cols .col-fill {
-  -webkit-text-stroke: 2px var(--title-outline);
+.poster.is-graphic .poster-cols .col-team,
+.poster.is-graphic .poster-cols .col-fill {
+  -webkit-text-stroke: var(--col-head-outline) var(--title-outline);
   paint-order: stroke fill;
-  text-shadow:
-    -1.5px 0 0 var(--title-outline),
-    1.5px 0 0 var(--title-outline),
-    0 -1.5px 0 var(--title-outline),
-    0 1.5px 0 var(--title-outline);
+  text-shadow: none;
 }
 
-.tmpl-board .poster-cols .poster-metrics {
+.poster.is-graphic .poster-cols .poster-metrics {
   background: transparent;
+  align-items: end;
 }
 
-.tmpl-board .poster-list {
+.poster.is-graphic .poster-cols .col-team,
+.poster.is-graphic .poster-cols .col-fill {
+  align-self: end;
+}
+
+.poster.is-graphic .poster-list {
   flex: 0 0 auto;
 }
 
-.tmpl-board .poster-row {
+.poster.is-graphic .poster-row {
   overflow: hidden;
   border-radius: 0;
 }
 
-.tmpl-board .poster-row.is-unmatched .poster-name {
+.poster.is-graphic .poster-row.is-unmatched .poster-name {
   outline: none;
 }
 
-.tmpl-board .poster-row::after {
+.poster.is-graphic .poster-row::after {
   display: none;
 }
 
-.tmpl-board .poster-trend {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  padding-right: 6px;
-  background: transparent;
-  color: var(--poster-fg);
-  font-family: var(--font-display);
-  font-size: calc(var(--stat-size) + 4px);
+/*
+  Movement and rank share one white plate. --seg-gap splits it into the separate boxes the
+  dark skin uses; at 0 the two cells fuse into the single plate of the grey skin.
+*/
+.poster.is-graphic .poster-trend,
+.poster.is-graphic .poster-rank {
+  background: var(--plate-bg);
+  margin: var(--plate-inset) 0;
+  color: var(--plate-team-ink, var(--plate-ink));
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-shadow: none;
   box-shadow: none;
 }
 
-.tmpl-board .poster-trend::before {
-  content: "↑";
+.poster.is-graphic .poster-trend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--trend-gap);
+  margin-right: var(--seg-gap);
+  font-size: var(--stat-size);
+}
+
+.poster.is-graphic .poster-trend::before {
+  content: "";
   flex: 0 0 auto;
-  width: auto;
-  height: auto;
+  width: calc(var(--arrow-size) * 0.72);
+  height: var(--arrow-size);
   border: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: var(--arrow-size);
-  font-weight: 700;
-  line-height: 1;
+  background: var(--move-up);
+  clip-path: polygon(50% 0, 100% 44%, 72% 44%, 72% 100%, 28% 100%, 28% 44%, 0 44%);
+}
+
+.poster.is-graphic .poster-trend.is-up {
   color: var(--move-up);
 }
 
-.tmpl-board .poster-trend.is-down::before {
-  content: "↓";
+.poster.is-graphic .poster-trend.is-down {
   color: var(--move-down);
 }
 
-.tmpl-board .poster-trend.is-flat {
-  justify-content: center;
-  padding-right: 0;
+.poster.is-graphic .poster-trend.is-down::before {
+  background: var(--move-down);
+  transform: scaleY(-1);
+}
+
+.poster.is-graphic .poster-trend.is-flat {
   color: transparent;
+  gap: 0;
 }
 
-.tmpl-board .poster-trend.is-flat::before {
-  content: "–";
-  color: var(--move-flat);
-  font-size: calc(var(--arrow-size) * 1.2);
-  font-weight: 700;
+.poster.is-graphic .poster-trend.is-flat::before {
+  width: calc(var(--arrow-size) * 0.62);
+  height: max(3px, calc(var(--arrow-size) * 0.14));
+  clip-path: none;
+  background: var(--move-flat);
 }
 
-.tmpl-board .poster-rank {
-  background: var(--team-fill, var(--team-primary));
-  color: var(--bar-ink);
-  font-family: var(--font-body);
-  font-weight: 700;
-  text-shadow: none;
-  letter-spacing: 0;
+.poster.is-graphic .poster-rank {
+  margin-right: var(--seg-gap);
+  font-size: var(--rank-size);
 }
 
-.tmpl-board .poster-mark {
+/* The crest rides straight on the team colour — no plate, no circle mask. */
+.poster.is-graphic .poster-mark {
   align-self: stretch;
   justify-self: stretch;
   width: auto;
-  height: auto;
+  /* A definite height so the crest's percentage sizing has something to resolve against. */
+  height: var(--row-height);
   background: var(--team-fill, var(--team-primary));
   box-shadow: none;
   overflow: hidden;
 }
 
-.tmpl-board .poster-mark img,
-.tmpl-board .poster-mark .lettermark {
-  width: var(--mark-size);
-  height: var(--mark-size);
-  border-radius: 50%;
-  background: var(--plate-bg);
-  object-fit: contain;
-  padding: 7%;
+/* Size the crest off --row-height rather than a percentage: a percentage height in a
+   grid area resolved against the intrinsic aspect ratio instead, so tall art spilled
+   past the bar and got sliced by the overflow clip. object-fit letterboxes it instead. */
+.poster.is-graphic .poster-mark img {
   box-sizing: border-box;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--title-shade) 16%, transparent);
+  width: 100%;
+  height: var(--row-height);
+  max-width: 100%;
+  max-height: var(--row-height);
+  border-radius: 0;
+  background: transparent;
+  object-fit: contain;
+  padding: var(--mark-pad-y) var(--mark-pad-x);
 }
 
-.tmpl-board .poster-mark .lettermark {
-  color: var(--team-primary);
-  font-size: calc(var(--mark-size) * 0.4);
+.poster.is-graphic .poster-mark .lettermark {
+  width: 88%;
+  height: 88%;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  color: var(--team-ink);
+  font-family: var(--font-display);
+  font-size: calc(var(--row-height) * 0.58);
+  line-height: 1;
 }
 
-.tmpl-board .poster-name {
+.poster.is-graphic .poster-name {
   background: var(--team-fill, var(--team-primary));
-  color: var(--bar-ink);
+  color: var(--team-ink);
+  margin-right: var(--seg-gap);
   font-family: var(--font-body);
   font-weight: 600;
   transform: none;
   padding: 0 var(--name-pad);
-  line-height: 1.02;
   white-space: normal;
   text-transform: none;
   text-shadow: none;
-  word-spacing: 0.04em;
   letter-spacing: 0;
 }
 
-.tmpl-board .poster-name > span {
+/* The graphic sets leading tighter than the cap height, so the line box is shorter
+   than the glyphs. Clipping here ate descenders; the bar itself does the clipping. */
+/* The graphic sets leading tighter than the cap height, so glyph ink overflows its own
+   line boxes. The padding gives the flex centring the true ink height to work with, which
+   keeps wrapped names such as "Rumson-Fair Haven" off both edges of the bar. */
+.poster.is-graphic .poster-name > span {
   transform: none;
   display: block;
   white-space: pre-line;
-  overflow: hidden;
+  overflow: visible;
+  padding-block: 0.16em;
   font-family: var(--font-body);
   text-transform: none;
-  word-spacing: 0.04em;
-  line-height: 1.05;
+  line-height: var(--name-line);
 }
 
-.tmpl-board .poster-metrics {
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--plate-bg) calc(var(--stat-tint) * 1%), transparent),
-      color-mix(in srgb, var(--plate-bg) calc(var(--stat-tint) * 0.4%), transparent)
-    ),
-    var(--team-fill, var(--team-primary));
+.poster.is-graphic .poster-metrics {
+  background: var(--stat-fill, var(--team-fill, var(--team-primary)));
 }
 
-.tmpl-board .poster-stat,
-.tmpl-board .poster-pts {
+.poster.is-graphic .poster-stat,
+.poster.is-graphic .poster-pts {
   margin: 0;
   background: transparent;
-  color: var(--bar-ink);
+  color: var(--team-ink);
   font-family: var(--font-body);
   font-weight: 700;
   font-size: var(--stat-size);
   text-shadow: none;
 }
 
-.tmpl-board .poster-pts {
-  font-size: calc(var(--stat-size) + 1px);
-}
-
-.tmpl-board .poster-row.is-light-bar .poster-rank,
-.tmpl-board .poster-row.is-light-bar .poster-name,
-.tmpl-board .poster-row.is-light-bar .poster-stat,
-.tmpl-board .poster-row.is-light-bar .poster-pts {
-  color: var(--bar-ink-on-light);
-}
-
-.tmpl-board .poster-move.is-up,
-.tmpl-board .poster-move.is-down {
+.poster.is-graphic .poster-move.is-up,
+.poster.is-graphic .poster-move.is-down {
   color: inherit;
 }
 
-.tmpl-board .poster-missing {
-  display: none;
+.poster.is-graphic .poster-name .poster-missing {
+  display: none !important;
 }
 
-.tmpl-board .poster-row.is-hot {
+.poster.is-graphic .poster-row.is-hot {
   outline: var(--hot-edge) solid var(--poster-fg);
   outline-offset: calc(var(--hot-edge) * -1);
 }
 
-/* Movers — segmented plates, movement leads */
-.tmpl-movers {
-  --grid:
-    var(--trend-width)
-    var(--rank-width)
-    var(--logo-size)
-    minmax(0, 1fr)
-    var(--pts-box);
-}
-
-.tmpl-movers.is-simple {
-  --grid: var(--trend-width) var(--rank-width) var(--logo-size) minmax(0, 1fr);
-}
-
-.tmpl-movers .poster-glitter {
-  display: none;
-}
-
-.tmpl-movers .poster-glow {
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--plate-bg) 26%, transparent), transparent 70%);
-}
-
-.tmpl-movers .poster-board {
-  margin: 0 auto;
-}
-
-.tmpl-movers .poster-meta {
-  display: flex;
-  color: var(--poster-accent);
-}
-
-.tmpl-movers .poster-header {
-  align-items: center;
-  padding-bottom: 0;
-}
-
-.tmpl-movers .poster-header-copy {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.tmpl-movers .poster-eyebrow {
-  color: var(--poster-accent);
-  letter-spacing: 0.06em;
-  text-shadow: 0 3px 0 color-mix(in srgb, var(--poster-accent) 18%, transparent);
-}
-
-.tmpl-movers .poster-title {
-  color: var(--poster-accent);
-  line-height: 0.92;
-  text-shadow: 0 5px 0 color-mix(in srgb, var(--poster-accent) 18%, transparent);
-}
-
-.tmpl-movers .poster-cols {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: calc(var(--stat-size) + 1px);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: var(--poster-accent);
-}
-
-.tmpl-movers .poster-cols > span.col-trend {
-  display: block;
-}
-
-.tmpl-movers .poster-cols .col-rank {
-  visibility: hidden;
-}
-
-.tmpl-movers .poster-cols .col-team {
-  visibility: visible;
-  grid-column: 3 / 5;
-}
-
+/*
+  Movers — the same graphic skin as State, movement-led. Its only structural differences are
+  the single rating column and the movement figure reading larger than the rank beside it.
+*/
+.tmpl-movers .poster-metrics,
 .tmpl-movers .poster-cols .poster-metrics {
-  background: transparent;
   grid-template-columns: var(--pts-box);
 }
 
+.tmpl-movers .poster-stat,
 .tmpl-movers .poster-cols .col-fill:not(.is-primary) {
   display: none;
 }
 
-.tmpl-movers .poster-list {
-  flex: 0 1 auto;
-  justify-content: flex-start;
-}
-
-.tmpl-movers .poster-row {
-  border-radius: 0;
-}
-
-.tmpl-movers .poster-row::after {
-  display: none;
-}
-
-.tmpl-movers .poster-trend,
-.tmpl-movers .poster-rank {
-  background: var(--plate-bg);
-  border-radius: var(--row-radius);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--poster-fg) 12%, transparent),
-    0 1px 0 color-mix(in srgb, var(--title-shade) 12%, transparent);
-}
-
 .tmpl-movers .poster-trend {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  margin-right: var(--seg-gap);
-  color: var(--rank-fg);
-  font-family: var(--font-display);
-  font-size: calc(var(--stat-size) + 1px);
-}
-
-.tmpl-movers .poster-trend::before {
-  content: "";
-  flex: 0 0 auto;
-  width: calc(var(--arrow-size) * 0.8);
-  height: var(--arrow-size);
-  background: var(--move-up);
-  clip-path: polygon(50% 0, 100% 46%, 71% 46%, 71% 100%, 29% 100%, 29% 46%, 0 46%);
-}
-
-.tmpl-movers .poster-trend.is-down::before {
-  background: var(--move-down);
-  transform: scaleY(-1);
-}
-
-.tmpl-movers .poster-trend.is-flat {
-  color: transparent;
-}
-
-.tmpl-movers .poster-trend.is-flat::before {
-  width: calc(var(--arrow-size) * 0.65);
-  height: 4px;
-  clip-path: none;
-  background: var(--move-flat);
-}
-
-.tmpl-movers .poster-rank {
-  margin-right: var(--seg-gap);
-  font-family: var(--font-display);
-  text-shadow: none;
-  letter-spacing: 0;
-}
-
-.tmpl-movers .poster-mark {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--plate-bg) 12%, transparent), transparent 60%),
-    var(--team-fill, var(--team-primary));
-  border-radius: var(--row-radius) 0 0 var(--row-radius);
-}
-
-.tmpl-movers .poster-name {
-  background: var(--team-fill, var(--team-primary));
-  color: var(--team-ink);
-  transform: none;
-  margin-right: var(--seg-gap);
-  padding: 0 var(--name-pad);
-  border-radius: 0 var(--row-radius) var(--row-radius) 0;
-}
-
-.tmpl-movers .poster-name > span {
-  transform: none;
-}
-
-.tmpl-movers .poster-missing {
-  color: var(--team-ink-soft);
-}
-
-.tmpl-movers .poster-metrics {
-  grid-template-columns: var(--pts-box);
-}
-
-.tmpl-movers .poster-stat {
-  display: none;
-}
-
-.tmpl-movers .poster-pts {
-  margin: 0;
-  border-radius: var(--row-radius);
-  background:
-    linear-gradient(
-      0deg,
-      color-mix(in srgb, var(--plate-bg) calc(var(--stat-tint) * 1%), transparent),
-      color-mix(in srgb, var(--plate-bg) calc(var(--stat-tint) * 1%), transparent)
-    ),
-    var(--team-fill, var(--team-primary));
-  color: var(--team-ink);
-}
-
-.tmpl-movers .poster-row.is-hot .poster-name {
-  box-shadow: 0 0 0 var(--hot-edge) var(--poster-accent);
+  font-size: var(--move-size);
 }
 
 /* Power — USL-style: white chamfered header, tagged ranks, color bars, player slab */

@@ -121,4 +121,12 @@
   --stat-tint: 16;
   --bar-ink: #f0e4c4;
   --bar-ink-on-light: #1a2748;
+  --eyebrow-outline: 8px;
+  --col-head-outline: 4px;
+  --plate-inset: 0px;
+  --trend-gap: 6px;
+  --name-line: 1.05;
+  --mark-pad-x: 12px;
+  --mark-pad-y: 4px;
+  --meta-y: 0px;
 }

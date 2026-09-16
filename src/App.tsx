@@ -15,6 +15,7 @@ import { PostPreview, PREVIEW_FORMATS, formatFromPreset, type PreviewFormat } fr
 import { usePosterDrag } from "./studio/usePosterDrag";
 import { ORNAMENT_IDS, ORNAMENT_LABELS, type OrnamentId } from "./templates/ornaments";
 import { addFileFont, addGoogleFont, applyExtraFonts, loadExtraFonts, saveExtraFonts, type ExtraFont } from "./theme/extraFonts";
+import { graphicBarFor } from "./theme/graphicBars";
 import { DEFAULT_TOKENS } from "./theme/tokenMeta";
 
 const STICKER_SLOTS = ["a", "b", "c", "d"] as const;
@@ -301,7 +302,7 @@ export default function App() {
   const previewFrame = PREVIEW_FORMATS.find((item) => item.id === previewFormat) ?? PREVIEW_FORMATS[0];
   const parsed = useMemo(() => parseTable(tableText), [tableText]);
   const rows = useMemo(() => decorateRows(parsed, teams), [parsed, teams]);
-  const unmatched = rows.filter((row) => !row.team);
+  const unmatched = rows.filter((row) => !row.team && !graphicBarFor(row.teamQuery));
 
   useEffect(() => {
     applyExtraFonts(extraFonts);
