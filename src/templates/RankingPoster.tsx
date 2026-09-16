@@ -21,6 +21,43 @@ export type PosterMedia = {
 
 export type PosterTextField = "title" | "subtitle" | "kicker" | "handle";
 
+/* Column labels are editable, so a coach can call the rating column "POWER" or blank out a
+   heading entirely without touching the pasted table. */
+export type PosterHeadField =
+  | "rank"
+  | "team"
+  | "rating"
+  | "off"
+  | "def"
+  | "w"
+  | "l"
+  | "d"
+  | "pts"
+  | "gf"
+  | "ga"
+  | "gd"
+  | "move"
+  | "games";
+
+export const HEAD_DEFAULTS: Record<PosterHeadField, string> = {
+  rank: "#",
+  team: "TEAM",
+  rating: "RATING",
+  off: "OFF",
+  def: "DEF",
+  w: "W",
+  l: "L",
+  d: "D",
+  pts: "PTS",
+  gf: "GF",
+  ga: "GA",
+  gd: "GD",
+  move: "+/-",
+  games: "GP",
+};
+
+export type PosterHeadLabels = Partial<Record<PosterHeadField, string>>;
+
 type Props = {
   title: string;
   subtitle: string;
@@ -39,7 +76,9 @@ type Props = {
   live?: boolean;
   selected?: string | null;
   artboardId?: string;
+  headLabels?: PosterHeadLabels;
   onText?: (field: PosterTextField, value: string) => void;
+  onHead?: (field: PosterHeadField, value: string) => void;
   onRowEdit?: (rowIndex: number, field: TableColumnRole, value: string) => void;
   onLogoPick?: (teamId: string | null, teamQuery: string) => void;
 };
@@ -169,9 +208,10 @@ function fitListToCanvas(
   let pad = parsePx(tokens["--poster-pad"], 48);
   let header = headerPref;
   let footer = parsePx(tokens["--footer-height"], 72);
-  // Graphic skins measure their column-head band exactly; the looser templates want breathing
-  // room above and below the labels.
-  const colHead = omitColHeads ? 0 : parsePx(tokens["--col-head-height"], 38) + (tightChrome ? 0 : 18);
+  // Graphic skins measure their column-head band exactly; --cols-y is the air between the
+  // title block and the labels. Looser templates keep a larger cushion around the heads.
+  const colsY = omitColHeads ? 0 : parsePx(tokens["--cols-y"], tightChrome ? 0 : 8);
+  const colHead = omitColHeads ? 0 : parsePx(tokens["--col-head-height"], 38) + colsY + (tightChrome ? 6 : 18);
   const gaps = Math.max(0, listCount - 1);
 
   const chrome = () => pad * 2 + header + colHead + footer + (tightChrome ? 0 : 14) + extraChrome;
@@ -190,12 +230,30 @@ function fitListToCanvas(
   let gap = preferredGap;
   let rowH = preferredRow;
   if (listCount > 0 && avail > 0) {
-    gap = gaps > 0 ? clamp(Math.round(Math.min(preferredGap, avail * 0.1 / gaps)), 0, preferredGap) : 0;
-    rowH = Math.floor((avail - gap * gaps) / listCount);
-    rowH = clamp(rowH, 16, maxRowHeight);
-    if (rowH * listCount + gap * gaps > avail && gaps > 0) {
-      gap = clamp(Math.floor((avail - 16 * listCount) / gaps), 0, preferredGap);
-      rowH = clamp(Math.floor((avail - gap * gaps) / listCount), 16, maxRowHeight);
+    if (tightChrome) {
+      // Honour the designed gap. Shrink the bars if fifteen rows cannot fit; pour leftover
+      // height into the gap so a short paste still reads as separate boards, not one slab.
+      const minRow = 48;
+      const packed = preferredRow * listCount + preferredGap * gaps;
+      if (packed > avail) {
+        rowH = clamp(Math.floor((avail - preferredGap * gaps) / listCount), minRow, preferredRow);
+        if (rowH * listCount + preferredGap * gaps > avail && gaps > 0) {
+          gap = clamp(Math.floor((avail - minRow * listCount) / gaps), 4, preferredGap);
+          rowH = clamp(Math.floor((avail - gap * gaps) / listCount), minRow, preferredRow);
+        }
+      } else if (gaps > 0) {
+        const leftover = avail - packed;
+        gap = preferredGap + clamp(Math.floor(leftover / gaps), 0, 16);
+        rowH = preferredRow;
+      }
+    } else {
+      gap = gaps > 0 ? clamp(Math.round(Math.min(preferredGap, (avail * 0.1) / gaps)), 0, preferredGap) : 0;
+      rowH = Math.floor((avail - gap * gaps) / listCount);
+      rowH = clamp(rowH, 16, maxRowHeight);
+      if (rowH * listCount + gap * gaps > avail && gaps > 0) {
+        gap = clamp(Math.floor((avail - 16 * listCount) / gaps), 0, preferredGap);
+        rowH = clamp(Math.floor((avail - gap * gaps) / listCount), 16, maxRowHeight);
+      }
     }
   }
 
@@ -329,6 +387,75 @@ function LiveText({
   );
 }
 
+function LiveHead({
+  className,
+  field,
+  labels,
+  live,
+  onHead,
+}: {
+  className: string;
+  field: PosterHeadField;
+  labels?: PosterHeadLabels;
+  live?: boolean;
+  onHead?: (field: PosterHeadField, value: string) => void;
+}) {
+  const fallback = HEAD_DEFAULTS[field];
+  const value = labels?.[field] ?? fallback;
+  const ref = useRef<HTMLSpanElement>(null);
+  const focused = useRef(false);
+  const [editing, setEditing] = useState(false);
+  const empty = live && !value.trim() && !editing;
+
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node || focused.current) return;
+    if ((node.textContent ?? "") !== value) node.textContent = value;
+  }, [value]);
+
+  useLayoutEffect(() => {
+    if (editing) ref.current?.focus();
+  }, [editing]);
+
+  return (
+    <span
+      ref={ref}
+      className={empty ? `${className} is-empty` : className}
+      data-head={field}
+      data-placeholder={fallback}
+      contentEditable={Boolean(live) && editing}
+      suppressContentEditableWarning
+      spellCheck={false}
+      tabIndex={live ? 0 : undefined}
+      title={live ? "Click to rename this column" : undefined}
+      onPointerDown={(event) => {
+        if (!live) return;
+        event.stopPropagation();
+      }}
+      onClick={() => {
+        if (live) setEditing(true);
+      }}
+      onFocus={() => {
+        if (live) {
+          focused.current = true;
+          setEditing(true);
+        }
+      }}
+      onBlur={(event) => {
+        focused.current = false;
+        setEditing(false);
+        const next = (event.currentTarget.textContent ?? "").replace(/\s+/g, " ").trim();
+        if (next !== value) onHead?.(field, next);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        event.currentTarget.blur();
+      }}
+    />
+  );
+}
+
 function LiveCell({
   className,
   value,
@@ -441,6 +568,17 @@ function visibleMetricsFrom(rows: RankingRow[]): VisibleMetrics {
     ga: any("ga"),
     gd: any("gd"),
   };
+}
+
+export function visibleHeadFields(rows: RankingRow[]): PosterHeadField[] {
+  const visible = visibleMetricsFrom(rows);
+  const fields: PosterHeadField[] = ["team"];
+  if (STAT_KEYS.some((key) => visible[key])) {
+    for (const key of STAT_KEYS) if (visible[key]) fields.push(key);
+  } else {
+    for (const key of RATING_KEYS) if (visible[key]) fields.push(key);
+  }
+  return fields;
 }
 
 function RowMetrics({
@@ -602,7 +740,7 @@ function PosterRow({
         )}
       </span>
       <span
-        className="poster-name"
+        className={label.includes("\n") ? "poster-name is-wrapped" : "poster-name"}
         onPointerDown={(event) => {
           if (!live) return;
           if (event.target instanceof HTMLElement && event.target.closest("[data-logo]")) {
@@ -652,59 +790,74 @@ function ColumnHeads({
   mode,
   variant,
   visible,
+  labels,
+  live,
+  onHead,
 }: {
   mode: "stats" | "ratings" | "simple";
   variant: "full" | "power" | "split" | "board";
   visible: VisibleMetrics;
+  labels?: PosterHeadLabels;
+  live?: boolean;
+  onHead?: (field: PosterHeadField, value: string) => void;
 }) {
   if (mode !== "stats" && mode !== "ratings") return null;
-  const lead = mode === "stats" ? "PTS" : visible.rating ? "RATING" : visible.off ? "OFF" : "RTG";
+  const head = (field: PosterHeadField, className: string) => (
+    <LiveHead key={field} className={className} field={field} labels={labels} live={live} onHead={onHead} />
+  );
+  // The lead column is whichever metric the paste actually carries.
+  const lead: PosterHeadField = mode === "stats" ? "pts" : visible.rating ? "rating" : "off";
+  const statHeads = (
+    <>
+      {visible.w ? head("w", "col-fill") : null}
+      {visible.l ? head("l", "col-fill") : null}
+      {visible.d ? head("d", "col-fill") : null}
+      {visible.pts ? head("pts", "col-fill is-primary") : null}
+      {visible.gf ? head("gf", "col-fill") : null}
+      {visible.ga ? head("ga", "col-fill") : null}
+      {visible.gd ? head("gd", "col-fill") : null}
+    </>
+  );
+  // Editable labels have to stay reachable, so only hide the row from screen readers
+  // when the poster is not live.
+  const hidden = live ? undefined : true;
+
   if (variant === "power") {
     return (
-      <div className="poster-cols is-lead" aria-hidden>
+      <div className="poster-cols is-lead" aria-hidden={hidden}>
         <span className="col-trend" />
-        <span className="col-rank">#</span>
-        <span className="col-team">TEAM</span>
-        <span className="col-fill is-primary">{mode === "stats" ? "PTS" : lead}</span>
+        {head("rank", "col-rank")}
+        {head("team", "col-team")}
+        {head(lead, "col-fill is-primary")}
       </div>
     );
   }
   if (variant === "split") {
     return (
-      <div className="poster-cols is-lead" aria-hidden>
-        <span className="col-rank">#</span>
+      <div className="poster-cols is-lead" aria-hidden={hidden}>
+        {head("rank", "col-rank")}
         <span className="col-trend" />
         <span className="col-mark" />
-        <span className="col-team">TEAM</span>
-        <span className="poster-metrics">
-          <span className="col-fill is-primary">{mode === "stats" ? "PTS" : lead}</span>
-        </span>
+        {head("team", "col-team")}
+        <span className="poster-metrics">{head(lead, "col-fill is-primary")}</span>
       </div>
     );
   }
   if (variant === "board") {
     return (
-      <div className="poster-cols" aria-hidden>
+      <div className="poster-cols" aria-hidden={hidden}>
         <span className="col-trend" />
         <span className="col-rank" />
         <span className="col-mark" />
-        <span className="col-team">TEAM</span>
+        {head("team", "col-team")}
         <span className="poster-metrics">
           {mode === "stats" ? (
-            <>
-              {visible.w ? <span className="col-fill">W</span> : null}
-              {visible.l ? <span className="col-fill">L</span> : null}
-              {visible.d ? <span className="col-fill">D</span> : null}
-              {visible.pts ? <span className="col-fill is-primary">PTS</span> : null}
-              {visible.gf ? <span className="col-fill">GF</span> : null}
-              {visible.ga ? <span className="col-fill">GA</span> : null}
-              {visible.gd ? <span className="col-fill">GD</span> : null}
-            </>
+            statHeads
           ) : (
             <>
-              {visible.rating ? <span className="col-fill is-primary">RATING</span> : null}
-              {visible.off ? <span className="col-fill">OFF</span> : null}
-              {visible.def ? <span className="col-fill">DEF</span> : null}
+              {visible.rating ? head("rating", "col-fill is-primary") : null}
+              {visible.off ? head("off", "col-fill") : null}
+              {visible.def ? head("def", "col-fill") : null}
             </>
           )}
         </span>
@@ -712,29 +865,21 @@ function ColumnHeads({
     );
   }
   return (
-    <div className="poster-cols" aria-hidden>
+    <div className="poster-cols" aria-hidden={hidden}>
       <span className="col-trend" />
-      <span className="col-rank">#</span>
+      {head("rank", "col-rank")}
       <span />
-      <span className="col-team">TEAM</span>
+      {head("team", "col-team")}
       <span className="poster-metrics">
         {mode === "stats" ? (
-          <>
-            {visible.w ? <span className="col-fill">W</span> : null}
-            {visible.l ? <span className="col-fill">L</span> : null}
-            {visible.d ? <span className="col-fill">D</span> : null}
-            {visible.pts ? <span className="col-fill is-primary">PTS</span> : null}
-            {visible.gf ? <span className="col-fill">GF</span> : null}
-            {visible.ga ? <span className="col-fill">GA</span> : null}
-            {visible.gd ? <span className="col-fill">GD</span> : null}
-          </>
+          statHeads
         ) : (
           <>
-            {visible.rating ? <span className="col-fill is-primary">RATING</span> : null}
-            {visible.off ? <span className="col-fill">OFF</span> : null}
-            {visible.def ? <span className="col-fill">DEF</span> : null}
-            <span className="col-fill is-move">+/-</span>
-            {visible.games ? <span className="col-fill">GP</span> : null}
+            {visible.rating ? head("rating", "col-fill is-primary") : null}
+            {visible.off ? head("off", "col-fill") : null}
+            {visible.def ? head("def", "col-fill") : null}
+            {head("move", "col-fill is-move")}
+            {visible.games ? head("games", "col-fill") : null}
           </>
         )}
       </span>
@@ -778,7 +923,9 @@ export function RankingPoster({
   live = false,
   selected = null,
   artboardId = "ranking-artboard",
+  headLabels,
   onText,
+  onHead,
   onRowEdit,
   onLogoPick,
 }: Props) {
@@ -942,7 +1089,14 @@ export function RankingPoster({
           </div>
         </header>
         {listRows.length > 0 && showHeads ? (
-          <ColumnHeads mode={mode} variant={headVariant} visible={visible} />
+          <ColumnHeads
+            mode={mode}
+            variant={headVariant}
+            visible={visible}
+            labels={headLabels}
+            live={live}
+            onHead={onHead}
+          />
         ) : null}
         {listRows.length > 0 ? (
           <ol className="poster-list">

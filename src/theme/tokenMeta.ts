@@ -26,6 +26,7 @@ export const DEFAULT_TOKENS: Record<string, string> = {
   "--col-head-height": "38px",
   "--col-head-size": "15px",
   "--col-head-fg": "#ffffff",
+  "--cols-y": "8px",
   "--row-height": "92px",
   "--row-gap": "14px",
   "--row-radius": "0px",
@@ -246,8 +247,9 @@ export const TOKEN_DEFS: TokenDef[] = [
   { id: "--board-width", label: "Board width %", group: "Place", kind: "number", min: 42, max: 100, step: 1 },
   { id: "--header-height", label: "Header height", group: "Place", kind: "px", min: 60, max: 420, step: 4 },
   { id: "--title-x", label: "Title left / right", group: "Place", kind: "px", min: -240, max: 240, step: 4 },
-  { id: "--title-y", label: "Title up / down", group: "Place", kind: "px", min: -200, max: 200, step: 4 },
+  { id: "--title-y", label: "Title up / down", group: "Place", kind: "px", min: -80, max: 80, step: 1 },
   { id: "--col-head-height", label: "Column head height", group: "Place", kind: "px", min: 0, max: 90, step: 2 },
+  { id: "--cols-y", label: "Labels above the board", group: "Place", kind: "px", min: 0, max: 48, step: 1 },
   { id: "--meta-y", label: "Credit line up / down", group: "Place", kind: "px", min: -60, max: 120, step: 1 },
   { id: "--footer-height", label: "Footer height", group: "Place", kind: "px", min: 0, max: 200, step: 4 },
   { id: "--rule-height", label: "Divider rule", group: "Place", kind: "px", min: 0, max: 24, step: 1 },
@@ -255,7 +257,7 @@ export const TOKEN_DEFS: TokenDef[] = [
 ];
 
 /** First-run Look panel. Everything else sits behind More look. */
-export const SIMPLE_LOOK_IDS = ["--poster-bg", "--poster-accent", "--title-size"] as const;
+export const SIMPLE_LOOK_IDS = ["--poster-bg", "--poster-accent", "--title-size", "--title-y", "--row-gap"] as const;
 
 /** Extra Look controls shown after More look. Simple colors/title stay at the top. */
 export const ESSENTIAL_TOKEN_IDS = new Set([
@@ -263,6 +265,7 @@ export const ESSENTIAL_TOKEN_IDS = new Set([
   "--poster-accent",
   "--poster-fg",
   "--title-size",
+  "--title-y",
   "--name-size",
   "--font-display",
   "--row-height",
@@ -289,6 +292,9 @@ export const TEMPLATE_TOKEN_IDS: Record<string, string[]> = {
     "--trend-gap",
     "--mark-pad-x",
     "--meta-y",
+    "--cols-y",
+    "--title-y",
+    "--row-gap",
     "--bar-ink",
     "--bar-ink-on-light",
   ],

@@ -8,11 +8,31 @@ import type { TableColumnRole, TeamRecord } from "./engine/types";
 import { ThemeInspector } from "./inspector/ThemeInspector";
 import { SAMPLE_BOYS_LAX, SAMPLE_GIRLS_LAX, SAMPLE_RANKING_TABLE, SAMPLE_TABLE } from "./sampleTable";
 import { TEMPLATES, tokensForTemplate, SAMPLE_HERO, type TemplateId } from "./templates/catalog";
-import { RankingPoster, type PosterTextField } from "./templates/RankingPoster";
+import {
+  HEAD_DEFAULTS,
+  RankingPoster,
+  visibleHeadFields,
+  type PosterHeadField,
+  type PosterHeadLabels,
+  type PosterTextField,
+} from "./templates/RankingPoster";
 import { RankingGrid } from "./studio/RankingGrid";
 import { ElementPop } from "./studio/ElementPop";
 import { PostPreview, PREVIEW_FORMATS, formatFromPreset, type PreviewFormat } from "./studio/PostPreview";
 import { usePosterDrag } from "./studio/usePosterDrag";
+import {
+  deleteSave,
+  downloadProject,
+  listSaves,
+  projectFromJson,
+  readAutosave,
+  readSave,
+  savedAgo,
+  writeAutosave,
+  writeSave,
+  type Project,
+  type SaveMeta,
+} from "./studio/projectStore";
 import { ORNAMENT_IDS, ORNAMENT_LABELS, type OrnamentId } from "./templates/ornaments";
 import { addFileFont, addGoogleFont, applyExtraFonts, loadExtraFonts, saveExtraFonts, type ExtraFont } from "./theme/extraFonts";
 import { graphicBarFor } from "./theme/graphicBars";
@@ -88,12 +108,30 @@ function PanelFold({
   );
 }
 
+const HEAD_FIELD_COPY: Record<PosterHeadField, string> = {
+  rank: "Rank",
+  team: "Team",
+  rating: "Rating",
+  off: "Off",
+  def: "Def",
+  w: "W",
+  l: "L",
+  d: "D",
+  pts: "Pts",
+  gf: "GF",
+  ga: "GA",
+  gd: "GD",
+  move: "+/-",
+  games: "GP",
+};
+
 type HistoryShot = {
   tableText: string;
   kicker: string;
   title: string;
   subtitle: string;
   handle: string;
+  heads: PosterHeadLabels;
   presetId: string;
   templateId: TemplateId;
   tokens: Record<string, string>;
@@ -107,6 +145,7 @@ type HistoryShot = {
 function cloneShot(shot: HistoryShot): HistoryShot {
   return {
     ...shot,
+    heads: { ...shot.heads },
     tokens: { ...shot.tokens },
     ornaments: { ...shot.ornaments },
     stickerSrc: { ...shot.stickerSrc },
@@ -123,6 +162,7 @@ export default function App() {
   const [title, setTitle] = useState("Group B");
   const [subtitle, setSubtitle] = useState("2025 GMC Boys Soccer Tournament");
   const [handle, setHandle] = useState("@mthssportsbusiness");
+  const [heads, setHeads] = useState<PosterHeadLabels>({});
   const [presetId, setPresetId] = useState(SIZE_PRESETS[0].id);
   const [templateId, setTemplateId] = useState<TemplateId>("slant");
   const [tokens, setTokens] = useState<Record<string, string>>({ ...DEFAULT_TOKENS });
@@ -183,6 +223,7 @@ export default function App() {
     title,
     subtitle,
     handle,
+    heads,
     presetId,
     templateId,
     tokens,
@@ -198,6 +239,7 @@ export default function App() {
     title,
     subtitle,
     handle,
+    heads,
     presetId,
     templateId,
     tokens,
@@ -244,6 +286,7 @@ export default function App() {
     setTitle(shot.title);
     setSubtitle(shot.subtitle);
     setHandle(shot.handle);
+    setHeads(shot.heads);
     setPresetId(shot.presetId);
     setTemplateId(shot.templateId);
     setTokens(shot.tokens);
@@ -285,6 +328,120 @@ export default function App() {
 
   usePosterDrag(stageRef, zoomRef, tokensRef, patchTokens, setPicked, rememberTokens);
 
+  const project: Project = {
+    version: 1,
+    tableText,
+    kicker,
+    title,
+    subtitle,
+    handle,
+    heads,
+    presetId,
+    templateId,
+    tokens,
+    ornaments,
+    stickerSrc,
+    media,
+  };
+  const projectRef = useRef(project);
+  projectRef.current = project;
+
+  const [saves, setSaves] = useState<SaveMeta[]>([]);
+  const [saveName, setSaveName] = useState("");
+  const [autosavedAt, setAutosavedAt] = useState<number | null>(null);
+  const restoredRef = useRef(false);
+  const projectFileRef = useRef<HTMLInputElement>(null);
+
+  const applyProject = useCallback((next: Project) => {
+    restoringRef.current = true;
+    setTableText(next.tableText);
+    setKicker(next.kicker);
+    setTitle(next.title);
+    setSubtitle(next.subtitle);
+    setHandle(next.handle);
+    setHeads(next.heads);
+    setPresetId(next.presetId);
+    setTemplateId(next.templateId);
+    setTokens(next.tokens);
+    setOrnaments(next.ornaments);
+    setStickerSrc(next.stickerSrc);
+    setMedia(next.media);
+    queueMicrotask(() => {
+      restoringRef.current = false;
+    });
+  }, []);
+
+  // Pick up where the last visit left off, so closing the tab is never destructive.
+  useEffect(() => {
+    const saved = readAutosave();
+    if (saved) {
+      applyProject(saved);
+      setStatus("Picked up where you left off");
+    }
+    restoredRef.current = true;
+    setSaves(listSaves());
+  }, [applyProject]);
+
+  // Autosave trails the edits rather than firing on every keystroke.
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    const timer = window.setTimeout(() => {
+      if (writeAutosave(projectRef.current)) setAutosavedAt(Date.now());
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [tableText, kicker, title, subtitle, handle, heads, presetId, templateId, tokens, ornaments, stickerSrc, media]);
+
+  const onSaveRankings = useCallback(() => {
+    const name = saveName.trim() || title.trim() || "Untitled rankings";
+    const result = writeSave(name, projectRef.current);
+    if (!result.ok) {
+      setStatus("Could not save — the browser is out of storage room");
+      return;
+    }
+    setSaves(listSaves());
+    setSaveName("");
+    setStatus(
+      result.droppedImages > 0
+        ? `Saved "${name}" — uploaded photos were too large to keep`
+        : `Saved "${name}"`,
+    );
+  }, [saveName, title]);
+
+  const onOpenSave = useCallback(
+    (meta: SaveMeta) => {
+      const found = readSave(meta.id);
+      if (!found) {
+        setStatus("That save could not be opened");
+        return;
+      }
+      remember();
+      applyProject(found);
+      setSaveName(meta.name);
+      setStatus(`Opened "${meta.name}"`);
+    },
+    [applyProject, remember],
+  );
+
+  const onDeleteSave = useCallback((meta: SaveMeta) => {
+    deleteSave(meta.id);
+    setSaves(listSaves());
+    setStatus(`Deleted "${meta.name}"`);
+  }, []);
+
+  const onImportProject = useCallback(
+    async (file: File) => {
+      const found = projectFromJson(await file.text());
+      if (!found) {
+        setStatus("That file is not a Ranking Studio save");
+        return;
+      }
+      remember();
+      applyProject(found);
+      setStatus(`Loaded ${file.name}`);
+    },
+    [applyProject, remember],
+  );
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -303,6 +460,7 @@ export default function App() {
   const parsed = useMemo(() => parseTable(tableText), [tableText]);
   const rows = useMemo(() => decorateRows(parsed, teams), [parsed, teams]);
   const unmatched = rows.filter((row) => !row.team && !graphicBarFor(row.teamQuery));
+  const headFields = useMemo(() => visibleHeadFields(rows), [rows]);
 
   useEffect(() => {
     applyExtraFonts(extraFonts);
@@ -567,8 +725,11 @@ export default function App() {
         <div className="brand">
           Ranking <span>Studio</span>
         </div>
-        <div className={status.toLowerCase().includes("fail") ? "topbar-status is-error" : "topbar-status"}>
-          {status || "Click the poster to edit titles and names"}
+        <div className={status.toLowerCase().includes("fail") || status.toLowerCase().includes("could not") ? "topbar-status is-error" : "topbar-status"}>
+          {status || "Paste rankings, click the poster to edit, then Save or Export PNG"}
+        </div>
+        <div className="save-flag" title="Your work is kept in this browser automatically">
+          {autosavedAt ? `Kept ${savedAgo(autosavedAt)}` : "Keeping your work"}
         </div>
         <label className="size-field">
           <span>Size</span>
@@ -606,7 +767,7 @@ export default function App() {
           Preview post
         </button>
         <button type="button" className="export-btn" onClick={onExport} disabled={busy || rows.length === 0}>
-          Export PNG
+          {busy ? "Exporting…" : "Export PNG"}
         </button>
       </header>
 
@@ -617,6 +778,12 @@ export default function App() {
             Hide
           </button>
         </div>
+        <ol className="coach-steps">
+          <li>Paste rankings</li>
+          <li>Pick a look</li>
+          <li>Click the poster to edit</li>
+          <li>Save or export</li>
+        </ol>
         <div className="panel-block">
           <h2 className="panel-label">Look</h2>
           <div className="template-pills">
@@ -636,6 +803,7 @@ export default function App() {
 
         <div className="panel-block">
           <h2 className="panel-label">Rankings</h2>
+          <p className="panel-hint">Paste from Sheets, or start from a sample. Missing Off or Def columns stay hidden.</p>
           <div
             className="field"
             onBlur={(event) => {
@@ -701,6 +869,150 @@ export default function App() {
               ))}
             </ul>
           )}
+        </div>
+
+        <div className="panel-block">
+          <h2 className="panel-label">Words on the poster</h2>
+          <p className="panel-hint">Click the poster to type, or edit here. Column labels follow whatever you pasted.</p>
+          <div className="word-fields">
+            <label>
+              Sport line
+              <input
+                value={subtitle}
+                onChange={(event) => {
+                  touchField("subtitle");
+                  setSubtitle(event.target.value);
+                }}
+                placeholder="Boys lacrosse"
+              />
+            </label>
+            <label>
+              Title
+              <input
+                value={title}
+                onChange={(event) => {
+                  touchField("title");
+                  setTitle(event.target.value);
+                }}
+                placeholder="State Top 15"
+              />
+            </label>
+            <label>
+              Date line
+              <input
+                value={kicker}
+                onChange={(event) => {
+                  touchField("kicker");
+                  setKicker(event.target.value);
+                }}
+                placeholder="For games through…"
+              />
+            </label>
+            <label>
+              Handle
+              <input
+                value={handle}
+                onChange={(event) => {
+                  touchField("handle");
+                  setHandle(event.target.value);
+                }}
+                placeholder="@yourhandle"
+              />
+            </label>
+          </div>
+          {headFields.length > 0 ? (
+            <div className="head-fields">
+              <p className="head-fields-label">Table labels</p>
+              <div className="head-fields-grid">
+                {headFields.map((field) => (
+                  <label key={field}>
+                    {HEAD_FIELD_COPY[field]}
+                    <input
+                      value={heads[field] ?? HEAD_DEFAULTS[field]}
+                      onChange={(event) => {
+                        touchField(`head-${field}`);
+                        setHeads((prev) => ({ ...prev, [field]: event.target.value }));
+                      }}
+                      placeholder={HEAD_DEFAULTS[field]}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="panel-block">
+          <h2 className="panel-label">Keep this week</h2>
+          <p className="panel-hint">
+            This browser keeps your last edit automatically. Name a week to open it again later, or download a file to take home.
+          </p>
+          <div className="save-row">
+            <input
+              type="text"
+              className="save-name"
+              value={saveName}
+              placeholder={title.trim() || "Week 4 rankings"}
+              onChange={(event) => setSaveName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                onSaveRankings();
+              }}
+            />
+            <button type="button" className="save-btn" onClick={onSaveRankings}>
+              Save
+            </button>
+          </div>
+          {saves.length > 0 ? (
+            <ul className="save-list">
+              {saves.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className="save-open"
+                    onClick={() => onOpenSave(item)}
+                    title={`Open "${item.name}"`}
+                  >
+                    <span className="save-open-name">{item.name}</span>
+                    <span className="save-open-when">{savedAgo(item.savedAt)}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="save-delete"
+                    onClick={() => onDeleteSave(item)}
+                    aria-label={`Delete ${item.name}`}
+                    title={`Delete "${item.name}"`}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="save-extras">
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => downloadProject(projectRef.current, saveName || title)}
+            >
+              Download a copy
+            </button>
+            <button type="button" className="link-btn" onClick={() => projectFileRef.current?.click()}>
+              Open a file
+            </button>
+          </div>
+          <input
+            ref={projectFileRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) void onImportProject(file);
+            }}
+          />
         </div>
 
         <div className="panel-block photo-block">
@@ -1012,6 +1324,12 @@ export default function App() {
                 if (field === "kicker") setKicker(value);
                 if (field === "handle") setHandle(value);
               }}
+              headLabels={heads}
+              onHead={(field: PosterHeadField, value: string) => {
+                if ((heads[field] ?? HEAD_DEFAULTS[field]) === value) return;
+                remember();
+                setHeads((prev) => ({ ...prev, [field]: value }));
+              }}
               onRowEdit={(rowIndex: number, field: TableColumnRole, value: string) => {
                 const next = patchTableCell(tableText, rowIndex, field, value);
                 if (next === tableText) return;
@@ -1077,6 +1395,7 @@ export default function App() {
             tokens={tokens}
             templateId={templateId}
             artboardId="preview-artboard"
+            headLabels={heads}
             media={{
               background: media.background || undefined,
               header: media.header || undefined,

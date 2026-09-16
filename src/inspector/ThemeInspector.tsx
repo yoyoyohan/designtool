@@ -204,6 +204,8 @@ export function ThemeInspector({
     const def = TOKEN_DEFS.find((item) => item.id === id);
     if (!def) return null;
     if (id === "--poster-accent") return { ...def, label: "Accent" };
+    if (id === "--title-y") return { ...def, label: "Title position" };
+    if (id === "--row-gap") return { ...def, label: "Space between rows" };
     return def;
   }).filter((def): def is TokenDef => Boolean(def));
 
@@ -233,7 +235,7 @@ export function ThemeInspector({
         </div>
       </div>
       <p className="inspector-help">
-        Click a photo, ranking board, title, or sticker on the poster to edit it. Drag to move.
+        Click anything on the poster to type. Drag the title or photo to move it. Space between rows and title position sit at the top so a weekly graphic is a two-slider job.
       </p>
       {simpleDefs.map((def) => (
         <Control

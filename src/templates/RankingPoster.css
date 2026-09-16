@@ -732,13 +732,14 @@
 }
 
 .poster.is-graphic .poster-header {
-  align-items: flex-end;
-  padding-bottom: 0;
+  align-items: center;
+  padding-top: 22px;
+  padding-bottom: 2px;
 }
 
 .poster.is-graphic .poster-header-copy {
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   text-align: center;
 }
 
@@ -771,7 +772,7 @@
 }
 
 .poster.is-graphic .poster-cols {
-  margin: 0;
+  margin: var(--cols-y) 0 6px;
   align-items: end;
   font-family: var(--font-display);
   font-size: var(--col-head-size);
@@ -955,6 +956,12 @@
 
 /* The graphic sets leading tighter than the cap height, so the line box is shorter
    than the glyphs. Clipping here ate descenders; the bar itself does the clipping. */
+/* A name broken over two lines needs both to clear the bar, so step it down rather than
+   shrink every name to suit the few that wrap. */
+.poster.is-graphic .poster-name.is-wrapped {
+  font-size: calc(var(--name-size) * 0.86);
+}
+
 /* The graphic sets leading tighter than the cap height, so glyph ink overflows its own
    line boxes. The padding gives the flex centring the true ink height to work with, which
    keeps wrapped names such as "Rumson-Fair Haven" off both edges of the bar. */
@@ -1616,12 +1623,15 @@
   overflow: hidden;
 }
 
-.poster.is-live [data-text] {
+.poster.is-live [data-text],
+.poster.is-live [data-head] {
   min-width: 1ch;
   cursor: text;
 }
 
-.poster.is-live [data-text].is-empty::before {
+.poster.is-live [data-text].is-empty::before,
+.poster.is-live [data-head].is-empty::before,
+.poster.is-live [data-head]:empty::before {
   content: attr(data-placeholder);
   opacity: 0.38;
 }
@@ -1642,6 +1652,7 @@
 
 .poster.is-live [data-drag="board"]:has([data-cell]:hover),
 .poster.is-live [data-drag="board"]:has([data-text]:hover),
+.poster.is-live [data-drag="board"]:has([data-head]:hover),
 .poster.is-live [data-drag="board"]:has([data-logo]:hover),
 .poster.is-live [data-drag="header"]:has([data-text]:hover) {
   outline: none;
@@ -1649,6 +1660,7 @@
 
 .poster.is-live [data-cell]:hover,
 .poster.is-live [data-text]:hover,
+.poster.is-live [data-head]:hover,
 .poster.is-live [data-logo]:hover {
   outline: 1px dashed color-mix(in srgb, #c4a574 80%, transparent);
   outline-offset: 2px;
@@ -1674,6 +1686,7 @@
 
 .poster.is-live [data-cell],
 .poster.is-live [data-text],
+.poster.is-live [data-head],
 .poster.is-live [data-logo] {
   cursor: text;
 }

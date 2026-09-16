@@ -14,8 +14,8 @@ type Props = {
 
 const HINTS: Record<string, string> = {
   hero: "Drag to move. Use the handles to stretch horizontally, vertically, or diagonally.",
-  board: "Drag to move. Click a name or number to type.",
-  header: "Drag to move. Click the title to type.",
+  board: "Drag to move. Click a name, number, or column label to type.",
+  header: "Drag to move. Click the title to type. Click TEAM, RATING, OFF, or DEF to rename those labels.",
 };
 
 const LABELS: Record<string, string> = {
