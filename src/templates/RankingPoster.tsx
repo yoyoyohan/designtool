@@ -231,17 +231,18 @@ function fitListToCanvas(
   let rowH = preferredRow;
   if (listCount > 0 && avail > 0) {
     if (tightChrome) {
-      // Honour the designed gap. Shrink the bars if fifteen rows cannot fit; pour leftover
-      // height into the gap so a short paste still reads as separate boards, not one slab.
+      // Honour the designed gap, including zero: a flush stack should stay flush. Shrink the
+      // bars if fifteen rows cannot fit. Only pour leftover into the gap when the template
+      // asked for one, so a short paste does not invent space between boards.
       const minRow = 48;
       const packed = preferredRow * listCount + preferredGap * gaps;
       if (packed > avail) {
         rowH = clamp(Math.floor((avail - preferredGap * gaps) / listCount), minRow, preferredRow);
-        if (rowH * listCount + preferredGap * gaps > avail && gaps > 0) {
-          gap = clamp(Math.floor((avail - minRow * listCount) / gaps), 4, preferredGap);
+        if (rowH * listCount + preferredGap * gaps > avail && gaps > 0 && preferredGap > 0) {
+          gap = clamp(Math.floor((avail - minRow * listCount) / gaps), 0, preferredGap);
           rowH = clamp(Math.floor((avail - gap * gaps) / listCount), minRow, preferredRow);
         }
-      } else if (gaps > 0) {
+      } else if (gaps > 0 && preferredGap > 0) {
         const leftover = avail - packed;
         gap = preferredGap + clamp(Math.floor(leftover / gaps), 0, 16);
         rowH = preferredRow;

@@ -945,35 +945,36 @@
   color: var(--team-ink);
   margin-right: var(--seg-gap);
   font-family: var(--font-body);
-  font-weight: 600;
+  font-weight: 700;
   transform: none;
-  padding: 0 var(--name-pad);
+  padding: 0 8px 0 0;
+  overflow: visible;
   white-space: normal;
   text-transform: none;
   text-shadow: none;
   letter-spacing: 0;
+  align-items: center;
+  justify-content: flex-start;
 }
 
-/* The graphic sets leading tighter than the cap height, so the line box is shorter
-   than the glyphs. Clipping here ate descenders; the bar itself does the clipping. */
-/* A name broken over two lines needs both to clear the bar, so step it down rather than
-   shrink every name to suit the few that wrap. */
-.poster.is-graphic .poster-name.is-wrapped {
-  font-size: calc(var(--name-size) * 0.86);
-}
-
-/* The graphic sets leading tighter than the cap height, so glyph ink overflows its own
-   line boxes. The padding gives the flex centring the true ink height to work with, which
-   keeps wrapped names such as "Rumson-Fair Haven" off both edges of the bar. */
 .poster.is-graphic .poster-name > span {
-  transform: none;
+  /* Shrink to the type so two-line names sit as a centred block, not top-aligned in a flex:1 strip.
+     --name-pad is a signed inset: negative values are legal (padding is not) so the start can tuck toward the crest. */
+  flex: none;
   display: block;
+  transform: none;
+  margin-left: var(--name-pad);
   white-space: pre-line;
   overflow: visible;
-  padding-block: 0.16em;
+  padding-block: 0;
   font-family: var(--font-body);
+  font-weight: 700;
   text-transform: none;
   line-height: var(--name-line);
+}
+
+.poster.is-graphic .poster-name.is-wrapped > span {
+  transform: translateY(-0.04em);
 }
 
 .poster.is-graphic .poster-metrics {

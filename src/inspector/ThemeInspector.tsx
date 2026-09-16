@@ -205,6 +205,7 @@ export function ThemeInspector({
     if (!def) return null;
     if (id === "--poster-accent") return { ...def, label: "Accent" };
     if (id === "--title-y") return { ...def, label: "Title position" };
+    if (id === "--name-pad") return { ...def, label: "Name start" };
     if (id === "--row-gap") return { ...def, label: "Space between rows" };
     return def;
   }).filter((def): def is TokenDef => Boolean(def));
@@ -235,7 +236,7 @@ export function ThemeInspector({
         </div>
       </div>
       <p className="inspector-help">
-        Click anything on the poster to type. Drag the title or photo to move it. Space between rows and title position sit at the top so a weekly graphic is a two-slider job.
+        Click anything on the poster to type. Drag the title or photo to move it. Team name size and Name start sit at the top — pull Name start left to tuck type closer to the crest.
       </p>
       {simpleDefs.map((def) => (
         <Control

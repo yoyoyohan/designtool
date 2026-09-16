@@ -183,7 +183,7 @@ export const TOKEN_DEFS: TokenDef[] = [
   { id: "--trend-gap", label: "Arrow / number gap", group: "Rows", kind: "px", min: 0, max: 32, step: 1 },
   { id: "--mark-pad-x", label: "Crest side padding", group: "Rows", kind: "px", min: 0, max: 48, step: 1 },
   { id: "--mark-pad-y", label: "Crest top padding", group: "Rows", kind: "px", min: 0, max: 32, step: 1 },
-  { id: "--name-pad", label: "Name padding", group: "Rows", kind: "px", min: 0, max: 48, step: 1 },
+  { id: "--name-pad", label: "Name start", group: "Rows", kind: "px", min: -40, max: 48, step: 1 },
   { id: "--name-skew", label: "Name slant", group: "Rows", kind: "number", min: -20, max: 20, step: 1 },
   { id: "--logo-scale", label: "Crest size %", group: "Rows", kind: "number", min: 30, max: 100, step: 1 },
   { id: "--rank-width", label: "Rank column", group: "Rows", kind: "px", min: 26, max: 160, step: 2 },
@@ -257,7 +257,15 @@ export const TOKEN_DEFS: TokenDef[] = [
 ];
 
 /** First-run Look panel. Everything else sits behind More look. */
-export const SIMPLE_LOOK_IDS = ["--poster-bg", "--poster-accent", "--title-size", "--title-y", "--row-gap"] as const;
+export const SIMPLE_LOOK_IDS = [
+  "--poster-bg",
+  "--poster-accent",
+  "--title-size",
+  "--title-y",
+  "--name-size",
+  "--name-pad",
+  "--row-gap",
+] as const;
 
 /** Extra Look controls shown after More look. Simple colors/title stay at the top. */
 export const ESSENTIAL_TOKEN_IDS = new Set([
@@ -267,6 +275,7 @@ export const ESSENTIAL_TOKEN_IDS = new Set([
   "--title-size",
   "--title-y",
   "--name-size",
+  "--name-pad",
   "--font-display",
   "--row-height",
   "--row-gap",
@@ -294,6 +303,7 @@ export const TEMPLATE_TOKEN_IDS: Record<string, string[]> = {
     "--meta-y",
     "--cols-y",
     "--title-y",
+    "--name-pad",
     "--row-gap",
     "--bar-ink",
     "--bar-ink-on-light",
