@@ -24,14 +24,13 @@ import {
   applyLogoLibrary,
   blobFromUrl,
   deleteLogo,
-  listLogos,
+  loadLogoLibrary,
   parseTagList,
   titleFromFile,
   updateLogo,
-  viewsFromRecords,
-  type LogoRecord,
   type LogoView,
 } from "./studio/logoStore";
+import { DeskAuthError, setDeskKey, type DeskMode } from "./studio/logoApi";
 import { ElementPop } from "./studio/ElementPop";
 import { PostPreview, PREVIEW_FORMATS, formatFromPreset, type PreviewFormat } from "./studio/PostPreview";
 import { usePosterDrag } from "./studio/usePosterDrag";
@@ -171,8 +170,9 @@ function cloneShot(shot: HistoryShot): HistoryShot {
 
 export default function App() {
   const [teams, setTeams] = useState<TeamRecord[]>([]);
-  const [logoRecords, setLogoRecords] = useState<LogoRecord[]>([]);
   const [logoViews, setLogoViews] = useState<LogoView[]>([]);
+  const [logoMode, setLogoMode] = useState<DeskMode>("local");
+  const revokeLogos = useRef<(() => void) | null>(null);
   const [assetNote, setAssetNote] = useState("Loading sample pack…");
   const [tableText, setTableText] = useState(SAMPLE_TABLE);
   const [kicker, setKicker] = useState("GMC");
@@ -501,41 +501,62 @@ export default function App() {
       .catch((err: unknown) => {
         if (!cancelled) setAssetNote(err instanceof Error ? err.message : "Sample pack failed");
       });
-    listLogos()
-      .then((stored) => {
-        if (!cancelled) setLogoRecords(stored);
+    loadLogoLibrary()
+      .then((loaded) => {
+        if (cancelled) {
+          loaded.revoke();
+          return;
+        }
+        revokeLogos.current?.();
+        revokeLogos.current = loaded.revoke;
+        setLogoViews(loaded.views);
+        setLogoMode(loaded.mode);
       })
       .catch(() => {
         if (!cancelled) setAssetNote("Logo library could not open in this browser");
       });
     return () => {
       cancelled = true;
+      revokeLogos.current?.();
     };
   }, []);
 
-  useEffect(() => {
-    const { views, revoke } = viewsFromRecords(logoRecords);
-    setLogoViews(views);
-    return revoke;
-  }, [logoRecords]);
-
   async function refreshLogos() {
-    setLogoRecords(await listLogos());
+    const loaded = await loadLogoLibrary();
+    revokeLogos.current?.();
+    revokeLogos.current = loaded.revoke;
+    setLogoViews(loaded.views);
+    setLogoMode(loaded.mode);
+    return loaded.mode;
   }
 
   async function ingestLibrary(fileList: FileList | File[], tag = "") {
     const files = Array.from(fileList).filter((file) => /\.(svg|png|jpe?g|webp)$/i.test(file.name));
     if (files.length === 0) return;
-    for (const file of files) {
-      await addLogo({
-        name: titleFromFile(file),
-        image: file,
-        tags: tag ? [tag] : [],
-      });
+    try {
+      for (const file of files) {
+        await addLogo({
+          name: titleFromFile(file),
+          image: file,
+          tags: tag ? [tag] : [],
+        });
+      }
+      const mode = await refreshLogos();
+      setAssetNote(`Library · ${files.length} added`);
+      setStatus(shareStatus(`Saved ${files.length} crest${files.length === 1 ? "" : "s"}`, mode));
+    } catch (err) {
+      reportLogoError(err);
     }
-    await refreshLogos();
-    setAssetNote(`Library · ${files.length} added`);
-    setStatus(`Saved ${files.length} crest${files.length === 1 ? "" : "s"} to the library`);
+  }
+
+  function shareStatus(message: string, mode = logoMode) {
+    if (mode === "local") return `${message} · this computer only`;
+    if (mode === "locked") return `${message} · enter the desk key to share`;
+    return `${message} · saved for everyone`;
+  }
+
+  function reportLogoError(err: unknown) {
+    setStatus(err instanceof DeskAuthError ? err.message : err instanceof Error ? err.message : "Logo save failed");
   }
 
   async function upsertLogoEntry(
@@ -545,19 +566,24 @@ export default function App() {
     const name = patch.name ?? entry.name;
     const aliases = aliasesAfterRename(entry.name, name, patch.aliases ?? entry.aliases);
     const next = { ...patch, name, aliases };
-    if (entry.libraryId) {
-      await updateLogo(entry.libraryId, next);
-    } else {
-      const image = next.image ?? (entry.url ? await blobFromUrl(entry.url) : null);
-      if (!image) return;
-      await addLogo({
-        name,
-        aliases,
-        tags: (next.tags ?? entry.tags).filter((tag) => tag !== "Sample" && tag !== "Upload"),
-        image,
-      });
+    try {
+      if (entry.libraryId) {
+        await updateLogo(entry.libraryId, next);
+      } else {
+        const image = next.image ?? (entry.url ? await blobFromUrl(entry.url) : null);
+        if (!image) return;
+        await addLogo({
+          name,
+          aliases,
+          tags: (next.tags ?? entry.tags).filter((tag) => tag !== "Sample" && tag !== "Upload"),
+          image,
+        });
+      }
+      const mode = await refreshLogos();
+      setStatus(shareStatus(`Updated ${name}`, mode));
+    } catch (err) {
+      reportLogoError(err);
     }
-    await refreshLogos();
   }
 
   useEffect(() => {
@@ -731,10 +757,11 @@ export default function App() {
         })
     )
       .then(() => refreshLogos())
-      .then(() => {
+      .then((mode) => {
         setAssetNote(`Logo updated · ${hit.teamQuery}`);
-        setStatus(`Logo saved · ${hit.teamQuery}`);
-      });
+        setStatus(shareStatus(`Logo saved · ${hit.teamQuery}`, mode));
+      })
+      .catch(reportLogoError);
   }
 
   function onMediaFile(file: File | undefined) {
@@ -944,7 +971,13 @@ export default function App() {
 
         <div className="panel-block">
           <h2 className="panel-label">Logo library</h2>
-          <p className="panel-hint">Always on. Click a name to fix spelling. Open the full library to scan every school.</p>
+          <p className="panel-hint">
+            {logoMode === "shared"
+              ? "Shared desk. A replace here shows up for every sports business computer."
+              : logoMode === "locked"
+                ? "The shared desk is on. Enter the sports business key to save for everyone."
+                : "This computer only until the shared desk is running on Render."}
+          </p>
           <LogoDatabase
             logos={logoViews}
             teams={teams}
@@ -954,26 +987,36 @@ export default function App() {
                 ? `${assetNote} · ${logoViews.length} saved`
                 : assetNote
             }
+            shareMode={logoMode}
             deskOpen={logoDeskOpen}
             onDeskOpen={() => setLogoDeskOpen(true)}
             onDeskClose={() => setLogoDeskOpen(false)}
+            onUnlock={(key) => {
+              setDeskKey(key);
+              void refreshLogos().then((mode) => {
+                setStatus(mode === "locked" ? "That key did not match" : "Desk unlocked · edits save for everyone");
+              });
+            }}
             onUpload={(files) => void ingestLibrary(files)}
             onSaveMeta={(entry, name, aliases, tags) => {
               void upsertLogoEntry(entry, {
                 name,
                 aliases: parseTagList(aliases),
                 tags: parseTagList(tags),
-              }).then(() => setStatus(`Updated ${name}`));
+              });
             }}
             onReplace={(entry, file) => {
-              void upsertLogoEntry(entry, { image: file }).then(() => setStatus(`Replaced ${entry.name}`));
+              void upsertLogoEntry(entry, { image: file });
             }}
             onCrop={(entry, blob) => {
-              void upsertLogoEntry(entry, { image: blob }).then(() => setStatus(`Cropped ${entry.name}`));
+              void upsertLogoEntry(entry, { image: blob });
             }}
             onDelete={(entry) => {
               if (!entry.libraryId) return;
-              void deleteLogo(entry.libraryId).then(() => refreshLogos());
+              void deleteLogo(entry.libraryId)
+                .then(() => refreshLogos())
+                .then((mode) => setStatus(shareStatus(`Deleted ${entry.name}`, mode)))
+                .catch(reportLogoError);
             }}
           />
           <div className="row-btns">

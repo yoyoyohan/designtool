@@ -1,4 +1,13 @@
 import type { TeamRecord } from "../engine/types";
+import {
+  deleteSharedLogo,
+  fetchDeskStatus,
+  fetchSharedViews,
+  patchSharedLogo,
+  postSharedLogo,
+  pushLocalIfMissing,
+  type DeskMode,
+} from "./logoApi";
 
 const DB_NAME = "ranking-studio-logos";
 const STORE = "logos";
@@ -83,7 +92,13 @@ export async function addLogo(input: {
     updatedAt: now,
   };
   await run("readwrite", (store) => store.put(record));
-  return record;
+  try {
+    const shared = await postSharedLogo(record);
+    return { ...record, id: shared.id, name: shared.name, aliases: shared.aliases, tags: shared.tags };
+  } catch (err) {
+    if ((await fetchDeskStatus()).available) throw err;
+    return record;
+  }
 }
 
 export async function updateLogo(
@@ -91,19 +106,50 @@ export async function updateLogo(
   patch: Partial<Pick<LogoRecord, "name" | "aliases" | "tags" | "image">>,
 ): Promise<LogoRecord | null> {
   const current = await getLogo(id);
-  if (!current) return null;
-  const next: LogoRecord = {
-    ...current,
-    ...patch,
-    name: (patch.name ?? current.name).trim() || current.name,
-    updatedAt: Date.now(),
-  };
-  await run("readwrite", (store) => store.put(next));
-  return next;
+  const fallback: LogoRecord | null = current
+    ? {
+        ...current,
+        ...patch,
+        name: (patch.name ?? current.name).trim() || current.name,
+        updatedAt: Date.now(),
+      }
+    : null;
+  if (fallback) await run("readwrite", (store) => store.put(fallback));
+  try {
+    await patchSharedLogo(id, patch);
+  } catch (err) {
+    if ((await fetchDeskStatus()).available) throw err;
+  }
+  return fallback;
 }
 
 export async function deleteLogo(id: string): Promise<void> {
   await run("readwrite", (store) => store.delete(id));
+  try {
+    await deleteSharedLogo(id);
+  } catch (err) {
+    if ((await fetchDeskStatus()).available) throw err;
+  }
+}
+
+export async function loadLogoLibrary(): Promise<{ views: LogoView[]; mode: DeskMode; revoke: () => void }> {
+  const remote = await fetchSharedViews();
+  const local = await listLogos();
+  if (remote) {
+    await pushLocalIfMissing(local, remote);
+    const views = (await fetchSharedViews()) ?? remote;
+    const status = await fetchDeskStatus();
+    const seen = new Set(views.flatMap((row) => [row.id, row.name.toLowerCase()]));
+    const pending = local.filter((row) => !seen.has(row.id) && !seen.has(row.name.toLowerCase()));
+    const extra = viewsFromRecords(pending);
+    return {
+      views: [...views, ...extra.views],
+      mode: status.locked && !status.authorized ? "locked" : "shared",
+      revoke: extra.revoke,
+    };
+  }
+  const { views, revoke } = viewsFromRecords(local);
+  return { views, mode: "local", revoke };
 }
 
 export function titleFromFile(file: File): string {

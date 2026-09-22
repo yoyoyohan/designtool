@@ -4,8 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node server/dev.mjs",
+    "dev:ui": "vite",
     "build": "tsc --noEmit && vite build",
+    "start": "node server/index.mjs",
     "preview": "vite preview",
     "zip:netlify": "tsc --noEmit && vite build && rm -f ranking-studio-netlify.zip && cd dist && zip -r ../ranking-studio-netlify.zip . >/dev/null && cd .. && ls -lh ranking-studio-netlify.zip"
   },

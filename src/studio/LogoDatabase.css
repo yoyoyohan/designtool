@@ -1,3 +1,33 @@
+.logo-share {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--ui-muted);
+}
+
+.logo-share.is-shared {
+  color: var(--ui-ink);
+}
+
+.logo-share.is-locked {
+  color: var(--ui-accent);
+}
+
+.logo-key-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.logo-key-row input {
+  width: 100%;
+  border: 1px solid var(--ui-line-strong);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
 .logo-db-tools {
   display: grid;
   gap: 6px;

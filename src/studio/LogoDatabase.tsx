@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import type { TeamRecord } from "../engine/types";
 import { LogoCropper } from "./LogoCropper";
+import type { DeskMode } from "./logoApi";
 import {
   logoIsInUse,
   normalizeLogoName,
@@ -25,9 +26,11 @@ type Props = {
   teams: TeamRecord[];
   usedNames: string[];
   note: string;
+  shareMode: DeskMode;
   deskOpen: boolean;
   onDeskOpen: () => void;
   onDeskClose: () => void;
+  onUnlock: (key: string) => void;
   onUpload: (files: FileList | File[]) => void;
   onSaveMeta: (entry: LogoEntry, name: string, aliases: string, tags: string) => void;
   onReplace: (entry: LogoEntry, file: File) => void;
@@ -170,9 +173,11 @@ export function LogoDatabase({
   teams,
   usedNames,
   note,
+  shareMode,
   deskOpen,
   onDeskOpen,
   onDeskClose,
+  onUnlock,
   onUpload,
   onSaveMeta,
   onReplace,
@@ -184,6 +189,7 @@ export function LogoDatabase({
   const pendingReplace = useRef<LogoEntry | null>(null);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("");
+  const [deskKey, setDeskKeyDraft] = useState("");
   const [cropping, setCropping] = useState<LogoEntry | null>(null);
   const [dropHot, setDropHot] = useState(false);
 
@@ -208,6 +214,33 @@ export function LogoDatabase({
 
   const tools = (
     <>
+      <p className={`logo-share is-${shareMode}`}>
+        {shareMode === "shared"
+          ? "Shared with sports business. Leave the page — the crest stays for everyone."
+          : shareMode === "locked"
+            ? "Everyone can see the shared desk. The key is required to replace a crest for the group."
+            : "Saved on this computer only. Open the site from Render with the desk server to share."}
+      </p>
+      {shareMode === "locked" ? (
+        <form
+          className="logo-key-row"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (deskKey.trim()) onUnlock(deskKey.trim());
+          }}
+        >
+          <input
+            type="password"
+            value={deskKey}
+            placeholder="Sports business desk key"
+            autoComplete="off"
+            onChange={(event) => setDeskKeyDraft(event.target.value)}
+          />
+          <button type="submit" className="ghost-btn">
+            Unlock
+          </button>
+        </form>
+      ) : null}
       <div
         className={dropHot ? "dropzone is-hot" : "dropzone"}
         onDragOver={(event) => {
@@ -323,7 +356,11 @@ export function LogoDatabase({
           <div className="logo-desk-bar">
             <div>
               <h2>Logo library</h2>
-              <p>Every crest the studio can use. Click a field to edit. Changes save when you leave the box.</p>
+              <p>
+                {shareMode === "shared"
+                  ? "Edits save for the whole desk. Click a field, then leave the box."
+                  : "Click a field to edit. Changes save when you leave the box."}
+              </p>
             </div>
             <button type="button" className="ghost-btn" onClick={onDeskClose}>
               Close

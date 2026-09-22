@@ -1,10 +1,15 @@
 services:
   - type: web
     name: designtool
-    runtime: static
+    runtime: node
     buildCommand: npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    startCommand: npm start
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+      - key: STAFF_KEY
+        sync: false
+    disk:
+      name: logo-library
+      mountPath: /var/data
+      sizeGB: 1
