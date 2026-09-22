@@ -976,7 +976,7 @@ export default function App() {
               ? "Shared desk. A replace here shows up for every sports business computer."
               : logoMode === "locked"
                 ? "The shared desk is on. Enter the sports business key to save for everyone."
-                : "This computer only until the shared desk is running on Render."}
+                : "This computer only until Supabase keys are on the Render build."}
           </p>
           <LogoDatabase
             logos={logoViews}
@@ -992,10 +992,14 @@ export default function App() {
             onDeskOpen={() => setLogoDeskOpen(true)}
             onDeskClose={() => setLogoDeskOpen(false)}
             onUnlock={(key) => {
-              setDeskKey(key);
-              void refreshLogos().then((mode) => {
-                setStatus(mode === "locked" ? "That key did not match" : "Desk unlocked · edits save for everyone");
-              });
+              void setDeskKey(key)
+                .then(() => refreshLogos())
+                .then((mode) => {
+                  setStatus(mode === "locked" ? "That key did not match" : "Desk unlocked · edits save for everyone");
+                })
+                .catch((err) => {
+                  setStatus(err instanceof Error ? err.message : "That key did not match");
+                });
             }}
             onUpload={(files) => void ingestLibrary(files)}
             onSaveMeta={(entry, name, aliases, tags) => {

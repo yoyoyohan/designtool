@@ -219,7 +219,7 @@ export function LogoDatabase({
           ? "Shared with sports business. Leave the page — the crest stays for everyone."
           : shareMode === "locked"
             ? "Everyone can see the shared desk. The key is required to replace a crest for the group."
-            : "Saved on this computer only. Open the site from Render with the desk server to share."}
+            : "Saved on this computer only. Add the Supabase keys on Render to share with the desk."}
       </p>
       {shareMode === "locked" ? (
         <form
