@@ -30,7 +30,7 @@ import {
   updateLogo,
   type LogoView,
 } from "./studio/logoStore";
-import { DeskAuthError, setDeskKey, type DeskMode } from "./studio/logoApi";
+import { DeskAuthError, deskBuildNote, setDeskKey, type DeskMode } from "./studio/logoApi";
 import { ElementPop } from "./studio/ElementPop";
 import { PostPreview, PREVIEW_FORMATS, formatFromPreset, type PreviewFormat } from "./studio/PostPreview";
 import { usePosterDrag } from "./studio/usePosterDrag";
@@ -172,6 +172,7 @@ export default function App() {
   const [teams, setTeams] = useState<TeamRecord[]>([]);
   const [logoViews, setLogoViews] = useState<LogoView[]>([]);
   const [logoMode, setLogoMode] = useState<DeskMode>("local");
+  const [logoDeskNote, setLogoDeskNote] = useState("");
   const revokeLogos = useRef<(() => void) | null>(null);
   const [assetNote, setAssetNote] = useState("Loading sample pack…");
   const [tableText, setTableText] = useState(SAMPLE_TABLE);
@@ -511,6 +512,7 @@ export default function App() {
         revokeLogos.current = loaded.revoke;
         setLogoViews(loaded.views);
         setLogoMode(loaded.mode);
+        setLogoDeskNote(loaded.note || deskBuildNote());
       })
       .catch(() => {
         if (!cancelled) setAssetNote("Logo library could not open in this browser");
@@ -527,6 +529,7 @@ export default function App() {
     revokeLogos.current = loaded.revoke;
     setLogoViews(loaded.views);
     setLogoMode(loaded.mode);
+    setLogoDeskNote(loaded.note || deskBuildNote());
     return loaded.mode;
   }
 
@@ -988,6 +991,7 @@ export default function App() {
                 : assetNote
             }
             shareMode={logoMode}
+            shareNote={logoDeskNote}
             deskOpen={logoDeskOpen}
             onDeskOpen={() => setLogoDeskOpen(true)}
             onDeskClose={() => setLogoDeskOpen(false)}

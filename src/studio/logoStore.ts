@@ -132,20 +132,27 @@ export async function deleteLogo(id: string): Promise<void> {
   }
 }
 
-export async function loadLogoLibrary(): Promise<{ views: LogoView[]; mode: DeskMode; revoke: () => void }> {
+export async function loadLogoLibrary(): Promise<{
+  views: LogoView[];
+  mode: DeskMode;
+  revoke: () => void;
+  note?: string;
+}> {
   const remote = await fetchSharedViews();
   const local = await listLogos();
   if (remote) {
-    await pushLocalIfMissing(local, remote);
-    const views = (await fetchSharedViews()) ?? remote;
+    if (!remote.error) await pushLocalIfMissing(local, remote.views);
+    const latest = remote.error ? remote : ((await fetchSharedViews()) ?? remote);
+    const views = latest.views;
     const status = await fetchDeskStatus();
     const seen = new Set(views.flatMap((row) => [row.id, row.name.toLowerCase()]));
     const pending = local.filter((row) => !seen.has(row.id) && !seen.has(row.name.toLowerCase()));
     const extra = viewsFromRecords(pending);
     return {
       views: [...views, ...extra.views],
-      mode: status.locked && !status.authorized ? "locked" : "shared",
+      mode: status.authorized ? "shared" : "locked",
       revoke: extra.revoke,
+      note: latest.error,
     };
   }
   const { views, revoke } = viewsFromRecords(local);

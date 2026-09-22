@@ -27,6 +27,7 @@ type Props = {
   usedNames: string[];
   note: string;
   shareMode: DeskMode;
+  shareNote?: string;
   deskOpen: boolean;
   onDeskOpen: () => void;
   onDeskClose: () => void;
@@ -174,6 +175,7 @@ export function LogoDatabase({
   usedNames,
   note,
   shareMode,
+  shareNote,
   deskOpen,
   onDeskOpen,
   onDeskClose,
@@ -219,9 +221,10 @@ export function LogoDatabase({
           ? "Shared with sports business. Leave the page — the crest stays for everyone."
           : shareMode === "locked"
             ? "Everyone can see the shared desk. The key is required to replace a crest for the group."
-            : "Saved on this computer only. Add the Supabase keys on Render to share with the desk."}
+            : "Saved on this computer only. This build never received the Supabase keys."}
+        {shareNote ? ` ${shareNote}` : ""}
       </p>
-      {shareMode === "locked" ? (
+      {shareMode === "shared" ? null : (
         <form
           className="logo-key-row"
           onSubmit={(event) => {
@@ -240,7 +243,7 @@ export function LogoDatabase({
             Unlock
           </button>
         </form>
-      ) : null}
+      )}
       <div
         className={dropHot ? "dropzone is-hot" : "dropzone"}
         onDragOver={(event) => {

@@ -29,12 +29,33 @@ export class DeskAuthError extends Error {
 
 const BUCKET = "crests";
 
+function clean(value?: string) {
+  return (value ?? "").trim().replace(/^['"]|['"]$/g, "");
+}
+
 function env() {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const anon = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  const email = import.meta.env.VITE_DESK_EMAIL || "desk@sportsbusiness.local";
+  const url = clean(import.meta.env.VITE_SUPABASE_URL);
+  const anon = clean(import.meta.env.VITE_SUPABASE_ANON_KEY);
+  const email = clean(import.meta.env.VITE_DESK_EMAIL) || "desk@sportsbusiness.local";
   if (!url || !anon) return null;
   return { url, anon, email };
+}
+
+export function isDeskConfigured(): boolean {
+  return Boolean(env());
+}
+
+export function deskBuildNote(): string {
+  const url = clean(import.meta.env.VITE_SUPABASE_URL);
+  const anon = clean(import.meta.env.VITE_SUPABASE_ANON_KEY);
+  if (url && anon) {
+    try {
+      return `Connected to ${new URL(url).host}`;
+    } catch {
+      return "Supabase keys are in this build";
+    }
+  }
+  return `Keys missing in this build · url ${url ? "yes" : "no"} · anon ${anon ? "yes" : "no"}`;
 }
 
 let client: SupabaseClient | null = null;
@@ -113,15 +134,15 @@ export async function fetchDeskStatus(): Promise<DeskStatus> {
   };
 }
 
-export async function fetchSharedViews(): Promise<LogoView[] | null> {
+export async function fetchSharedViews(): Promise<{ views: LogoView[]; error?: string } | null> {
   const supabase = getClient();
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("logos")
     .select("id,name,aliases,tags,mime,uploaded_at,updated_at")
     .order("name");
-  if (error) return null;
-  return (data ?? []).map(asView);
+  if (error) return { views: [], error: error.message };
+  return { views: (data ?? []).map(asView) };
 }
 
 async function requireClient(): Promise<SupabaseClient> {
