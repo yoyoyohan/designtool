@@ -96,12 +96,14 @@ function filterEntries(rows: LogoEntry[], query: string, tag: string): LogoEntry
 
 function LogoRow({
   entry,
+  canEdit,
   onSaveMeta,
   onCrop,
   onReplaceClick,
   onDelete,
 }: {
   entry: LogoEntry;
+  canEdit: boolean;
   onSaveMeta: Props["onSaveMeta"];
   onCrop: (entry: LogoEntry) => void;
   onReplaceClick: (entry: LogoEntry) => void;
@@ -109,61 +111,81 @@ function LogoRow({
 }) {
   return (
     <article className={entry.used ? "logo-row is-used" : "logo-row"}>
-      <button type="button" className="logo-row-mark" title="Crop crest" onClick={() => onCrop(entry)}>
-        <img src={entry.url} alt="" />
-      </button>
+      {canEdit ? (
+        <button type="button" className="logo-row-mark" title="Crop crest" onClick={() => onCrop(entry)}>
+          <img src={entry.url} alt="" />
+        </button>
+      ) : (
+        <div className="logo-row-mark is-static">
+          <img src={entry.url} alt="" />
+        </div>
+      )}
       <label>
         School
-        <input
-          key={`${entry.key}-name-${entry.name}`}
-          defaultValue={entry.name}
-          onBlur={(event) => {
-            const next = event.target.value.trim();
-            if (next && next !== entry.name) onSaveMeta(entry, next, entry.aliases.join(", "), entry.tags.join(", "));
-          }}
-        />
+        {canEdit ? (
+          <input
+            key={`${entry.key}-name-${entry.name}`}
+            defaultValue={entry.name}
+            onBlur={(event) => {
+              const next = event.target.value.trim();
+              if (next && next !== entry.name) onSaveMeta(entry, next, entry.aliases.join(", "), entry.tags.join(", "));
+            }}
+          />
+        ) : (
+          <p className="logo-row-static">{entry.name}</p>
+        )}
       </label>
       <label>
         Also known as
-        <input
-          key={`${entry.key}-aka-${entry.aliases.join("|")}`}
-          defaultValue={entry.aliases.join(", ")}
-          placeholder="Short names, nicknames"
-          onBlur={(event) => {
-            if (event.target.value !== entry.aliases.join(", ")) {
-              onSaveMeta(entry, entry.name, event.target.value, entry.tags.join(", "));
-            }
-          }}
-        />
+        {canEdit ? (
+          <input
+            key={`${entry.key}-aka-${entry.aliases.join("|")}`}
+            defaultValue={entry.aliases.join(", ")}
+            placeholder="Short names, nicknames"
+            onBlur={(event) => {
+              if (event.target.value !== entry.aliases.join(", ")) {
+                onSaveMeta(entry, entry.name, event.target.value, entry.tags.join(", "));
+              }
+            }}
+          />
+        ) : (
+          <p className="logo-row-static">{entry.aliases.join(", ") || "—"}</p>
+        )}
       </label>
       <label>
         Tags
-        <input
-          key={`${entry.key}-tags-${entry.tags.join("|")}`}
-          defaultValue={entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ")}
-          placeholder="State, Movers"
-          onBlur={(event) => {
-            if (event.target.value !== entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ")) {
-              onSaveMeta(entry, entry.name, entry.aliases.join(", "), event.target.value);
-            }
-          }}
-        />
+        {canEdit ? (
+          <input
+            key={`${entry.key}-tags-${entry.tags.join("|")}`}
+            defaultValue={entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ")}
+            placeholder="State, Movers"
+            onBlur={(event) => {
+              if (event.target.value !== entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ")) {
+                onSaveMeta(entry, entry.name, entry.aliases.join(", "), event.target.value);
+              }
+            }}
+          />
+        ) : (
+          <p className="logo-row-static">{entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ") || "—"}</p>
+        )}
       </label>
       <div className="logo-row-side">
         <span>{entry.used ? "On this poster" : entry.source === "library" ? "Library" : "Sample pack"}</span>
-        <div className="logo-db-actions">
-          <button type="button" className="link-btn" onClick={() => onCrop(entry)}>
-            Crop
-          </button>
-          <button type="button" className="link-btn" onClick={() => onReplaceClick(entry)}>
-            Replace
-          </button>
-          {entry.libraryId ? (
-            <button type="button" className="link-btn" onClick={() => onDelete(entry)}>
-              Delete
+        {canEdit ? (
+          <div className="logo-db-actions">
+            <button type="button" className="link-btn" onClick={() => onCrop(entry)}>
+              Crop / outline
             </button>
-          ) : null}
-        </div>
+            <button type="button" className="link-btn" onClick={() => onReplaceClick(entry)}>
+              Replace
+            </button>
+            {entry.libraryId ? (
+              <button type="button" className="link-btn" onClick={() => onDelete(entry)}>
+                Delete
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </article>
   );
@@ -203,6 +225,7 @@ export function LogoDatabase({
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [entries]);
   const posterCount = entries.filter((entry) => entry.used).length;
+  const canEdit = shareMode !== "locked";
 
   function askDelete(entry: LogoEntry) {
     if (!entry.libraryId) return;
@@ -220,7 +243,7 @@ export function LogoDatabase({
         {shareMode === "shared"
           ? "Shared with sports business. Leave the page — the crest stays for everyone."
           : shareMode === "locked"
-            ? "Everyone can see the shared desk. The key is required to replace a crest for the group."
+            ? "You can look. Type the sports business key and crop, replace, and upload appear."
             : "Saved on this computer only. This build never received the Supabase keys."}
         {shareNote ? ` ${shareNote}` : ""}
       </p>
@@ -244,25 +267,29 @@ export function LogoDatabase({
           </button>
         </form>
       )}
-      <div
-        className={dropHot ? "dropzone is-hot" : "dropzone"}
-        onDragOver={(event) => {
-          event.preventDefault();
-          setDropHot(true);
-        }}
-        onDragLeave={() => setDropHot(false)}
-        onDrop={(event) => {
-          event.preventDefault();
-          setDropHot(false);
-          if (event.dataTransfer.files.length) onUpload(event.dataTransfer.files);
-        }}
-      >
-        Drop crests here. Click a name to rename. Crop or replace saves over the same school.
-      </div>
+      {canEdit ? (
+        <div
+          className={dropHot ? "dropzone is-hot" : "dropzone"}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDropHot(true);
+          }}
+          onDragLeave={() => setDropHot(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            setDropHot(false);
+            if (event.dataTransfer.files.length) onUpload(event.dataTransfer.files);
+          }}
+        >
+          Drop crests here. Click a name to rename. Crop or replace saves over the same school.
+        </div>
+      ) : null}
       <div className="row-btns">
-        <button type="button" className="ghost-btn" onClick={() => fileRef.current?.click()}>
-          Upload logos
-        </button>
+        {canEdit ? (
+          <button type="button" className="ghost-btn" onClick={() => fileRef.current?.click()}>
+            Upload logos
+          </button>
+        ) : null}
         {!deskOpen ? (
           <button type="button" className="ghost-btn" onClick={onDeskOpen}>
             Open full library
@@ -328,6 +355,7 @@ export function LogoDatabase({
       <LogoRow
         key={entry.key}
         entry={entry}
+        canEdit={canEdit}
         onSaveMeta={onSaveMeta}
         onCrop={setCropping}
         onReplaceClick={(item) => {
@@ -362,7 +390,9 @@ export function LogoDatabase({
               <p>
                 {shareMode === "shared"
                   ? "Edits save for the whole desk. Click a field, then leave the box."
-                  : "Click a field to edit. Changes save when you leave the box."}
+                  : shareMode === "locked"
+                    ? "Type the sports business key to unlock crop and replace."
+                    : "Click a field to edit. Changes save when you leave the box."}
               </p>
             </div>
             <button type="button" className="ghost-btn" onClick={onDeskClose}>
@@ -375,7 +405,7 @@ export function LogoDatabase({
           </div>
         </div>
       ) : null}
-      {cropping ? (
+      {canEdit && cropping ? (
         <LogoCropper
           src={cropping.url}
           name={cropping.name}

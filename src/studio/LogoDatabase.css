@@ -72,6 +72,15 @@
   background: var(--ui-fill-2);
 }
 
+.logo-row-static {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 6px 0;
+}
+
 .logo-row-mark {
   grid-row: 1 / span 4;
   width: 86px;
@@ -80,6 +89,10 @@
   border: 0;
   background: #1a2748;
   cursor: pointer;
+}
+
+.logo-row-mark.is-static {
+  cursor: default;
 }
 
 .logo-row-mark img {
@@ -201,12 +214,34 @@
 }
 
 .logo-crop {
-  width: min(360px, 100%);
+  width: min(400px, 100%);
   background: var(--ui-panel);
   border: 1px solid var(--ui-line-strong);
   border-radius: 8px;
   padding: 14px;
   box-shadow: 0 16px 40px color-mix(in srgb, #111 18%, transparent);
+}
+
+.logo-crop-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.logo-crop-modes button {
+  border: 1px solid var(--ui-line-strong);
+  background: var(--ui-fill);
+  color: var(--ui-ink);
+  border-radius: 4px;
+  padding: 6px 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.logo-crop-modes button.is-on {
+  background: var(--ui-accent-fill);
+  border-color: var(--ui-accent);
 }
 
 .logo-crop-title {
@@ -221,6 +256,7 @@
 }
 
 .logo-crop-view {
+  position: relative;
   width: 280px;
   height: 280px;
   max-width: 100%;
@@ -229,6 +265,34 @@
   background: #1a2748;
   cursor: grab;
   touch-action: none;
+}
+
+.logo-crop-view.is-draw {
+  cursor: crosshair;
+}
+
+.logo-crop-view canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.logo-crop-path {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.logo-crop-path polygon {
+  fill: color-mix(in srgb, #fff 18%, transparent);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.logo-crop-clear {
+  width: 100%;
+  margin-bottom: 10px;
 }
 
 .logo-crop-view img {

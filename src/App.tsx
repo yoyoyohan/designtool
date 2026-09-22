@@ -25,6 +25,7 @@ import {
   blobFromUrl,
   deleteLogo,
   loadLogoLibrary,
+  normalizeLogoName,
   parseTagList,
   titleFromFile,
   updateLogo,
@@ -174,6 +175,7 @@ export default function App() {
   const [logoMode, setLogoMode] = useState<DeskMode>("local");
   const [logoDeskNote, setLogoDeskNote] = useState("");
   const revokeLogos = useRef<(() => void) | null>(null);
+  const logoOverrides = useRef<Record<string, string>>({});
   const [assetNote, setAssetNote] = useState("Loading sample pack…");
   const [tableText, setTableText] = useState(SAMPLE_TABLE);
   const [kicker, setKicker] = useState("GMC");
@@ -510,9 +512,9 @@ export default function App() {
         }
         revokeLogos.current?.();
         revokeLogos.current = loaded.revoke;
-        setLogoViews(loaded.views);
+        setLogoViews(withOverrides(loaded.views));
         setLogoMode(loaded.mode);
-        setLogoDeskNote(loaded.note || deskBuildNote());
+        setLogoDeskNote(loaded.note || (loaded.mode === "local" ? deskBuildNote() : ""));
       })
       .catch(() => {
         if (!cancelled) setAssetNote("Logo library could not open in this browser");
@@ -523,13 +525,61 @@ export default function App() {
     };
   }, []);
 
+  function withOverrides(views: LogoView[]) {
+    const extras = Object.entries(logoOverrides.current)
+      .filter(([key]) => !views.some((view) => normalizeLogoName(view.name) === key))
+      .map(([key, url]) => ({
+        id: `preview-${key}`,
+        name: key,
+        aliases: [],
+        tags: [],
+        uploadedAt: Date.now(),
+        updatedAt: Date.now(),
+        url,
+      }));
+    return [
+      ...views.map((view) => {
+        const hit = logoOverrides.current[normalizeLogoName(view.name)];
+        return hit ? { ...view, url: hit } : view;
+      }),
+      ...extras,
+    ];
+  }
+
+  function paintLogoNow(name: string, aliases: string[], image: Blob, id?: string) {
+    const url = URL.createObjectURL(image);
+    logoOverrides.current[normalizeLogoName(name)] = url;
+    aliases.forEach((alias) => {
+      logoOverrides.current[normalizeLogoName(alias)] = url;
+    });
+    setLogoViews((prev) => {
+      const keys = new Set([name, ...aliases].map(normalizeLogoName));
+      const row: LogoView = {
+        id: id || `preview-${Date.now()}`,
+        name,
+        aliases,
+        tags: [],
+        uploadedAt: Date.now(),
+        updatedAt: Date.now(),
+        url,
+      };
+      const idx = prev.findIndex(
+        (item) => item.id === id || keys.has(normalizeLogoName(item.name)) || item.aliases.some((alias) => keys.has(normalizeLogoName(alias))),
+      );
+      if (idx < 0) return [row, ...prev];
+      const next = prev.slice();
+      next[idx] = { ...prev[idx], ...row, id: id || prev[idx].id, tags: prev[idx].tags };
+      return next;
+    });
+  }
+
   async function refreshLogos() {
     const loaded = await loadLogoLibrary();
     revokeLogos.current?.();
     revokeLogos.current = loaded.revoke;
-    setLogoViews(loaded.views);
+    setLogoViews(withOverrides(loaded.views));
     setLogoMode(loaded.mode);
-    setLogoDeskNote(loaded.note || deskBuildNote());
+    setLogoDeskNote(loaded.note || (loaded.mode === "local" ? deskBuildNote() : ""));
     return loaded.mode;
   }
 
@@ -538,8 +588,10 @@ export default function App() {
     if (files.length === 0) return;
     try {
       for (const file of files) {
+        const name = titleFromFile(file);
+        paintLogoNow(name, [], file);
         await addLogo({
-          name: titleFromFile(file),
+          name,
           image: file,
           tags: tag ? [tag] : [],
         });
@@ -569,6 +621,7 @@ export default function App() {
     const name = patch.name ?? entry.name;
     const aliases = aliasesAfterRename(entry.name, name, patch.aliases ?? entry.aliases);
     const next = { ...patch, name, aliases };
+    if (next.image) paintLogoNow(name, aliases, next.image, entry.libraryId ?? undefined);
     try {
       if (entry.libraryId) {
         await updateLogo(entry.libraryId, next);
@@ -747,6 +800,8 @@ export default function App() {
     pendingLogo.current = null;
     if (!file || !hit) return;
     remember();
+    const name = hit.teamQuery.trim() || titleFromFile(file);
+    paintLogoNow(name, [hit.teamQuery], file);
     const existing = logoViews.find(
       (logo) => logo.name.toLowerCase() === hit.teamQuery.trim().toLowerCase(),
     );
@@ -978,7 +1033,7 @@ export default function App() {
             {logoMode === "shared"
               ? "Shared desk. A replace here shows up for every sports business computer."
               : logoMode === "locked"
-                ? "The shared desk is on. Enter the sports business key to save for everyone."
+                ? "Look only. Type the sports business key and the crop tools appear."
                 : "This computer only until Supabase keys are on the Render build."}
           </p>
           <LogoDatabase
@@ -1028,12 +1083,16 @@ export default function App() {
             }}
           />
           <div className="row-btns">
+            {logoMode === "locked" ? null : (
+              <>
             <button type="button" className="ghost-btn" onClick={() => folderRef.current?.click()}>
               Upload folder
             </button>
             <button type="button" className="ghost-btn" onClick={() => filesRef.current?.click()}>
               Upload files
             </button>
+              </>
+            )}
             <button
               type="button"
               className="ghost-btn"
@@ -1467,7 +1526,7 @@ export default function App() {
                 remember();
                 setTableText(next);
               }}
-              onLogoPick={pickRowLogo}
+              onLogoPick={logoMode === "locked" ? undefined : pickRowLogo}
               media={{
                 background: media.background || undefined,
                 header: media.header || undefined,
