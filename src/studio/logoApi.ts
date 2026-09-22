@@ -33,8 +33,17 @@ function clean(value?: string) {
   return (value ?? "").trim().replace(/^['"]|['"]$/g, "");
 }
 
+function projectUrl(raw: string) {
+  try {
+    const parsed = new URL(raw);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return raw.replace(/\/rest\/v1.*$/i, "").replace(/\/+$/, "");
+  }
+}
+
 function env() {
-  const url = clean(import.meta.env.VITE_SUPABASE_URL);
+  const url = projectUrl(clean(import.meta.env.VITE_SUPABASE_URL));
   const anon = clean(import.meta.env.VITE_SUPABASE_ANON_KEY);
   const email = clean(import.meta.env.VITE_DESK_EMAIL) || "desk@sportsbusiness.local";
   if (!url || !anon) return null;
