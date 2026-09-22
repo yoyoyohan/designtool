@@ -733,8 +733,8 @@
 
 .poster.is-graphic .poster-header {
   align-items: center;
-  padding-top: 22px;
-  padding-bottom: 2px;
+  padding-top: var(--header-pad);
+  padding-bottom: 0;
 }
 
 .poster.is-graphic .poster-header-copy {
@@ -766,13 +766,13 @@
   display: block;
   width: var(--rule-width);
   height: var(--rule-height);
-  margin: 6px auto 0;
+  margin: 4px auto 0;
   border-radius: 50%;
   background: var(--title-outline);
 }
 
 .poster.is-graphic .poster-cols {
-  margin: var(--cols-y) 0 6px;
+  margin: var(--cols-y) 0 0;
   align-items: end;
   font-family: var(--font-display);
   font-size: var(--col-head-size);

@@ -211,7 +211,7 @@ function fitListToCanvas(
   // Graphic skins measure their column-head band exactly; --cols-y is the air between the
   // title block and the labels. Looser templates keep a larger cushion around the heads.
   const colsY = omitColHeads ? 0 : parsePx(tokens["--cols-y"], tightChrome ? 0 : 8);
-  const colHead = omitColHeads ? 0 : parsePx(tokens["--col-head-height"], 38) + colsY + (tightChrome ? 6 : 18);
+  const colHead = omitColHeads ? 0 : parsePx(tokens["--col-head-height"], 38) + colsY + (tightChrome ? 0 : 18);
   const gaps = Math.max(0, listCount - 1);
 
   const chrome = () => pad * 2 + header + colHead + footer + (tightChrome ? 0 : 14) + extraChrome;
@@ -282,9 +282,9 @@ function fitListToCanvas(
     "--title-size": `${titleSize}px`,
     "--col-head-size": `${clamp(Math.round(Math.min(colSizePref, Math.max(9, rowH * colHeadCap))), 8, colSizePref)}px`,
   };
-  // Graphic skins set the crest cell wider than the bar is tall, so squaring it off the row
-  // height would pull the team name out of its measured column.
-  if (!tightChrome) fitted["--logo-size"] = `${rowH}px`;
+  // Keep the crest cell as tall as the bar so oversized marks fill the row instead of sitting
+  // in a leftover well when the fitter has to shrink fifteen boards.
+  fitted["--logo-size"] = `${rowH}px`;
   return fitted;
 }
 

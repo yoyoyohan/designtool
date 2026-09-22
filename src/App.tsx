@@ -17,6 +17,21 @@ import {
   type PosterTextField,
 } from "./templates/RankingPoster";
 import { RankingGrid } from "./studio/RankingGrid";
+import { LogoDatabase, type LogoEntry } from "./studio/LogoDatabase";
+import {
+  addLogo,
+  aliasesAfterRename,
+  applyLogoLibrary,
+  blobFromUrl,
+  deleteLogo,
+  listLogos,
+  parseTagList,
+  titleFromFile,
+  updateLogo,
+  viewsFromRecords,
+  type LogoRecord,
+  type LogoView,
+} from "./studio/logoStore";
 import { ElementPop } from "./studio/ElementPop";
 import { PostPreview, PREVIEW_FORMATS, formatFromPreset, type PreviewFormat } from "./studio/PostPreview";
 import { usePosterDrag } from "./studio/usePosterDrag";
@@ -156,6 +171,8 @@ function cloneShot(shot: HistoryShot): HistoryShot {
 
 export default function App() {
   const [teams, setTeams] = useState<TeamRecord[]>([]);
+  const [logoRecords, setLogoRecords] = useState<LogoRecord[]>([]);
+  const [logoViews, setLogoViews] = useState<LogoView[]>([]);
   const [assetNote, setAssetNote] = useState("Loading sample pack…");
   const [tableText, setTableText] = useState(SAMPLE_TABLE);
   const [kicker, setKicker] = useState("GMC");
@@ -173,7 +190,6 @@ export default function App() {
   });
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const [dropHot, setDropHot] = useState(false);
   const [zoom, setZoom] = useState(0.4);
   const [lockFit, setLockFit] = useState(true);
   const [ornaments, setOrnaments] = useState<Record<StickerSlot, OrnamentId>>({
@@ -211,6 +227,7 @@ export default function App() {
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [logoDeskOpen, setLogoDeskOpen] = useState(false);
   const [previewFormat, setPreviewFormat] = useState<PreviewFormat>("feed");
   const zoomRef = useRef(zoom);
   const tokensRef = useRef(tokens);
@@ -449,16 +466,22 @@ export default function App() {
         setPreviewOpen(false);
         return;
       }
+      if (logoDeskOpen) {
+        setLogoDeskOpen(false);
+        return;
+      }
       setPicked(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [previewOpen]);
+  }, [previewOpen, logoDeskOpen]);
 
   const preset = SIZE_PRESETS.find((item) => item.id === presetId) ?? SIZE_PRESETS[0];
   const previewFrame = PREVIEW_FORMATS.find((item) => item.id === previewFormat) ?? PREVIEW_FORMATS[0];
   const parsed = useMemo(() => parseTable(tableText), [tableText]);
-  const rows = useMemo(() => decorateRows(parsed, teams), [parsed, teams]);
+  const matchedTeams = useMemo(() => applyLogoLibrary(teams, logoViews), [teams, logoViews]);
+  const rows = useMemo(() => decorateRows(parsed, matchedTeams), [parsed, matchedTeams]);
+  const usedLogoNames = useMemo(() => rows.map((row) => row.teamQuery), [rows]);
   const unmatched = rows.filter((row) => !row.team && !graphicBarFor(row.teamQuery));
   const headFields = useMemo(() => visibleHeadFields(rows), [rows]);
 
@@ -478,10 +501,64 @@ export default function App() {
       .catch((err: unknown) => {
         if (!cancelled) setAssetNote(err instanceof Error ? err.message : "Sample pack failed");
       });
+    listLogos()
+      .then((stored) => {
+        if (!cancelled) setLogoRecords(stored);
+      })
+      .catch(() => {
+        if (!cancelled) setAssetNote("Logo library could not open in this browser");
+      });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const { views, revoke } = viewsFromRecords(logoRecords);
+    setLogoViews(views);
+    return revoke;
+  }, [logoRecords]);
+
+  async function refreshLogos() {
+    setLogoRecords(await listLogos());
+  }
+
+  async function ingestLibrary(fileList: FileList | File[], tag = "") {
+    const files = Array.from(fileList).filter((file) => /\.(svg|png|jpe?g|webp)$/i.test(file.name));
+    if (files.length === 0) return;
+    for (const file of files) {
+      await addLogo({
+        name: titleFromFile(file),
+        image: file,
+        tags: tag ? [tag] : [],
+      });
+    }
+    await refreshLogos();
+    setAssetNote(`Library · ${files.length} added`);
+    setStatus(`Saved ${files.length} crest${files.length === 1 ? "" : "s"} to the library`);
+  }
+
+  async function upsertLogoEntry(
+    entry: LogoEntry,
+    patch: { name?: string; aliases?: string[]; tags?: string[]; image?: Blob },
+  ) {
+    const name = patch.name ?? entry.name;
+    const aliases = aliasesAfterRename(entry.name, name, patch.aliases ?? entry.aliases);
+    const next = { ...patch, name, aliases };
+    if (entry.libraryId) {
+      await updateLogo(entry.libraryId, next);
+    } else {
+      const image = next.image ?? (entry.url ? await blobFromUrl(entry.url) : null);
+      if (!image) return;
+      await addLogo({
+        name,
+        aliases,
+        tags: (next.tags ?? entry.tags).filter((tag) => tag !== "Sample" && tag !== "Upload"),
+        image,
+      });
+    }
+    await refreshLogos();
+  }
 
   useEffect(() => {
     lockFitRef.current = lockFit;
@@ -641,31 +718,23 @@ export default function App() {
     pendingLogo.current = null;
     if (!file || !hit) return;
     remember();
-    const url = URL.createObjectURL(file);
-    objectUrls.current.push(url);
-    setTeams((prev) => {
-      if (hit.teamId && prev.some((team) => team.id === hit.teamId)) {
-        return prev.map((team) =>
-          team.id === hit.teamId ? { ...team, logoUrl: url, logoFile: file.name } : team,
-        );
-      }
-      const slug = hit.teamQuery.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "team";
-      return [
-        ...prev,
-        {
-          id: `custom-${Date.now()}-${slug}`,
-          name: hit.teamQuery,
-          aliases: [],
-          primary: "#444444",
-          secondary: "#f3ead8",
-          logoUrl: url,
-          logoFile: file.name,
-          source: "upload" as const,
-        },
-      ];
-    });
-    setAssetNote(`Logo updated · ${hit.teamQuery}`);
-    setStatus(`Logo set · ${hit.teamQuery}`);
+    const existing = logoViews.find(
+      (logo) => logo.name.toLowerCase() === hit.teamQuery.trim().toLowerCase(),
+    );
+    void (existing
+      ? updateLogo(existing.id, { image: file })
+      : addLogo({
+          name: hit.teamQuery.trim() || titleFromFile(file),
+          image: file,
+          aliases: hit.teamQuery ? [hit.teamQuery] : [],
+          tags: [templateId === "movers" ? "Movers" : "State"],
+        })
+    )
+      .then(() => refreshLogos())
+      .then(() => {
+        setAssetNote(`Logo updated · ${hit.teamQuery}`);
+        setStatus(`Logo saved · ${hit.teamQuery}`);
+      });
   }
 
   function onMediaFile(file: File | undefined) {
@@ -683,17 +752,15 @@ export default function App() {
 
   async function applyFiles(fileList: FileList | File[]) {
     remember();
-    objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
-    const pack = await loadUploadedRegistry(fileList);
-    objectUrls.current = pack.map((team) => team.logoUrl).filter((url) => url.startsWith("blob:"));
-    setTeams(pack);
-    const missingLogos = pack.filter((team) => !team.logoUrl).length;
-    const missingColor = pack.filter((team) => team.primary === "#4a4a4a").length;
-    setAssetNote(
-      `Uploaded · ${pack.length} teams` +
-        (missingLogos ? ` · ${missingLogos} without logos` : "") +
-        (missingColor ? ` · ${missingColor} using default color` : ""),
-    );
+    const files = Array.from(fileList);
+    const hasCsv = files.some((file) => file.name.toLowerCase().endsWith(".csv"));
+    if (hasCsv) {
+      objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
+      const pack = await loadUploadedRegistry(files);
+      objectUrls.current = pack.map((team) => team.logoUrl).filter((url) => url.startsWith("blob:"));
+      setTeams(pack);
+    }
+    await ingestLibrary(files);
   }
 
   async function onExport() {
@@ -756,6 +823,9 @@ export default function App() {
             Redo
           </button>
         </div>
+        <button type="button" className="preview-btn" onClick={() => setLogoDeskOpen(true)}>
+          Logos{logoViews.length ? ` · ${logoViews.length}` : ""}
+        </button>
         <button
           type="button"
           className="preview-btn"
@@ -782,6 +852,7 @@ export default function App() {
           <li>Paste rankings</li>
           <li>Pick a look</li>
           <li>Click the poster to edit</li>
+          <li>Fix crests in Logos</li>
           <li>Save or export</li>
         </ol>
         <div className="panel-block">
@@ -869,6 +940,87 @@ export default function App() {
               ))}
             </ul>
           )}
+        </div>
+
+        <div className="panel-block">
+          <h2 className="panel-label">Logo library</h2>
+          <p className="panel-hint">Always on. Click a name to fix spelling. Open the full library to scan every school.</p>
+          <LogoDatabase
+            logos={logoViews}
+            teams={teams}
+            usedNames={usedLogoNames}
+            note={
+              logoViews.length
+                ? `${assetNote} · ${logoViews.length} saved`
+                : assetNote
+            }
+            deskOpen={logoDeskOpen}
+            onDeskOpen={() => setLogoDeskOpen(true)}
+            onDeskClose={() => setLogoDeskOpen(false)}
+            onUpload={(files) => void ingestLibrary(files)}
+            onSaveMeta={(entry, name, aliases, tags) => {
+              void upsertLogoEntry(entry, {
+                name,
+                aliases: parseTagList(aliases),
+                tags: parseTagList(tags),
+              }).then(() => setStatus(`Updated ${name}`));
+            }}
+            onReplace={(entry, file) => {
+              void upsertLogoEntry(entry, { image: file }).then(() => setStatus(`Replaced ${entry.name}`));
+            }}
+            onCrop={(entry, blob) => {
+              void upsertLogoEntry(entry, { image: blob }).then(() => setStatus(`Cropped ${entry.name}`));
+            }}
+            onDelete={(entry) => {
+              if (!entry.libraryId) return;
+              void deleteLogo(entry.libraryId).then(() => refreshLogos());
+            }}
+          />
+          <div className="row-btns">
+            <button type="button" className="ghost-btn" onClick={() => folderRef.current?.click()}>
+              Upload folder
+            </button>
+            <button type="button" className="ghost-btn" onClick={() => filesRef.current?.click()}>
+              Upload files
+            </button>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => {
+                remember();
+                objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
+                objectUrls.current = [];
+                void loadSampleRegistry().then((pack) => {
+                  setTeams(pack);
+                  setAssetNote(`Sample pack · ${pack.length} teams`);
+                });
+              }}
+            >
+              Use sample logos
+            </button>
+          </div>
+          <input
+            ref={folderRef}
+            className="hidden-file"
+            type="file"
+            multiple
+            {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
+            onChange={(e) => {
+              if (e.target.files?.length) void applyFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={filesRef}
+            className="hidden-file"
+            type="file"
+            multiple
+            accept=".csv,image/png,image/svg+xml,image/jpeg,image/webp,.json"
+            onChange={(e) => {
+              if (e.target.files?.length) void applyFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
         </div>
 
         <div className="panel-block">
@@ -1041,82 +1193,10 @@ export default function App() {
         </div>
 
         <PanelFold
-          title="Team pack"
-          closedHint="Logos, extra images, and stickers"
-          openHint="Drop logos, or pick extra images and stickers"
+          title="Extra images"
+          closedHint="Background, watermarks, and stickers"
+          openHint="These sit behind or around the board, not on the team bars"
         >
-          <div
-            className={dropHot ? "dropzone is-hot" : "dropzone"}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDropHot(true);
-            }}
-            onDragLeave={() => setDropHot(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDropHot(false);
-              if (e.dataTransfer.files.length) void applyFiles(e.dataTransfer.files);
-            }}
-          >
-            Drop team logos here. Names come from the file names.
-          </div>
-          <div className="row-btns">
-            <button type="button" className="ghost-btn" onClick={() => folderRef.current?.click()}>
-              Upload folder
-            </button>
-            <button type="button" className="ghost-btn" onClick={() => filesRef.current?.click()}>
-              Upload files
-            </button>
-            <button
-              type="button"
-              className="ghost-btn"
-              onClick={() => {
-                remember();
-                objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
-                objectUrls.current = [];
-                void loadSampleRegistry().then((pack) => {
-                  setTeams(pack);
-                  setAssetNote(`Sample pack · ${pack.length} teams`);
-                });
-              }}
-            >
-              Use sample logos
-            </button>
-          </div>
-          <input
-            ref={folderRef}
-            className="hidden-file"
-            type="file"
-            multiple
-            {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
-            onChange={(e) => {
-              if (e.target.files?.length) void applyFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
-          <input
-            ref={filesRef}
-            className="hidden-file"
-            type="file"
-            multiple
-            accept=".csv,image/png,image/svg+xml,image/jpeg,image/webp,.json"
-            onChange={(e) => {
-              if (e.target.files?.length) void applyFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
-          <p className="pack-meta">{assetNote}</p>
-          <div className="logo-strip">
-            {teams.slice(0, 12).map((team) =>
-              team.logoUrl ? (
-                <img key={team.id} src={team.logoUrl} alt={team.name} title={team.name} />
-              ) : (
-                <span key={team.id} className="logo-fallback" title={team.name}>
-                  {team.name.charAt(0)}
-                </span>
-              ),
-            )}
-          </div>
           <div className="image-grid">
             <ImageTile
               label="Background"
