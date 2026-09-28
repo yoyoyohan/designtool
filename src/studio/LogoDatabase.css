@@ -214,12 +214,61 @@
 }
 
 .logo-crop {
-  width: min(400px, 100%);
+  width: min(440px, 100%);
   background: var(--ui-panel);
   border: 1px solid var(--ui-line-strong);
   border-radius: 8px;
   padding: 14px;
   box-shadow: 0 16px 40px color-mix(in srgb, #111 18%, transparent);
+}
+
+.logo-crop-stage {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 240px;
+  margin: 0 0 12px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 6px;
+  background: repeating-conic-gradient(var(--ui-fill-2) 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.logo-crop-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.logo-crop-frame {
+  position: absolute;
+  overflow: hidden;
+  outline: 2px solid var(--ui-ink);
+  background: #fff;
+}
+
+.logo-crop-placed {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  height: auto;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.logo-crop-placed.is-dim {
+  opacity: 0.5;
+}
+
+.logo-crop-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.logo-crop-controls .logo-crop-zoom {
+  flex: 1;
+  margin: 0;
 }
 
 .logo-crop-modes {

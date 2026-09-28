@@ -167,6 +167,28 @@ export function freehandOutline(
   return fitTransparent(canvas, box.maxX - box.minX, box.maxY - box.minY, box.minX, box.minY);
 }
 
+export type FrameCrop = { cx: number; cy: number; w: number };
+
+export function containFrameCrop(nw: number, nh: number, cellW = 1, cellH = 1): FrameCrop {
+  const aspect = nw / Math.max(nh, 1);
+  const frame = cellW / Math.max(cellH, 1);
+  return { cx: 0.5, cy: 0.5, w: Math.min(1, aspect / frame) };
+}
+
+/** Coach roster crop: image width is `w` of the box; center sits at (cx, cy). */
+export function rasterizeFrameCrop(image: HTMLImageElement, crop: FrameCrop, out = OUT): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = out;
+  canvas.height = out;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+  const imgW = crop.w * out;
+  const imgH = imgW * (image.naturalHeight / Math.max(image.naturalWidth, 1));
+  ctx.clearRect(0, 0, out, out);
+  ctx.drawImage(image, crop.cx * out - imgW / 2, crop.cy * out - imgH / 2, imgW, imgH);
+  return canvas;
+}
+
 export function canvasPng(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Could not save that crest"))), "image/png", 1);
