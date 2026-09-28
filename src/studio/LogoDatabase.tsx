@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { Component, useMemo, useRef, useState, type ReactNode } from "react";
 import type { TeamRecord } from "../engine/types";
 import { LogoCropper } from "./LogoCropper";
 import type { DeskMode } from "./logoApi";
@@ -8,6 +8,33 @@ import {
   type LogoView,
 } from "./logoStore";
 import "./LogoDatabase.css";
+
+class CropSafe extends Component<{ onClose: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <div className="logo-crop-mask" role="alertdialog" aria-label="Crop failed">
+          <div className="logo-crop">
+            <p className="logo-crop-title">Could not open that crop</p>
+            <p className="logo-crop-help">Close this box. The rest of the studio is still here.</p>
+            <div className="logo-crop-actions">
+              <button type="button" className="ghost-btn" onClick={this.props.onClose}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export type LogoEntry = {
   key: string;
@@ -406,15 +433,17 @@ export function LogoDatabase({
         </div>
       ) : null}
       {canEdit && cropping ? (
-        <LogoCropper
-          src={cropping.url}
-          name={cropping.name}
-          onCancel={() => setCropping(null)}
-          onApply={(blob) => {
-            onCrop(cropping, blob);
-            setCropping(null);
-          }}
-        />
+        <CropSafe onClose={() => setCropping(null)}>
+          <LogoCropper
+            src={cropping.url}
+            name={cropping.name}
+            onCancel={() => setCropping(null)}
+            onApply={(blob) => {
+              onCrop(cropping, blob);
+              setCropping(null);
+            }}
+          />
+        </CropSafe>
       ) : null}
     </div>
   );

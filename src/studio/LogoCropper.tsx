@@ -27,6 +27,7 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
   const drag = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
   const drawing = useRef(false);
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [mode, setMode] = useState<Mode>("frame");
   const [natural, setNatural] = useState({ w: 1, h: 1 });
   const [crop, setCrop] = useState<FrameCrop>({ cx: 0.5, cy: 0.5, w: 1 });
@@ -40,6 +41,7 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
   useEffect(() => {
     sized.current = false;
     setReady(false);
+    setFailed(false);
     setPoints([]);
     setCrop({ cx: 0.5, cy: 0.5, w: 1 });
   }, [src]);
@@ -62,7 +64,10 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
       const stageH = stage.clientHeight;
       const frameH = Math.min(stageH * 0.62, stageW * 0.62);
       const frameW = frameH;
-      setFrame({ left: (stageW - frameW) / 2, top: (stageH - frameH) / 2, w: frameW, h: frameH });
+      const next = { left: (stageW - frameW) / 2, top: (stageH - frameH) / 2, w: frameW, h: frameH };
+      setFrame((prev) =>
+        prev.left === next.left && prev.top === next.top && prev.w === next.w && prev.h === next.h ? prev : next,
+      );
     };
     layout();
     const observer = new ResizeObserver(layout);
@@ -72,18 +77,24 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
 
   function onImageLoad(image: HTMLImageElement) {
     if (!image.naturalWidth) return;
-    setNatural({ w: image.naturalWidth, h: image.naturalHeight });
+    imgRef.current = image;
+    setNatural((prev) =>
+      prev.w === image.naturalWidth && prev.h === image.naturalHeight
+        ? prev
+        : { w: image.naturalWidth, h: image.naturalHeight },
+    );
     if (!sized.current) {
       sized.current = true;
       setCrop(containFrameCrop(image.naturalWidth, image.naturalHeight));
     }
+    setFailed(false);
     setReady(true);
   }
 
-  function bindImage(image: HTMLImageElement | null) {
-    imgRef.current = image;
+  useEffect(() => {
+    const image = imgRef.current;
     if (image?.complete && image.naturalWidth) onImageLoad(image);
-  }
+  }, [src, mode]);
 
   function viewPoint(event: React.PointerEvent<HTMLDivElement>) {
     const box = event.currentTarget.getBoundingClientRect();
@@ -177,7 +188,7 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
     <div className="logo-crop-mask" role="dialog" aria-modal="true" aria-label={`Crop ${name}`}>
       <div className="logo-crop">
         <p className="logo-crop-title">Crop {name}</p>
-        <p className="logo-crop-help">{help}</p>
+        <p className="logo-crop-help">{failed ? "That crest did not load. Close and try another file." : help}</p>
         <div className="logo-crop-modes">
           <button type="button" className={mode === "frame" ? "is-on" : undefined} onClick={() => setMode("frame")}>
             Frame
@@ -207,7 +218,15 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
             >
               <img className="logo-crop-placed" src={src} alt="" draggable={false} style={fullStyle} />
             </div>
-            <img ref={bindImage} src={src} alt="" crossOrigin="anonymous" hidden onLoad={(event) => onImageLoad(event.currentTarget)} />
+            <img
+              ref={imgRef}
+              src={src}
+              alt=""
+              crossOrigin="anonymous"
+              hidden
+              onLoad={(event) => onImageLoad(event.currentTarget)}
+              onError={() => setFailed(true)}
+            />
           </div>
         ) : (
           <div
@@ -219,13 +238,14 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
           >
             {mode === "auto" ? <canvas ref={previewRef} width={VIEW} height={VIEW} /> : null}
             <img
-              ref={bindImage}
+              ref={imgRef}
               src={src}
               alt=""
               crossOrigin="anonymous"
               draggable={false}
               hidden={mode === "auto"}
               onLoad={(event) => onImageLoad(event.currentTarget)}
+              onError={() => setFailed(true)}
             />
             {mode === "draw" && points.length > 1 ? (
               <svg className="logo-crop-path" viewBox={`0 0 ${VIEW} ${VIEW}`}>
