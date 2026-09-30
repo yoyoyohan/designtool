@@ -42,6 +42,23 @@ export function normalizeLogoName(value: string): string {
     .trim();
 }
 
+/** Three-letter codes like SHS collide across dozens of schools. Do not treat them as names. */
+export function isSchoolCode(value: string): boolean {
+  const key = normalizeLogoName(value);
+  return Boolean(key) && key.length <= 4 && !key.includes(" ");
+}
+
+/** "Summit" hits "Summit" and "Summit High School", but not "Westfield". */
+export function schoolNameHits(a: string, b: string): boolean {
+  const left = normalizeLogoName(a);
+  const right = normalizeLogoName(b);
+  if (!left || !right) return false;
+  if (left === right) return true;
+  const [short, long] = left.length <= right.length ? [left, right] : [right, left];
+  if (isSchoolCode(short) && short !== long) return false;
+  return ` ${long} `.includes(` ${short} `);
+}
+
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -234,9 +251,11 @@ export function viewsFromRecords(records: LogoRecord[]): { views: LogoView[]; re
 }
 
 function logoHitsTeam(logo: LogoView, team: TeamRecord): boolean {
-  const keys = [logo.name, ...logo.aliases].map(normalizeLogoName).filter(Boolean);
-  const names = [team.name, team.logoFile.replace(/\.[^.]+$/, ""), ...team.aliases].map(normalizeLogoName);
-  return keys.some((key) => names.includes(key));
+  const teamNames = [team.name, team.logoFile.replace(/\.[^.]+$/, "")];
+  if (teamNames.some((name) => schoolNameHits(logo.name, name))) return true;
+  const logoNames = [logo.name, ...logo.aliases.filter((alias) => !isSchoolCode(alias))];
+  const names = [...teamNames, ...team.aliases.filter((alias) => !isSchoolCode(alias))];
+  return logoNames.some((key) => names.some((name) => schoolNameHits(key, name)));
 }
 
 /** Overlay library crests onto the matching pack without changing team ids. */

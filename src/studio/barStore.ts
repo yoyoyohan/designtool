@@ -1,4 +1,4 @@
-import type { TeamRecord } from "../engine/types";
+import type { RankingRow, TeamRecord } from "../engine/types";
 import { GRAPHIC_BAR_SCHOOLS, graphicBarFor } from "../theme/graphicBars";
 import {
   fetchDeskStatus,
@@ -7,7 +7,7 @@ import {
   upsertSharedBar,
   type SharedBar,
 } from "./logoApi";
-import { normalizeLogoName } from "./logoStore";
+import { isSchoolCode, normalizeLogoName, schoolNameHits } from "./logoStore";
 
 const DB_NAME = "ranking-studio-bars";
 const STORE = "bars";
@@ -108,14 +108,35 @@ export function catalogBars(teams: TeamRecord[]): BarRecord[] {
 }
 
 export function findBar(bars: BarRecord[], ...names: string[]): BarRecord | null {
-  const keys = names.map(normalizeLogoName).filter(Boolean);
+  const keys = names.map((name) => name.trim()).filter(Boolean);
   if (keys.length === 0) return null;
-  return (
-    bars.find((bar) => {
-      const barKeys = [bar.name, ...bar.aliases].map(normalizeLogoName);
-      return keys.some((key) => barKeys.includes(key));
-    }) ?? null
+  const fullKeys = keys.filter((key) => !isSchoolCode(key));
+  const nameKeys = fullKeys.length ? fullKeys : keys;
+  const byName = bars.find((bar) => nameKeys.some((key) => schoolNameHits(key, bar.name)));
+  if (byName) return byName;
+  const aliasHits = bars.filter((bar) =>
+    bar.aliases.some((alias) => nameKeys.some((key) => schoolNameHits(key, alias))),
   );
+  return aliasHits.length === 1 ? aliasHits[0] : null;
+}
+
+/** Paint the desk colours onto ranking rows so a pasted name uses that school's bar, not a colliding alias. */
+export function applyDeskColorsToRows(rows: RankingRow[], bars: BarRecord[]): RankingRow[] {
+  return rows.map((row) => {
+    const desk = findBar(bars, row.teamQuery, row.team?.name ?? "", ...(row.team?.aliases ?? []));
+    if (!desk) return row;
+    const team = row.team ?? {
+      id: `desk-${desk.id}`,
+      name: desk.name,
+      aliases: desk.aliases,
+      primary: desk.primary,
+      secondary: desk.secondary,
+      logoUrl: "",
+      logoFile: "",
+      source: "upload" as const,
+    };
+    return { ...row, team: { ...team, primary: desk.primary, secondary: desk.secondary } };
+  });
 }
 
 /** Desk colours win, then the published graphic, then the pack guess. */

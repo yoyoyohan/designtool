@@ -9,6 +9,7 @@ import {
   normalizeLogoName,
   type LogoView,
 } from "./logoStore";
+import { CLEAR_BG_TAG, transparentSrc } from "./transparentCrest";
 import "./LogoDatabase.css";
 
 class CropSafe extends Component<{ onClose: () => void; children: ReactNode }, { failed: boolean }> {
@@ -83,6 +84,21 @@ function colorsFor(name: string, aliases: string[], bars: BarRecord[], team?: Te
     primary: desk?.primary ?? graphic?.primary ?? team?.primary ?? "#3a3a40",
     secondary: desk?.secondary ?? graphic?.secondary ?? team?.secondary ?? "#ffffff",
   };
+}
+
+function DeskCrest({ src }: { src: string }) {
+  const [url, setUrl] = useState(src);
+  useEffect(() => {
+    let gone = false;
+    setUrl(src);
+    void transparentSrc(src).then((next) => {
+      if (!gone) setUrl(next);
+    });
+    return () => {
+      gone = true;
+    };
+  }, [src]);
+  return <img src={url} alt="" />;
 }
 
 function ColorField({
@@ -205,7 +221,7 @@ function filterEntries(rows: LogoEntry[], query: string, tag: string): LogoEntry
 }
 
 function visibleTags(tags: string[]) {
-  return tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ");
+  return tags.filter((tag) => tag !== "Sample" && tag !== "Upload" && tag !== CLEAR_BG_TAG).join(", ");
 }
 
 function LogoRow({
@@ -267,11 +283,11 @@ function LogoRow({
           style={{ background: primary }}
           onClick={() => onCrop(entry)}
         >
-          <img src={entry.url} alt="" />
+          <DeskCrest src={entry.url} />
         </button>
       ) : (
         <div className="logo-row-mark is-static" style={{ background: entry.primary }}>
-          <img src={entry.url} alt="" />
+          <DeskCrest src={entry.url} />
         </div>
       )}
       <label>

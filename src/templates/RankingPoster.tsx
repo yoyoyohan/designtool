@@ -1,8 +1,9 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ImgHTMLAttributes } from "react";
 import type { RankingRow, TableColumnRole } from "../engine/types";
 import { type TemplateId } from "./catalog";
 import { OrnamentGraphic, type OrnamentId } from "./ornaments";
 import { graphicBarFor } from "../theme/graphicBars";
+import { transparentSrc } from "../studio/transparentCrest";
 import "./RankingPoster.css";
 import "../theme/tokens.css";
 
@@ -126,8 +127,11 @@ function mixHex(hex: string, toward: string, amount: number): string {
   return `#${mix(0)}${mix(2)}${mix(4)}`;
 }
 
-/** Pick black or white ink, then push the bar fill until the name stays readable. */
-function barTone(color: string | undefined): {
+/** Use the desk colours as saved. Do not rewrite the bar or the name ink. */
+function barTone(
+  primary: string | undefined,
+  secondary?: string,
+): {
   ink: string;
   soft: string;
   fill: string;
@@ -135,7 +139,17 @@ function barTone(color: string | undefined): {
 } {
   const dark = { ink: "#101114", soft: "rgba(16, 17, 20, 0.78)" };
   const light = { ink: "#ffffff", soft: "rgba(255, 255, 255, 0.84)" };
-  const hex = parseHex(color);
+  const hex = parseHex(primary);
+  const secondaryHex = parseHex(secondary);
+  if (hex && secondaryHex) {
+    const lightBar = hexLuminance(hex) > 0.4;
+    return {
+      fill: `#${hex}`,
+      ink: `#${secondaryHex}`,
+      soft: lightBar ? "rgba(16, 17, 20, 0.78)" : "rgba(255, 255, 255, 0.84)",
+      lightBar,
+    };
+  }
   if (!hex) return { ...light, fill: "#2a2a32", lightBar: false };
   const useLightInk = contrastRatio(hex, "ffffff") >= contrastRatio(hex, "101114");
   const tone = useLightInk ? light : dark;
@@ -149,11 +163,8 @@ function barTone(color: string | undefined): {
 }
 
 /*
-  Graphic skins (State, Movers) paint the team colour exactly as published, so no contrast
-  nudging on the bar itself. Three inks come off that one colour:
-  - name ink is the team's second colour, dropped when it disappears into the bar
-  - rank and movement digits sit on the white plate, so the colour is pushed dark enough to read
-  - the stat panel is the bar pulled toward neutral, which darkens pale bars and lifts dark ones
+  Graphic skins (State, Movers) paint the desk colours exactly: bar fill and name ink.
+  Rank and movement stay on the white plate. The stat panel is the bar pulled toward grey.
 */
 function graphicTone(
   primary: string | undefined,
@@ -163,14 +174,12 @@ function graphicTone(
   const fill = parseHex(primary) ?? "2a2a32";
   const lightBar = hexLuminance(fill) > 0.4;
   const secondaryHex = parseHex(secondary);
-  const readable = secondaryHex && contrastRatio(secondaryHex, fill) >= 3;
-  const ink = readable ? `#${secondaryHex}` : lightBar ? "var(--bar-ink-on-light)" : "var(--bar-ink)";
+  const ink = secondaryHex ? `#${secondaryHex}` : lightBar ? "var(--bar-ink-on-light)" : "var(--bar-ink)";
 
   return {
     fill: `#${fill}`,
     ink,
     soft: lightBar ? "rgba(26, 39, 72, 0.8)" : "rgba(255, 255, 255, 0.8)",
-    // The graphic prints every rank and movement number in one ink, not the team colour.
     plateInk: "var(--plate-ink)",
     statFill: mixHex(fill, "808080", clamp(statTint / 100, 0, 0.7)),
     lightBar,
@@ -680,7 +689,7 @@ function PosterRow({
   const graphic = graphicBarFor(row.teamQuery, row.team?.name);
   const primary = row.team?.primary ?? graphic?.primary ?? "#3a3a40";
   const secondary = row.team?.secondary ?? graphic?.secondary ?? "#111111";
-  const tone = graphicSkin ? graphicTone(primary, secondary, statTint) : barTone(primary);
+  const tone = graphicSkin ? graphicTone(primary, secondary, statTint) : barTone(primary, secondary);
   const graphicVars: Record<string, string> = graphicSkin
     ? {
         "--plate-team-ink": (tone as ReturnType<typeof graphicTone>).plateInk,
@@ -734,7 +743,7 @@ function PosterRow({
         }}
       >
         {row.team?.logoUrl ? (
-          <img src={row.team.logoUrl} alt="" />
+          <CrestImage src={row.team.logoUrl} />
         ) : (
           <span className="lettermark">{markLetter}</span>
         )}
@@ -755,11 +764,10 @@ function PosterRow({
         }}
       >
         {row.team?.logoUrl ? (
-          <img
+          <CrestImage
             className="poster-name-ghost"
             data-logo=""
             src={row.team.logoUrl}
-            alt=""
             title={live ? "Click to change logo" : undefined}
             onPointerDown={(event) => {
               if (live) event.stopPropagation();
@@ -885,6 +893,21 @@ function ColumnHeads({
       </span>
     </div>
   );
+}
+
+function CrestImage({ src, ...props }: { src: string } & Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt">) {
+  const [url, setUrl] = useState(src);
+  useEffect(() => {
+    let gone = false;
+    setUrl(src);
+    void transparentSrc(src).then((next) => {
+      if (!gone) setUrl(next);
+    });
+    return () => {
+      gone = true;
+    };
+  }, [src]);
+  return <img {...props} src={url} alt="" />;
 }
 
 function Deco({

@@ -51,7 +51,17 @@ import {
 } from "./studio/projectStore";
 import { ORNAMENT_IDS, ORNAMENT_LABELS, type OrnamentId } from "./templates/ornaments";
 import { addFileFont, addGoogleFont, applyExtraFonts, loadExtraFonts, saveExtraFonts, type ExtraFont } from "./theme/extraFonts";
-import { applyBarColors, barIdFor, catalogBars, findBar, loadBars, saveBar, type BarRecord } from "./studio/barStore";
+import {
+  applyBarColors,
+  applyDeskColorsToRows,
+  barIdFor,
+  catalogBars,
+  findBar,
+  loadBars,
+  saveBar,
+  type BarRecord,
+} from "./studio/barStore";
+import { persistTransparentCrests } from "./studio/transparentCrest";
 import { graphicBarFor } from "./theme/graphicBars";
 import { DEFAULT_TOKENS } from "./theme/tokenMeta";
 
@@ -489,7 +499,10 @@ export default function App() {
     () => applyBarColors(applyLogoLibrary(teams, logoViews), bars),
     [teams, logoViews, bars],
   );
-  const rows = useMemo(() => decorateRows(parsed, matchedTeams), [parsed, matchedTeams]);
+  const rows = useMemo(
+    () => applyDeskColorsToRows(decorateRows(parsed, matchedTeams), bars),
+    [parsed, matchedTeams, bars],
+  );
   const usedLogoNames = useMemo(() => rows.map((row) => row.teamQuery), [rows]);
   const unmatched = rows.filter(
     (row) => !row.team && !graphicBarFor(row.teamQuery) && !findBar(bars, row.teamQuery),
@@ -536,6 +549,18 @@ export default function App() {
       revokeLogos.current?.();
     };
   }, []);
+
+  useEffect(() => {
+    if (logoMode !== "shared" || logoViews.length === 0) return;
+    let cancelled = false;
+    persistTransparentCrests(logoViews, logoMode).then((next) => {
+      if (cancelled || !next) return;
+      setLogoViews(withOverrides(next));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [logoMode, logoViews]);
 
   function withOverrides(views: LogoView[]) {
     const extras = Object.entries(logoOverrides.current)

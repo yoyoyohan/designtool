@@ -34,6 +34,16 @@ function alreadyCut(data: Uint8ClampedArray) {
   return clear / (data.length / 4) > 0.08;
 }
 
+function paperBackground(samples: { r: number; g: number; b: number; a: number }[]) {
+  const paper = samples.filter((p) => {
+    const max = Math.max(p.r, p.g, p.b);
+    const min = Math.min(p.r, p.g, p.b);
+    const lum = (p.r + p.g + p.b) / 3;
+    return max - min < 30 && (lum > 218 || lum < 28);
+  });
+  return paper.length >= Math.max(1, samples.length - 1);
+}
+
 function floodBackground(ctx: CanvasRenderingContext2D, tolerance: number) {
   const { width: w, height: h } = ctx.canvas;
   const image = ctx.getImageData(0, 0, w, h);
@@ -128,6 +138,32 @@ export function autoOutline(image: HTMLImageElement, tolerance: number): HTMLCan
   drawn.ctx.putImageData(cut, 0, 0);
   const box = bounds(cut.data, drawn.canvas.width, drawn.canvas.height);
   if (!box) return fitTransparent(image, image.naturalWidth, image.naturalHeight);
+  return fitTransparent(drawn.canvas, box.maxX - box.minX, box.maxY - box.minY, box.minX, box.minY);
+}
+
+/** Drop a white or black box behind a real crest. Skip photos and crests that are already cut out. */
+export function knockoutOpaqueCrest(image: HTMLImageElement, tolerance = 48): HTMLCanvasElement | null {
+  const drawn = drawSource(image);
+  if (!drawn) return null;
+  const { width: w, height: h } = drawn.canvas;
+  const snap = drawn.ctx.getImageData(0, 0, w, h);
+  if (alreadyCut(snap.data)) return null;
+  const samples = [
+    [0, 0],
+    [w - 1, 0],
+    [0, h - 1],
+    [w - 1, h - 1],
+    [Math.floor(w / 2), 0],
+    [Math.floor(w / 2), h - 1],
+    [0, Math.floor(h / 2)],
+    [w - 1, Math.floor(h / 2)],
+  ].map(([x, y]) => pixel(snap.data, (y * w + x) * 4));
+  if (!paperBackground(samples)) return null;
+  const cut = floodBackground(drawn.ctx, tolerance);
+  drawn.ctx.putImageData(cut, 0, 0);
+  if (!alreadyCut(cut.data)) return null;
+  const box = bounds(cut.data, w, h);
+  if (!box) return null;
   return fitTransparent(drawn.canvas, box.maxX - box.minX, box.maxY - box.minY, box.minX, box.minY);
 }
 
