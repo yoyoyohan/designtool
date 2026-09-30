@@ -34,21 +34,32 @@ function alreadyCut(data: Uint8ClampedArray) {
   return clear / (data.length / 4) > 0.08;
 }
 
+function isPaperColor(p: { r: number; g: number; b: number; a: number }) {
+  if (p.a < 12) return true;
+  const max = Math.max(p.r, p.g, p.b);
+  const min = Math.min(p.r, p.g, p.b);
+  const lum = (p.r + p.g + p.b) / 3;
+  return max - min < 34 && (lum > 210 || lum < 28);
+}
+
 function paperBackground(samples: { r: number; g: number; b: number; a: number }[]) {
-  const paper = samples.filter((p) => {
-    const max = Math.max(p.r, p.g, p.b);
-    const min = Math.min(p.r, p.g, p.b);
-    const lum = (p.r + p.g + p.b) / 3;
-    return max - min < 30 && (lum > 218 || lum < 28);
-  });
+  const paper = samples.filter((p) => isPaperColor(p));
   return paper.length >= Math.max(1, samples.length - 1);
 }
 
+function opaqueCount(data: Uint8ClampedArray) {
+  let n = 0;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] >= 12) n += 1;
+  }
+  return n;
+}
+
+/** Eat white/black paper connected to the canvas edge, including a plate sitting in transparent padding. */
 function floodBackground(ctx: CanvasRenderingContext2D, tolerance: number) {
   const { width: w, height: h } = ctx.canvas;
   const image = ctx.getImageData(0, 0, w, h);
   const { data } = image;
-  if (alreadyCut(data)) return image;
 
   const samples = [
     [0, 0],
@@ -69,7 +80,8 @@ function floodBackground(ctx: CanvasRenderingContext2D, tolerance: number) {
     const idx = y * w + x;
     if (seen[idx]) return;
     const p = pixel(data, idx * 4);
-    if (p.a < 12 || samples.some((bg) => dist(p, bg) <= tolerance)) {
+    const nearSample = samples.some((bg) => bg.a >= 12 && dist(p, bg) <= tolerance);
+    if (isPaperColor(p) || nearSample) {
       seen[idx] = 1;
       queue.push(idx);
     }
@@ -96,6 +108,45 @@ function floodBackground(ctx: CanvasRenderingContext2D, tolerance: number) {
   }
 
   return image;
+}
+
+/** Drop the anti-aliased white halo that reads as a seam on a colored bar. */
+function defringe(data: Uint8ClampedArray, w: number, h: number) {
+  const mark = new Uint8Array(w * h);
+  const neighbors = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+    [1, 1],
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+  ];
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const i = (y * w + x) * 4;
+      if (data[i + 3] < 12) continue;
+      let touchClear = x === 0 || y === 0 || x === w - 1 || y === h - 1;
+      if (!touchClear) {
+        for (const [dx, dy] of neighbors) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h || data[(ny * w + nx) * 4 + 3] < 16) {
+            touchClear = true;
+            break;
+          }
+        }
+      }
+      if (!touchClear) continue;
+      const p = pixel(data, i);
+      const lum = (p.r + p.g + p.b) / 3;
+      if (isPaperColor(p) || (p.a < 210 && lum > 188)) mark[y * w + x] = 1;
+    }
+  }
+  for (let i = 0; i < mark.length; i += 1) {
+    if (mark[i]) data[i * 4 + 3] = 0;
+  }
 }
 
 function bounds(data: Uint8ClampedArray, w: number, h: number) {
@@ -135,19 +186,19 @@ export function autoOutline(image: HTMLImageElement, tolerance: number): HTMLCan
   const drawn = drawSource(image);
   if (!drawn) return null;
   const cut = floodBackground(drawn.ctx, tolerance);
+  defringe(cut.data, drawn.canvas.width, drawn.canvas.height);
   drawn.ctx.putImageData(cut, 0, 0);
   const box = bounds(cut.data, drawn.canvas.width, drawn.canvas.height);
   if (!box) return fitTransparent(image, image.naturalWidth, image.naturalHeight);
   return fitTransparent(drawn.canvas, box.maxX - box.minX, box.maxY - box.minY, box.minX, box.minY);
 }
 
-/** Drop a white or black box behind a real crest. Skip photos and crests that are already cut out. */
-export function knockoutOpaqueCrest(image: HTMLImageElement, tolerance = 48): HTMLCanvasElement | null {
+/** Drop a white or black box behind a real crest so it sits clean on a team bar. */
+export function knockoutOpaqueCrest(image: HTMLImageElement, tolerance = 52): HTMLCanvasElement | null {
   const drawn = drawSource(image);
   if (!drawn) return null;
   const { width: w, height: h } = drawn.canvas;
   const snap = drawn.ctx.getImageData(0, 0, w, h);
-  if (alreadyCut(snap.data)) return null;
   const samples = [
     [0, 0],
     [w - 1, 0],
@@ -158,8 +209,13 @@ export function knockoutOpaqueCrest(image: HTMLImageElement, tolerance = 48): HT
     [0, Math.floor(h / 2)],
     [w - 1, Math.floor(h / 2)],
   ].map(([x, y]) => pixel(snap.data, (y * w + x) * 4));
-  if (!paperBackground(samples)) return null;
+  const cutOut = alreadyCut(snap.data);
+  if (!cutOut && !paperBackground(samples)) return null;
+  const before = opaqueCount(snap.data);
   const cut = floodBackground(drawn.ctx, tolerance);
+  defringe(cut.data, w, h);
+  const newly = before - opaqueCount(cut.data);
+  if (newly < w * h * 0.01) return null;
   drawn.ctx.putImageData(cut, 0, 0);
   if (!alreadyCut(cut.data)) return null;
   const box = bounds(cut.data, w, h);

@@ -875,6 +875,14 @@
   font-size: var(--stat-size);
 }
 
+.poster.is-graphic .poster-trend-arrow {
+  flex: 0 0 auto;
+  width: var(--arrow-size);
+  height: var(--arrow-size);
+  object-fit: contain;
+  display: block;
+}
+
 .poster.is-graphic .poster-trend::before {
   content: "";
   flex: 0 0 auto;
@@ -883,6 +891,7 @@
   border: 0;
   background: var(--move-up);
   clip-path: polygon(50% 0, 100% 44%, 72% 44%, 72% 100%, 28% 100%, 28% 44%, 0 44%);
+  display: none;
 }
 
 .poster.is-graphic .poster-trend.is-up {
@@ -895,7 +904,7 @@
 
 .poster.is-graphic .poster-trend.is-down::before {
   background: var(--move-down);
-  transform: scaleY(-1);
+  transform: none;
 }
 
 .poster.is-graphic .poster-trend.is-flat {
@@ -904,6 +913,7 @@
 }
 
 .poster.is-graphic .poster-trend.is-flat::before {
+  display: block;
   width: calc(var(--arrow-size) * 0.62);
   height: max(3px, calc(var(--arrow-size) * 0.14));
   clip-path: none;
@@ -923,7 +933,10 @@
   /* A definite height so the crest's percentage sizing has something to resolve against. */
   height: var(--row-height);
   background: var(--team-fill, var(--team-primary));
-  box-shadow: none;
+  /* Cover the 1px grid seam so mark and name read as one bar. */
+  margin-right: -1px;
+  z-index: 1;
+  box-shadow: 2px 0 0 var(--team-fill, var(--team-primary));
   overflow: hidden;
 }
 
@@ -940,6 +953,7 @@
   background: transparent;
   object-fit: contain;
   padding: var(--mark-pad-y) var(--mark-pad-x);
+  isolation: isolate;
 }
 
 .poster.is-graphic .poster-mark .lettermark {

@@ -723,6 +723,12 @@ function PosterRow({
       }
     >
       <span className={`poster-trend ${moveClass}`} aria-hidden>
+        {graphicSkin && moveClass === "is-up" ? (
+          <img className="poster-trend-arrow" src={`${import.meta.env.BASE_URL}arrows/up.png`} alt="" />
+        ) : null}
+        {graphicSkin && moveClass === "is-down" ? (
+          <img className="poster-trend-arrow" src={`${import.meta.env.BASE_URL}arrows/down.png`} alt="" />
+        ) : null}
         {trendLabel(row.movement, unsignedTrend)}
       </span>
       <LiveCell
