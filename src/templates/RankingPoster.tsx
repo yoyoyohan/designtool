@@ -956,21 +956,23 @@ export function RankingPoster({
   const showRatings = !showStats && RATING_KEYS.some((key) => visible[key]);
   const mode = showStats ? "stats" : showRatings ? "ratings" : "simple";
   const showHeads = mode !== "simple" && templateId !== "power";
+  const statCol = graphicSkin ? "var(--stat-col-width)" : "minmax(var(--stat-col-width), max-content)";
+  const ptsCol = graphicSkin ? "var(--pts-box)" : "minmax(var(--pts-box), max-content)";
   const metricCols =
     mode === "stats"
       ? [
-          visible.w ? "var(--stat-col-width)" : "",
-          visible.l ? "var(--stat-col-width)" : "",
-          visible.d ? "var(--stat-col-width)" : "",
-          visible.pts ? "var(--pts-box)" : "",
-          visible.gf ? "var(--stat-col-width)" : "",
-          visible.ga ? "var(--stat-col-width)" : "",
-          visible.gd ? "var(--stat-col-width)" : "",
+          visible.w ? statCol : "",
+          visible.l ? statCol : "",
+          visible.d ? statCol : "",
+          visible.pts ? ptsCol : "",
+          visible.gf ? statCol : "",
+          visible.ga ? statCol : "",
+          visible.gd ? statCol : "",
         ].filter(Boolean)
       : [
-          visible.rating ? "var(--pts-box)" : "",
-          visible.off ? "var(--stat-col-width)" : "",
-          visible.def ? "var(--stat-col-width)" : "",
+          visible.rating ? ptsCol : "",
+          visible.off ? statCol : "",
+          visible.def ? statCol : "",
         ].filter(Boolean);
   if (metricCols.length) style["--metrics"] = metricCols.join(" ");
 

@@ -31,6 +31,7 @@
   --name-size: 28px;
   --stat-size: 22px;
   --stat-col-width: 52px;
+  --metric-gap: 10px;
   --pts-box: 64px;
   --pts-bg: #ffffff;
   --pts-fg: #e4b53c;

@@ -534,6 +534,21 @@
   min-width: 0;
 }
 
+.poster:not(.is-graphic) .poster-metrics {
+  gap: var(--metric-gap);
+}
+
+.poster:not(.is-graphic) .poster-stat,
+.poster:not(.is-graphic) .poster-cols .col-fill {
+  padding-inline: 6px;
+}
+
+.poster:not(.is-graphic) .poster-pts {
+  min-width: var(--pts-box);
+  padding-inline: 10px;
+  box-sizing: border-box;
+}
+
 .poster-cols .poster-metrics {
   background: var(--header-bar);
 }
@@ -1098,8 +1113,15 @@
 
 .tmpl-power .poster-board {
   width: calc(var(--board-width) * 1%);
-  max-width: calc(var(--cut-left) * 1% - 12px);
+  max-width: calc(var(--cut-left) * 1% - 28px);
+  padding-right: 12px;
   justify-content: flex-start;
+  z-index: 8;
+}
+
+.tmpl-power.is-live .poster-hero-wrap,
+.tmpl-power.is-live.is-hero-front .poster-hero-wrap {
+  z-index: 2;
 }
 
 .tmpl-power .poster-header {
@@ -1421,6 +1443,12 @@
   box-sizing: border-box;
   margin-left: auto;
   padding: 0 0 0 var(--split-pad-left);
+  z-index: 8;
+}
+
+.tmpl-split.is-live .poster-hero-wrap,
+.tmpl-split.is-live.is-hero-front .poster-hero-wrap {
+  z-index: 2;
 }
 
 .tmpl-split .poster-header {

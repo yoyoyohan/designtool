@@ -944,9 +944,23 @@ export default function App() {
         .join(" ")}
     >
       <header className="topbar">
-        <div className="brand">
+        <button
+          type="button"
+          className="brand"
+          title="Back to the main studio"
+          onClick={() => {
+            setLogoDeskOpen(false);
+            setPreviewOpen(false);
+            setPicked(null);
+            setLeftOpen(true);
+            setRightOpen(true);
+            if (window.location.hash || window.location.search) {
+              window.history.replaceState(null, "", window.location.pathname || "/");
+            }
+          }}
+        >
           Ranking <span>Studio</span>
-        </div>
+        </button>
         <div className={status.toLowerCase().includes("fail") || status.toLowerCase().includes("could not") ? "topbar-status is-error" : "topbar-status"}>
           {status || "Paste rankings, click the poster to edit, then Save or Export PNG"}
         </div>

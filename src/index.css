@@ -70,9 +70,15 @@ textarea {
 }
 
 .brand {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
   font-family: "Fraunces", Georgia, serif;
   font-size: 18px;
   letter-spacing: 0.02em;
+  cursor: pointer;
 }
 
 .brand span {
