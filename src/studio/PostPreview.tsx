@@ -1,19 +1,16 @@
 import { useEffect, useMemo, type ReactNode } from "react";
 import "./PostPreview.css";
 
-export type PreviewFormat = "feed" | "story" | "square";
+export type PreviewFormat = "feed";
 
 export const PREVIEW_FORMATS: { id: PreviewFormat; label: string; width: number; height: number }[] = [
   { id: "feed", label: "Feed", width: 1080, height: 1350 },
-  { id: "story", label: "Story", width: 1080, height: 1920 },
-  { id: "square", label: "Square", width: 1080, height: 1080 },
 ];
 
 type Props = {
   handle: string;
   title: string;
   format: PreviewFormat;
-  onFormat: (format: PreviewFormat) => void;
   onClose: () => void;
   children: ReactNode;
 };
@@ -61,16 +58,12 @@ function Bookmark() {
   );
 }
 
-export function PostPreview({ handle, title, format, onFormat, onClose, children }: Props) {
+export function PostPreview({ handle, title, format, onClose, children }: Props) {
   const frame = PREVIEW_FORMATS.find((item) => item.id === format) ?? PREVIEW_FORMATS[0];
   const tag = (handle.trim() || "@rankingstudio").replace(/^@?/, "@");
   const name = tag.slice(1);
   const letter = name.charAt(0).toUpperCase() || "R";
-  const scale = useMemo(() => {
-    const maxW = format === "story" ? 290 : 338;
-    const maxH = format === "story" ? 560 : 430;
-    return Math.min(maxW / frame.width, maxH / frame.height);
-  }, [format, frame.height, frame.width]);
+  const scale = useMemo(() => Math.min(338 / frame.width, 430 / frame.height), [frame.height, frame.width]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -100,49 +93,8 @@ export function PostPreview({ handle, title, format, onFormat, onClose, children
             ×
           </button>
         </div>
-        <div className="post-preview-tabs" role="tablist" aria-label="Post format">
-          {PREVIEW_FORMATS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={item.id === format}
-              className={item.id === format ? "is-on" : undefined}
-              onClick={() => onFormat(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <div className={`ig-phone is-${format}`}>
+        <div className="ig-phone is-feed">
           <div className="ig-notch" aria-hidden />
-          {format === "story" ? (
-            <div className="ig-story">
-              <div className="ig-story-bar" aria-hidden>
-                <span className="is-on" />
-                <span />
-                <span />
-              </div>
-              <div className="ig-story-user">
-                <span className="ig-avatar">{letter}</span>
-                <span>{tag}</span>
-                <span className="ig-muted">2h</span>
-              </div>
-              <div
-                className="ig-art"
-                style={{ width: frame.width * scale, height: frame.height * scale }}
-              >
-                <div className="ig-art-scale" style={{ width: frame.width, height: frame.height, transform: `scale(${scale})` }}>
-                  {children}
-                </div>
-              </div>
-              <div className="ig-story-reply">
-                <span>Send message</span>
-                <Heart />
-                <Send />
-              </div>
-            </div>
-          ) : (
             <div className="ig-feed">
               <div className="ig-feed-top">
                 <span>Preview</span>
@@ -179,15 +131,12 @@ export function PostPreview({ handle, title, format, onFormat, onClose, children
               </p>
               <p className="ig-muted">View all comments</p>
             </div>
-          )}
         </div>
       </div>
     </div>
   );
 }
 
-export function formatFromPreset(presetId: string): PreviewFormat {
-  if (presetId === "ig-story") return "story";
-  if (presetId === "square") return "square";
+export function formatFromPreset(_presetId: string): PreviewFormat {
   return "feed";
 }

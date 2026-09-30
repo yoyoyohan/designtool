@@ -1678,7 +1678,6 @@ export default function App() {
           handle={handle}
           title={title}
           format={previewFormat}
-          onFormat={setPreviewFormat}
           onClose={() => setPreviewOpen(false)}
         >
           <RankingPoster
