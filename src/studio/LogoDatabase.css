@@ -82,7 +82,7 @@
 }
 
 .logo-row-mark {
-  grid-row: 1 / span 4;
+  grid-row: 1 / span 5;
   width: 86px;
   height: 86px;
   padding: 0;
@@ -188,8 +188,56 @@
 }
 
 .logo-desk .logo-row {
-  grid-template-columns: 96px minmax(160px, 1.2fr) minmax(160px, 1fr) minmax(120px, 0.8fr) 180px;
+  grid-template-columns: 96px minmax(140px, 1.1fr) minmax(140px, 1fr) minmax(110px, 0.7fr) minmax(150px, 0.8fr) 170px;
   align-items: end;
+}
+
+.logo-row-tones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.logo-row-color {
+  display: grid;
+  gap: 3px;
+}
+
+.logo-row-swatch {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 4px;
+  align-items: center;
+}
+
+.logo-row-swatch.is-static {
+  display: block;
+  width: 34px;
+  height: 28px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+}
+
+.logo-row-swatch input[type="color"] {
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.logo-row-swatch input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--ui-line-strong);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .logo-desk .logo-row-mark {
@@ -382,6 +430,6 @@
   }
 
   .logo-desk .logo-row-mark {
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 5;
   }
 }

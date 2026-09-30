@@ -50,6 +50,7 @@ import {
 } from "./studio/projectStore";
 import { ORNAMENT_IDS, ORNAMENT_LABELS, type OrnamentId } from "./templates/ornaments";
 import { addFileFont, addGoogleFont, applyExtraFonts, loadExtraFonts, saveExtraFonts, type ExtraFont } from "./theme/extraFonts";
+import { applyBarColors, barIdFor, catalogBars, findBar, loadBars, saveBar, type BarRecord } from "./studio/barStore";
 import { graphicBarFor } from "./theme/graphicBars";
 import { DEFAULT_TOKENS } from "./theme/tokenMeta";
 
@@ -172,10 +173,12 @@ function cloneShot(shot: HistoryShot): HistoryShot {
 export default function App() {
   const [teams, setTeams] = useState<TeamRecord[]>([]);
   const [logoViews, setLogoViews] = useState<LogoView[]>([]);
+  const [bars, setBars] = useState<BarRecord[]>([]);
   const [logoMode, setLogoMode] = useState<DeskMode>("local");
   const [logoDeskNote, setLogoDeskNote] = useState("");
   const revokeLogos = useRef<(() => void) | null>(null);
   const logoOverrides = useRef<Record<string, string>>({});
+  const barSaveTimer = useRef<number | null>(null);
   const [assetNote, setAssetNote] = useState("Loading sample pack…");
   const [tableText, setTableText] = useState(SAMPLE_TABLE);
   const [kicker, setKicker] = useState("GMC");
@@ -482,10 +485,15 @@ export default function App() {
   const preset = SIZE_PRESETS.find((item) => item.id === presetId) ?? SIZE_PRESETS[0];
   const previewFrame = PREVIEW_FORMATS.find((item) => item.id === previewFormat) ?? PREVIEW_FORMATS[0];
   const parsed = useMemo(() => parseTable(tableText), [tableText]);
-  const matchedTeams = useMemo(() => applyLogoLibrary(teams, logoViews), [teams, logoViews]);
+  const matchedTeams = useMemo(
+    () => applyBarColors(applyLogoLibrary(teams, logoViews), bars),
+    [teams, logoViews, bars],
+  );
   const rows = useMemo(() => decorateRows(parsed, matchedTeams), [parsed, matchedTeams]);
   const usedLogoNames = useMemo(() => rows.map((row) => row.teamQuery), [rows]);
-  const unmatched = rows.filter((row) => !row.team && !graphicBarFor(row.teamQuery));
+  const unmatched = rows.filter(
+    (row) => !row.team && !graphicBarFor(row.teamQuery) && !findBar(bars, row.teamQuery),
+  );
   const headFields = useMemo(() => visibleHeadFields(rows), [rows]);
 
   useEffect(() => {
@@ -499,25 +507,29 @@ export default function App() {
       .then((pack) => {
         if (cancelled) return;
         setTeams(pack);
+        setBars(catalogBars(pack));
         setAssetNote(`Sample pack · ${pack.length} teams`);
+        return Promise.all([loadLogoLibrary(), loadBars(pack)] as const);
+      })
+      .then((loaded) => {
+        if (!loaded || cancelled) {
+          loaded?.[0].revoke();
+          return;
+        }
+        const [library, loadedBars] = loaded;
+        revokeLogos.current?.();
+        revokeLogos.current = library.revoke;
+        setLogoViews(withOverrides(library.views));
+        setLogoMode(library.mode);
+        setBars(loadedBars.bars);
+        setLogoDeskNote(
+          [library.note || (library.mode === "local" ? deskBuildNote() : ""), loadedBars.note]
+            .filter(Boolean)
+            .join(" · "),
+        );
       })
       .catch((err: unknown) => {
         if (!cancelled) setAssetNote(err instanceof Error ? err.message : "Sample pack failed");
-      });
-    loadLogoLibrary()
-      .then((loaded) => {
-        if (cancelled) {
-          loaded.revoke();
-          return;
-        }
-        revokeLogos.current?.();
-        revokeLogos.current = loaded.revoke;
-        setLogoViews(withOverrides(loaded.views));
-        setLogoMode(loaded.mode);
-        setLogoDeskNote(loaded.note || (loaded.mode === "local" ? deskBuildNote() : ""));
-      })
-      .catch(() => {
-        if (!cancelled) setAssetNote("Logo library could not open in this browser");
       });
     return () => {
       cancelled = true;
@@ -579,8 +591,33 @@ export default function App() {
     revokeLogos.current = loaded.revoke;
     setLogoViews(withOverrides(loaded.views));
     setLogoMode(loaded.mode);
-    setLogoDeskNote(loaded.note || (loaded.mode === "local" ? deskBuildNote() : ""));
+    const loadedBars = await loadBars(teams);
+    setBars(loadedBars.bars);
+    setLogoDeskNote(
+      [loaded.note || (loaded.mode === "local" ? deskBuildNote() : ""), loadedBars.note].filter(Boolean).join(" · "),
+    );
     return loaded.mode;
+  }
+
+  function paintBarNow(name: string, aliases: string[], primary: string, secondary: string, id?: string) {
+    setBars((prev) => {
+      const keys = new Set([name, ...aliases].map(normalizeLogoName));
+      const idx = prev.findIndex(
+        (item) => keys.has(normalizeLogoName(item.name)) || item.aliases.some((alias) => keys.has(normalizeLogoName(alias))),
+      );
+      const row: BarRecord = {
+        id: id || prev[idx]?.id || `bar-${Date.now().toString(36)}`,
+        name,
+        aliases,
+        primary,
+        secondary,
+        updatedAt: Date.now(),
+      };
+      if (idx < 0) return [row, ...prev];
+      const next = prev.slice();
+      next[idx] = { ...prev[idx], ...row, id: id || prev[idx].id };
+      return next;
+    });
   }
 
   async function ingestLibrary(fileList: FileList | File[], tag = "") {
@@ -1033,12 +1070,13 @@ export default function App() {
             {logoMode === "shared"
               ? "Shared desk. A replace here shows up for every sports business computer."
               : logoMode === "locked"
-                ? "Look only. Type the sports business key and the crop tools appear."
+                ? "Look only. Type the sports business key and crop and bar colors appear."
                 : "This computer only until Supabase keys are on the Render build."}
           </p>
           <LogoDatabase
             logos={logoViews}
             teams={teams}
+            bars={bars}
             usedNames={usedLogoNames}
             note={
               logoViews.length
@@ -1067,6 +1105,24 @@ export default function App() {
                 aliases: parseTagList(aliases),
                 tags: parseTagList(tags),
               });
+            }}
+            onSaveBar={(entry, primary, secondary) => {
+              paintBarNow(entry.name, entry.aliases, primary, secondary);
+              if (barSaveTimer.current) window.clearTimeout(barSaveTimer.current);
+              barSaveTimer.current = window.setTimeout(() => {
+                void saveBar({
+                  id: findBar(bars, entry.name, ...entry.aliases)?.id || barIdFor(entry.name),
+                  name: entry.name,
+                  aliases: entry.aliases,
+                  primary,
+                  secondary,
+                })
+                  .then((saved) => {
+                    paintBarNow(saved.name, saved.aliases, saved.primary, saved.secondary, saved.id);
+                    setStatus(shareStatus(`Bar color saved · ${entry.name}`));
+                  })
+                  .catch(reportLogoError);
+              }, 280);
             }}
             onReplace={(entry, file) => {
               void upsertLogoEntry(entry, { image: file });

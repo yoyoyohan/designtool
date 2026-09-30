@@ -109,6 +109,9 @@ function writeFailed(message?: string): never {
   if (message?.toLowerCase().includes("row-level security") || message?.includes("401") || message?.includes("JWT")) {
     throw new DeskAuthError();
   }
+  if (message?.includes("schema cache") && message.toLowerCase().includes("bars")) {
+    throw new Error("Run the bars SQL in Supabase (supabase/schema.sql), then unlock again");
+  }
   throw new Error(message || "The shared logo desk could not save that crest");
 }
 
@@ -229,6 +232,76 @@ export async function deleteSharedLogo(id: string): Promise<void> {
   if (current?.mime) {
     await supabase.storage.from(BUCKET).remove([objectPath(id, current.mime)]);
   }
+}
+
+export type SharedBar = {
+  id: string;
+  name: string;
+  aliases: string[];
+  primary: string;
+  secondary: string;
+  updatedAt: number;
+};
+
+type BarRow = {
+  id: string;
+  name: string;
+  aliases: string[] | null;
+  bar_fill: string;
+  name_ink: string;
+  updated_at: number;
+};
+
+function asBar(row: BarRow): SharedBar {
+  return {
+    id: row.id,
+    name: row.name,
+    aliases: row.aliases ?? [],
+    primary: row.bar_fill,
+    secondary: row.name_ink,
+    updatedAt: Number(row.updated_at),
+  };
+}
+
+export async function fetchSharedBars(): Promise<{ bars: SharedBar[]; error?: string } | null> {
+  const supabase = getClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("bars")
+    .select("id,name,aliases,bar_fill,name_ink,updated_at")
+    .order("name");
+  if (error) return { bars: [], error: error.message };
+  return { bars: (data ?? []).map((row) => asBar(row as BarRow)) };
+}
+
+export async function upsertSharedBar(input: SharedBar): Promise<SharedBar> {
+  const supabase = await requireClient();
+  const row = {
+    id: input.id,
+    name: input.name.trim() || "Untitled school",
+    aliases: input.aliases,
+    bar_fill: input.primary,
+    name_ink: input.secondary,
+    updated_at: Date.now(),
+  };
+  const { data, error } = await supabase.from("bars").upsert(row).select().single();
+  if (error) writeFailed(error.message);
+  return asBar(data as BarRow);
+}
+
+export async function pushBarsIfMissing(catalog: SharedBar[], remote: SharedBar[]): Promise<boolean> {
+  const seen = new Set(remote.flatMap((row) => [row.id, row.name.toLowerCase()]));
+  const missing = catalog.filter((row) => !seen.has(row.id) && !seen.has(row.name.toLowerCase()));
+  if (missing.length === 0) return false;
+  const chunk = 25;
+  for (let i = 0; i < missing.length; i += chunk) {
+    const slice = missing.slice(i, i + chunk);
+    const results = await Promise.allSettled(slice.map((row) => upsertSharedBar(row)));
+    if (results.some((item) => item.status === "rejected" && item.reason instanceof DeskAuthError)) {
+      return true;
+    }
+  }
+  return true;
 }
 
 export async function pushLocalIfMissing(local: LogoRecord[], remote: LogoView[]): Promise<boolean> {

@@ -676,11 +676,10 @@ function PosterRow({
   const markLetter = cleaned.trim().charAt(0).toUpperCase();
   const moveClass =
     row.movement && row.movement > 0 ? "is-up" : row.movement && row.movement < 0 ? "is-down" : "is-flat";
-  // Sampled bar colours come straight off the published art, so they outrank whatever the
-  // logo pack guessed for the same school.
+  // Desk / pack colours already sit on the team. Graphic bars only fill unmatched names.
   const graphic = graphicBarFor(row.teamQuery, row.team?.name);
-  const primary = graphic?.primary ?? row.team?.primary ?? "#3a3a40";
-  const secondary = graphic?.secondary ?? row.team?.secondary ?? "#111111";
+  const primary = row.team?.primary ?? graphic?.primary ?? "#3a3a40";
+  const secondary = row.team?.secondary ?? graphic?.secondary ?? "#111111";
   const tone = graphicSkin ? graphicTone(primary, secondary, statTint) : barTone(primary);
   const graphicVars: Record<string, string> = graphicSkin
     ? {

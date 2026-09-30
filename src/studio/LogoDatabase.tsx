@@ -1,5 +1,7 @@
-import { Component, useMemo, useRef, useState, type ReactNode } from "react";
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { TeamRecord } from "../engine/types";
+import { graphicBarFor } from "../theme/graphicBars";
+import { colorSwatch, findBar, normalizeHex, type BarRecord } from "./barStore";
 import { LogoCropper } from "./LogoCropper";
 import type { DeskMode } from "./logoApi";
 import {
@@ -46,11 +48,14 @@ export type LogoEntry = {
   url: string;
   used: boolean;
   source: "library" | "sample";
+  primary: string;
+  secondary: string;
 };
 
 type Props = {
   logos: LogoView[];
   teams: TeamRecord[];
+  bars: BarRecord[];
   usedNames: string[];
   note: string;
   shareMode: DeskMode;
@@ -61,30 +66,91 @@ type Props = {
   onUnlock: (key: string) => void;
   onUpload: (files: FileList | File[]) => void;
   onSaveMeta: (entry: LogoEntry, name: string, aliases: string, tags: string) => void;
+  onSaveBar: (entry: LogoEntry, primary: string, secondary: string) => void;
   onReplace: (entry: LogoEntry, file: File) => void;
   onCrop: (entry: LogoEntry, blob: Blob) => void;
   onDelete: (entry: LogoEntry) => void;
 };
 
-function buildEntries(logos: LogoView[], teams: TeamRecord[], usedNames: string[]): LogoEntry[] {
+function colorsFor(name: string, aliases: string[], bars: BarRecord[], team?: TeamRecord) {
+  const desk = findBar(bars, name, ...aliases);
+  const graphic = graphicBarFor(name, team?.name);
+  return {
+    primary: desk?.primary ?? graphic?.primary ?? team?.primary ?? "#3a3a40",
+    secondary: desk?.secondary ?? graphic?.secondary ?? team?.secondary ?? "#ffffff",
+  };
+}
+
+function ColorField({
+  label,
+  value,
+  canEdit,
+  onCommit,
+}: {
+  label: string;
+  value: string;
+  canEdit: boolean;
+  onCommit: (next: string) => void;
+}) {
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+  const hex = colorSwatch(text);
+  if (!canEdit) {
+    return (
+      <label className="logo-row-color">
+        {label}
+        <span className="logo-row-swatch is-static" style={{ background: hex }} title={hex} />
+      </label>
+    );
+  }
+  return (
+    <label className="logo-row-color">
+      {label}
+      <span className="logo-row-swatch">
+        <input
+          type="color"
+          value={hex}
+          onChange={(event) => {
+            setText(event.target.value);
+            onCommit(event.target.value);
+          }}
+        />
+        <input
+          type="text"
+          value={text}
+          spellCheck={false}
+          autoComplete="off"
+          onChange={(event) => setText(event.target.value)}
+          onBlur={() => {
+            const next = normalizeHex(text, value);
+            setText(next);
+            if (next !== value) onCommit(next);
+          }}
+        />
+      </span>
+    </label>
+  );
+}
+
+function buildEntries(logos: LogoView[], teams: TeamRecord[], bars: BarRecord[], usedNames: string[]): LogoEntry[] {
   const covered = new Set<string>();
   const rows: LogoEntry[] = logos.map((logo) => {
-    teams.forEach((team) => {
-      const names = [team.name, team.logoFile.replace(/\.[^.]+$/, ""), ...team.aliases].map(normalizeLogoName);
-      if ([logo.name, ...logo.aliases].map(normalizeLogoName).some((key) => names.includes(key))) {
-        covered.add(team.id);
-      }
+    const team = teams.find((item) => {
+      const names = [item.name, item.logoFile.replace(/\.[^.]+$/, ""), ...item.aliases].map(normalizeLogoName);
+      return [logo.name, ...logo.aliases].map(normalizeLogoName).some((key) => names.includes(key));
     });
+    if (team) covered.add(team.id);
     return {
       key: `lib-${logo.id}`,
       libraryId: logo.id,
-      teamId: null,
+      teamId: team?.id ?? null,
       name: logo.name,
       aliases: logo.aliases,
       tags: logo.tags,
       url: logo.url,
       used: logoIsInUse(logo, usedNames),
       source: "library",
+      ...colorsFor(logo.name, logo.aliases, bars, team),
     };
   });
   for (const team of teams) {
@@ -99,6 +165,7 @@ function buildEntries(logos: LogoView[], teams: TeamRecord[], usedNames: string[
       url: team.logoUrl,
       used: usedNames.some((query) => normalizeLogoName(query) === normalizeLogoName(team.name)),
       source: "sample",
+      ...colorsFor(team.name, team.aliases, bars, team),
     });
   }
   return rows.sort((a, b) => {
@@ -125,6 +192,7 @@ function LogoRow({
   entry,
   canEdit,
   onSaveMeta,
+  onSaveBar,
   onCrop,
   onReplaceClick,
   onDelete,
@@ -132,6 +200,7 @@ function LogoRow({
   entry: LogoEntry;
   canEdit: boolean;
   onSaveMeta: Props["onSaveMeta"];
+  onSaveBar: Props["onSaveBar"];
   onCrop: (entry: LogoEntry) => void;
   onReplaceClick: (entry: LogoEntry) => void;
   onDelete: Props["onDelete"];
@@ -139,11 +208,17 @@ function LogoRow({
   return (
     <article className={entry.used ? "logo-row is-used" : "logo-row"}>
       {canEdit ? (
-        <button type="button" className="logo-row-mark" title="Crop crest" onClick={() => onCrop(entry)}>
+        <button
+          type="button"
+          className="logo-row-mark"
+          title="Crop crest"
+          style={{ background: entry.primary }}
+          onClick={() => onCrop(entry)}
+        >
           <img src={entry.url} alt="" />
         </button>
       ) : (
-        <div className="logo-row-mark is-static">
+        <div className="logo-row-mark is-static" style={{ background: entry.primary }}>
           <img src={entry.url} alt="" />
         </div>
       )}
@@ -196,6 +271,20 @@ function LogoRow({
           <p className="logo-row-static">{entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ") || "—"}</p>
         )}
       </label>
+      <div className="logo-row-tones">
+        <ColorField
+          label="Bar"
+          value={entry.primary}
+          canEdit={canEdit}
+          onCommit={(primary) => onSaveBar(entry, primary, entry.secondary)}
+        />
+        <ColorField
+          label="Name"
+          value={entry.secondary}
+          canEdit={canEdit}
+          onCommit={(secondary) => onSaveBar(entry, entry.primary, secondary)}
+        />
+      </div>
       <div className="logo-row-side">
         <span>{entry.used ? "On this poster" : entry.source === "library" ? "Library" : "Sample pack"}</span>
         {canEdit ? (
@@ -221,6 +310,7 @@ function LogoRow({
 export function LogoDatabase({
   logos,
   teams,
+  bars,
   usedNames,
   note,
   shareMode,
@@ -231,6 +321,7 @@ export function LogoDatabase({
   onUnlock,
   onUpload,
   onSaveMeta,
+  onSaveBar,
   onReplace,
   onCrop,
   onDelete,
@@ -244,7 +335,7 @@ export function LogoDatabase({
   const [cropping, setCropping] = useState<LogoEntry | null>(null);
   const [dropHot, setDropHot] = useState(false);
 
-  const entries = useMemo(() => buildEntries(logos, teams, usedNames), [logos, teams, usedNames]);
+  const entries = useMemo(() => buildEntries(logos, teams, bars, usedNames), [logos, teams, bars, usedNames]);
   const shown = useMemo(() => filterEntries(entries, query, tag), [entries, query, tag]);
   const tags = useMemo(() => {
     const set = new Set<string>();
@@ -270,7 +361,7 @@ export function LogoDatabase({
         {shareMode === "shared"
           ? "Shared with sports business. Leave the page — the crest stays for everyone."
           : shareMode === "locked"
-            ? "You can look. Type the sports business key and crop, replace, and upload appear."
+            ? "You can look. Type the sports business key and crop, colors, replace, and upload appear."
             : "Saved on this computer only. This build never received the Supabase keys."}
         {shareNote ? ` ${shareNote}` : ""}
       </p>
@@ -308,7 +399,7 @@ export function LogoDatabase({
             if (event.dataTransfer.files.length) onUpload(event.dataTransfer.files);
           }}
         >
-          Drop crests here. Click a name to rename. Crop or replace saves over the same school.
+          Drop crests here. Click a name to rename. Bar and name colors save for the whole desk.
         </div>
       ) : null}
       <div className="row-btns">
@@ -384,6 +475,7 @@ export function LogoDatabase({
         entry={entry}
         canEdit={canEdit}
         onSaveMeta={onSaveMeta}
+        onSaveBar={onSaveBar}
         onCrop={setCropping}
         onReplaceClick={(item) => {
           pendingReplace.current = item;
@@ -418,7 +510,7 @@ export function LogoDatabase({
                 {shareMode === "shared"
                   ? "Edits save for the whole desk. Click a field, then leave the box."
                   : shareMode === "locked"
-                    ? "Type the sports business key to unlock crop and replace."
+                    ? "Type the sports business key to unlock crop, colors, and replace."
                     : "Click a field to edit. Changes save when you leave the box."}
               </p>
             </div>
