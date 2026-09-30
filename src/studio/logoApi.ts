@@ -18,7 +18,11 @@ type LogoRow = {
   mime: string | null;
   uploaded_at: number;
   updated_at: number;
+  has_original?: boolean | null;
+  has_previous?: boolean | null;
 };
+
+export type LogoHistory = "crop" | "replace" | "none";
 
 export class DeskAuthError extends Error {
   constructor() {
@@ -98,11 +102,16 @@ function asView(row: LogoRow): LogoView {
     uploadedAt: Number(row.uploaded_at),
     updatedAt: Number(row.updated_at),
     url: publicUrl(row.id, row.mime || "image/png", Number(row.updated_at)),
+    hasOriginal: Boolean(row.has_original),
+    hasPrevious: Boolean(row.has_previous),
   };
 }
 
-function objectPath(id: string, mime: string): string {
-  return `${id}.${extFor(mime)}`;
+function objectPath(id: string, mime: string, kind: "current" | "original" | "previous" = "current"): string {
+  const ext = extFor(mime);
+  if (kind === "original") return `${id}-original.${ext}`;
+  if (kind === "previous") return `${id}-previous.${ext}`;
+  return `${id}.${ext}`;
 }
 
 function writeFailed(message?: string): never {
@@ -149,12 +158,17 @@ export async function fetchDeskStatus(): Promise<DeskStatus> {
 export async function fetchSharedViews(): Promise<{ views: LogoView[]; error?: string } | null> {
   const supabase = getClient();
   if (!supabase) return null;
+  const full = await supabase
+    .from("logos")
+    .select("id,name,aliases,tags,mime,uploaded_at,updated_at,has_original,has_previous")
+    .order("name");
+  if (!full.error) return { views: (full.data ?? []).map((row) => asView(row as LogoRow)) };
   const { data, error } = await supabase
     .from("logos")
     .select("id,name,aliases,tags,mime,uploaded_at,updated_at")
     .order("name");
   if (error) return { views: [], error: error.message };
-  return { views: (data ?? []).map(asView) };
+  return { views: (data ?? []).map((row) => asView(row as LogoRow)) };
 }
 
 async function requireClient(): Promise<SupabaseClient> {
@@ -165,9 +179,14 @@ async function requireClient(): Promise<SupabaseClient> {
   return supabase;
 }
 
-async function uploadImage(supabase: SupabaseClient, id: string, image: Blob): Promise<string> {
+async function uploadImage(
+  supabase: SupabaseClient,
+  id: string,
+  image: Blob,
+  kind: "current" | "original" | "previous" = "current",
+): Promise<string> {
   const mime = image.type || "image/png";
-  const path = objectPath(id, mime);
+  const path = objectPath(id, mime, kind);
   const { error } = await supabase.storage.from(BUCKET).upload(path, image, {
     upsert: true,
     contentType: mime,
@@ -176,17 +195,46 @@ async function uploadImage(supabase: SupabaseClient, id: string, image: Blob): P
   return mime;
 }
 
+async function downloadStored(supabase: SupabaseClient, id: string, kind: "original" | "previous", mimeHint?: string) {
+  const guessed = [mimeHint || "image/png", "image/png", "image/svg+xml", "image/jpeg", "image/webp"];
+  const seen = new Set<string>();
+  for (const mime of guessed) {
+    const path = objectPath(id, mime, kind);
+    if (seen.has(path)) continue;
+    seen.add(path);
+    const { data } = await supabase.storage.from(BUCKET).download(path);
+    if (data) return data;
+  }
+  return null;
+}
+
+async function updateLogoRow(
+  supabase: SupabaseClient,
+  id: string,
+  next: Record<string, unknown>,
+): Promise<LogoRow> {
+  const { data, error } = await supabase.from("logos").update(next).eq("id", id).select().single();
+  if (!error) return data as LogoRow;
+  if (!String(error.message).includes("has_original")) writeFailed(error.message);
+  const { has_original: _o, has_previous: _p, ...plain } = next;
+  const retry = await supabase.from("logos").update(plain).eq("id", id).select().single();
+  if (retry.error) writeFailed(retry.error.message);
+  return retry.data as LogoRow;
+}
+
 export async function postSharedLogo(input: {
   id?: string;
   name: string;
   aliases: string[];
   tags: string[];
   image: Blob;
+  original?: Blob;
   uploadedAt?: number;
 }): Promise<LogoView> {
   const supabase = await requireClient();
   const id = input.id || `logo-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const mime = await uploadImage(supabase, id, input.image);
+  await uploadImage(supabase, id, input.original ?? input.image, "original");
   const now = Date.now();
   const row = {
     id,
@@ -196,32 +244,69 @@ export async function postSharedLogo(input: {
     mime,
     uploaded_at: input.uploadedAt ?? now,
     updated_at: now,
+    has_original: true,
+    has_previous: false,
   };
   const { data, error } = await supabase.from("logos").upsert(row).select().single();
+  if (error && String(error.message).includes("has_original")) {
+    const { has_original: _o, has_previous: _p, ...plain } = row;
+    const retry = await supabase.from("logos").upsert(plain).select().single();
+    if (retry.error) writeFailed(retry.error.message);
+    return asView(retry.data as LogoRow);
+  }
   if (error) writeFailed(error.message);
   return asView(data as LogoRow);
 }
 
 export async function patchSharedLogo(
   id: string,
-  patch: { name?: string; aliases?: string[]; tags?: string[]; image?: Blob },
+  patch: { name?: string; aliases?: string[]; tags?: string[]; image?: Blob; history?: LogoHistory },
 ): Promise<LogoView> {
   const supabase = await requireClient();
   const { data: current, error: readError } = await supabase.from("logos").select("*").eq("id", id).maybeSingle();
   if (readError) writeFailed(readError.message);
   if (!current) throw new Error("That crest is not in the shared desk");
   let mime = current.mime || "image/png";
-  if (patch.image) mime = await uploadImage(supabase, id, patch.image);
+  let hasOriginal = Boolean(current.has_original);
+  let hasPrevious = Boolean(current.has_previous);
+  const history = patch.history ?? (patch.image ? "crop" : "none");
+  if (patch.image) {
+    if (history === "crop") {
+      if (!hasOriginal) {
+        const live = await supabase.storage.from(BUCKET).download(objectPath(id, mime));
+        await uploadImage(supabase, id, live.data ?? patch.image, "original");
+      }
+      const live = await supabase.storage.from(BUCKET).download(objectPath(id, mime));
+      if (live.data) await uploadImage(supabase, id, live.data, "previous");
+      hasOriginal = true;
+      hasPrevious = true;
+    } else if (history === "replace") {
+      await uploadImage(supabase, id, patch.image, "original");
+      hasOriginal = true;
+      hasPrevious = false;
+    }
+    mime = await uploadImage(supabase, id, patch.image);
+  }
   const next = {
     name: (patch.name ?? current.name).trim() || current.name,
     aliases: patch.aliases ?? current.aliases,
     tags: patch.tags ?? current.tags,
     mime,
     updated_at: Date.now(),
+    has_original: hasOriginal,
+    has_previous: hasPrevious,
   };
-  const { data, error } = await supabase.from("logos").update(next).eq("id", id).select().single();
-  if (error) writeFailed(error.message);
-  return asView(data as LogoRow);
+  return asView(await updateLogoRow(supabase, id, next));
+}
+
+export async function revertSharedLogo(id: string, to: "original" | "previous"): Promise<LogoView> {
+  const supabase = await requireClient();
+  const { data: current, error: readError } = await supabase.from("logos").select("*").eq("id", id).maybeSingle();
+  if (readError) writeFailed(readError.message);
+  if (!current) throw new Error("That crest is not in the shared desk");
+  const blob = await downloadStored(supabase, id, to, current.mime || "image/png");
+  if (!blob) throw new Error(to === "original" ? "No original crest is stored for that school" : "Nothing left to undo");
+  return patchSharedLogo(id, { image: blob, history: "none" });
 }
 
 export async function deleteSharedLogo(id: string): Promise<void> {
@@ -230,7 +315,12 @@ export async function deleteSharedLogo(id: string): Promise<void> {
   const { error } = await supabase.from("logos").delete().eq("id", id);
   if (error) writeFailed(error.message);
   if (current?.mime) {
-    await supabase.storage.from(BUCKET).remove([objectPath(id, current.mime)]);
+    const mime = current.mime as string;
+    await supabase.storage.from(BUCKET).remove([
+      objectPath(id, mime),
+      objectPath(id, mime, "original"),
+      objectPath(id, mime, "previous"),
+    ]);
   }
 }
 

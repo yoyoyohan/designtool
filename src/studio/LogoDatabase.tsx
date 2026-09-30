@@ -50,6 +50,9 @@ export type LogoEntry = {
   source: "library" | "sample";
   primary: string;
   secondary: string;
+  hasOriginal: boolean;
+  hasPrevious: boolean;
+  packUrl: string | null;
 };
 
 type Props = {
@@ -65,10 +68,11 @@ type Props = {
   onDeskClose: () => void;
   onUnlock: (key: string) => void;
   onUpload: (files: FileList | File[]) => void;
-  onSaveMeta: (entry: LogoEntry, name: string, aliases: string, tags: string) => void;
-  onSaveBar: (entry: LogoEntry, primary: string, secondary: string) => void;
+  onSaveDraft: (entry: LogoEntry, draft: { name: string; aliases: string; tags: string; primary: string; secondary: string }) => void;
   onReplace: (entry: LogoEntry, file: File) => void;
   onCrop: (entry: LogoEntry, blob: Blob) => void;
+  onUndoCrop: (entry: LogoEntry) => void;
+  onRevertOriginal: (entry: LogoEntry) => void;
   onDelete: (entry: LogoEntry) => void;
 };
 
@@ -120,7 +124,11 @@ function ColorField({
           value={text}
           spellCheck={false}
           autoComplete="off"
-          onChange={(event) => setText(event.target.value)}
+          onChange={(event) => {
+            const next = event.target.value;
+            setText(next);
+            if (/^#[0-9a-fA-F]{6}$/.test(next.trim())) onCommit(next.trim());
+          }}
           onBlur={() => {
             const next = normalizeHex(text, value);
             setText(next);
@@ -140,6 +148,7 @@ function buildEntries(logos: LogoView[], teams: TeamRecord[], bars: BarRecord[],
       return [logo.name, ...logo.aliases].map(normalizeLogoName).some((key) => names.includes(key));
     });
     if (team) covered.add(team.id);
+    const packUrl = team?.source === "sample" && team.logoUrl.startsWith("/sample/") ? team.logoUrl : null;
     return {
       key: `lib-${logo.id}`,
       libraryId: logo.id,
@@ -150,11 +159,15 @@ function buildEntries(logos: LogoView[], teams: TeamRecord[], bars: BarRecord[],
       url: logo.url,
       used: logoIsInUse(logo, usedNames),
       source: "library",
+      hasOriginal: Boolean(logo.hasOriginal) || Boolean(packUrl),
+      hasPrevious: Boolean(logo.hasPrevious),
+      packUrl,
       ...colorsFor(logo.name, logo.aliases, bars, team),
     };
   });
   for (const team of teams) {
     if (covered.has(team.id) || !team.logoUrl) continue;
+    const packUrl = team.source === "sample" && team.logoUrl.startsWith("/sample/") ? team.logoUrl : null;
     rows.push({
       key: `team-${team.id}`,
       libraryId: null,
@@ -165,6 +178,9 @@ function buildEntries(logos: LogoView[], teams: TeamRecord[], bars: BarRecord[],
       url: team.logoUrl,
       used: usedNames.some((query) => normalizeLogoName(query) === normalizeLogoName(team.name)),
       source: "sample",
+      hasOriginal: Boolean(packUrl),
+      hasPrevious: false,
+      packUrl,
       ...colorsFor(team.name, team.aliases, bars, team),
     });
   }
@@ -188,23 +204,59 @@ function filterEntries(rows: LogoEntry[], query: string, tag: string): LogoEntry
   });
 }
 
+function visibleTags(tags: string[]) {
+  return tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ");
+}
+
 function LogoRow({
   entry,
   canEdit,
-  onSaveMeta,
-  onSaveBar,
+  onSaveDraft,
   onCrop,
   onReplaceClick,
+  onUndoCrop,
+  onRevertOriginal,
   onDelete,
 }: {
   entry: LogoEntry;
   canEdit: boolean;
-  onSaveMeta: Props["onSaveMeta"];
-  onSaveBar: Props["onSaveBar"];
+  onSaveDraft: Props["onSaveDraft"];
   onCrop: (entry: LogoEntry) => void;
   onReplaceClick: (entry: LogoEntry) => void;
+  onUndoCrop: Props["onUndoCrop"];
+  onRevertOriginal: Props["onRevertOriginal"];
   onDelete: Props["onDelete"];
 }) {
+  const [name, setName] = useState(entry.name);
+  const [aliases, setAliases] = useState(entry.aliases.join(", "));
+  const [tags, setTags] = useState(visibleTags(entry.tags));
+  const [primary, setPrimary] = useState(entry.primary);
+  const [secondary, setSecondary] = useState(entry.secondary);
+
+  const savedKey = `${entry.name}|${entry.aliases.join(",")}|${visibleTags(entry.tags)}|${entry.primary}|${entry.secondary}`;
+  useEffect(() => {
+    setName(entry.name);
+    setAliases(entry.aliases.join(", "));
+    setTags(visibleTags(entry.tags));
+    setPrimary(entry.primary);
+    setSecondary(entry.secondary);
+  }, [entry.key, savedKey, entry.name, entry.aliases, entry.primary, entry.secondary, entry.tags]);
+
+  const dirty =
+    name.trim() !== entry.name ||
+    aliases !== entry.aliases.join(", ") ||
+    tags !== visibleTags(entry.tags) ||
+    normalizeHex(primary, entry.primary) !== normalizeHex(entry.primary) ||
+    normalizeHex(secondary, entry.secondary) !== normalizeHex(entry.secondary);
+
+  function discard() {
+    setName(entry.name);
+    setAliases(entry.aliases.join(", "));
+    setTags(visibleTags(entry.tags));
+    setPrimary(entry.primary);
+    setSecondary(entry.secondary);
+  }
+
   return (
     <article className={entry.used ? "logo-row is-used" : "logo-row"}>
       {canEdit ? (
@@ -212,7 +264,7 @@ function LogoRow({
           type="button"
           className="logo-row-mark"
           title="Crop crest"
-          style={{ background: entry.primary }}
+          style={{ background: primary }}
           onClick={() => onCrop(entry)}
         >
           <img src={entry.url} alt="" />
@@ -225,14 +277,7 @@ function LogoRow({
       <label>
         School
         {canEdit ? (
-          <input
-            key={`${entry.key}-name-${entry.name}`}
-            defaultValue={entry.name}
-            onBlur={(event) => {
-              const next = event.target.value.trim();
-              if (next && next !== entry.name) onSaveMeta(entry, next, entry.aliases.join(", "), entry.tags.join(", "));
-            }}
-          />
+          <input value={name} onChange={(event) => setName(event.target.value)} />
         ) : (
           <p className="logo-row-static">{entry.name}</p>
         )}
@@ -241,14 +286,9 @@ function LogoRow({
         Also known as
         {canEdit ? (
           <input
-            key={`${entry.key}-aka-${entry.aliases.join("|")}`}
-            defaultValue={entry.aliases.join(", ")}
+            value={aliases}
             placeholder="Short names, nicknames"
-            onBlur={(event) => {
-              if (event.target.value !== entry.aliases.join(", ")) {
-                onSaveMeta(entry, entry.name, event.target.value, entry.tags.join(", "));
-              }
-            }}
+            onChange={(event) => setAliases(event.target.value)}
           />
         ) : (
           <p className="logo-row-static">{entry.aliases.join(", ") || "—"}</p>
@@ -257,40 +297,58 @@ function LogoRow({
       <label>
         Tags
         {canEdit ? (
-          <input
-            key={`${entry.key}-tags-${entry.tags.join("|")}`}
-            defaultValue={entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ")}
-            placeholder="State, Movers"
-            onBlur={(event) => {
-              if (event.target.value !== entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ")) {
-                onSaveMeta(entry, entry.name, entry.aliases.join(", "), event.target.value);
-              }
-            }}
-          />
+          <input value={tags} placeholder="State, Movers" onChange={(event) => setTags(event.target.value)} />
         ) : (
-          <p className="logo-row-static">{entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join(", ") || "—"}</p>
+          <p className="logo-row-static">{visibleTags(entry.tags) || "—"}</p>
         )}
       </label>
       <div className="logo-row-tones">
-        <ColorField
-          label="Bar"
-          value={entry.primary}
-          canEdit={canEdit}
-          onCommit={(primary) => onSaveBar(entry, primary, entry.secondary)}
-        />
-        <ColorField
-          label="Name"
-          value={entry.secondary}
-          canEdit={canEdit}
-          onCommit={(secondary) => onSaveBar(entry, entry.primary, secondary)}
-        />
+        <ColorField label="Bar" value={primary} canEdit={canEdit} onCommit={setPrimary} />
+        <ColorField label="Name" value={secondary} canEdit={canEdit} onCommit={setSecondary} />
       </div>
       <div className="logo-row-side">
-        <span>{entry.used ? "On this poster" : entry.source === "library" ? "Library" : "Sample pack"}</span>
+        <span>
+          {dirty ? "Unsaved" : entry.used ? "On this poster" : entry.source === "library" ? "Library" : "Sample pack"}
+        </span>
         {canEdit ? (
           <div className="logo-db-actions">
+            <button
+              type="button"
+              className={dirty ? "ghost-btn logo-row-save" : "ghost-btn"}
+              disabled={!dirty}
+              onClick={() =>
+                onSaveDraft(entry, {
+                  name: name.trim() || entry.name,
+                  aliases,
+                  tags,
+                  primary: normalizeHex(primary, entry.primary),
+                  secondary: normalizeHex(secondary, entry.secondary),
+                })
+              }
+            >
+              Save
+            </button>
+            <button type="button" className="link-btn" disabled={!dirty} onClick={discard}>
+              Discard
+            </button>
             <button type="button" className="link-btn" onClick={() => onCrop(entry)}>
               Crop / outline
+            </button>
+            <button
+              type="button"
+              className="link-btn"
+              disabled={!entry.hasPrevious}
+              onClick={() => onUndoCrop(entry)}
+            >
+              Undo crop
+            </button>
+            <button
+              type="button"
+              className="link-btn"
+              disabled={!entry.hasOriginal}
+              onClick={() => onRevertOriginal(entry)}
+            >
+              Original
             </button>
             <button type="button" className="link-btn" onClick={() => onReplaceClick(entry)}>
               Replace
@@ -320,10 +378,11 @@ export function LogoDatabase({
   onDeskClose,
   onUnlock,
   onUpload,
-  onSaveMeta,
-  onSaveBar,
+  onSaveDraft,
   onReplace,
   onCrop,
+  onUndoCrop,
+  onRevertOriginal,
   onDelete,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -399,7 +458,7 @@ export function LogoDatabase({
             if (event.dataTransfer.files.length) onUpload(event.dataTransfer.files);
           }}
         >
-          Drop crests here. Click a name to rename. Bar and name colors save for the whole desk.
+          Drop crests here. Change a field, then Save. Original puts the first crest back.
         </div>
       ) : null}
       <div className="row-btns">
@@ -474,13 +533,14 @@ export function LogoDatabase({
         key={entry.key}
         entry={entry}
         canEdit={canEdit}
-        onSaveMeta={onSaveMeta}
-        onSaveBar={onSaveBar}
+        onSaveDraft={onSaveDraft}
         onCrop={setCropping}
         onReplaceClick={(item) => {
           pendingReplace.current = item;
           replaceRef.current?.click();
         }}
+        onUndoCrop={onUndoCrop}
+        onRevertOriginal={onRevertOriginal}
         onDelete={askDelete}
       />
     ));
@@ -508,10 +568,10 @@ export function LogoDatabase({
               <h2>Logo library</h2>
               <p>
                 {shareMode === "shared"
-                  ? "Edits save for the whole desk. Click a field, then leave the box."
+                  ? "Change a field, then Save. Undo crop steps back one. Original is the first crest."
                   : shareMode === "locked"
                     ? "Type the sports business key to unlock crop, colors, and replace."
-                    : "Click a field to edit. Changes save when you leave the box."}
+                    : "Change a field, then Save. Nothing leaves this computer until you do."}
               </p>
             </div>
             <button type="button" className="ghost-btn" onClick={onDeskClose}>

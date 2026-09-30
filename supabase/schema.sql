@@ -13,7 +13,9 @@ create table if not exists public.logos (
   tags text[] not null default '{}',
   mime text not null default 'image/png',
   uploaded_at bigint not null,
-  updated_at bigint not null
+  updated_at bigint not null,
+  has_original boolean not null default false,
+  has_previous boolean not null default false
 );
 
 alter table public.logos enable row level security;

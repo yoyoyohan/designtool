@@ -27,11 +27,12 @@ import {
   loadLogoLibrary,
   normalizeLogoName,
   parseTagList,
+  revertLogo,
   titleFromFile,
   updateLogo,
   type LogoView,
 } from "./studio/logoStore";
-import { DeskAuthError, deskBuildNote, setDeskKey, type DeskMode } from "./studio/logoApi";
+import { DeskAuthError, deskBuildNote, setDeskKey, type DeskMode, type LogoHistory } from "./studio/logoApi";
 import { ElementPop } from "./studio/ElementPop";
 import { PostPreview, PREVIEW_FORMATS, formatFromPreset, type PreviewFormat } from "./studio/PostPreview";
 import { usePosterDrag } from "./studio/usePosterDrag";
@@ -178,7 +179,6 @@ export default function App() {
   const [logoDeskNote, setLogoDeskNote] = useState("");
   const revokeLogos = useRef<(() => void) | null>(null);
   const logoOverrides = useRef<Record<string, string>>({});
-  const barSaveTimer = useRef<number | null>(null);
   const [assetNote, setAssetNote] = useState("Loading sample pack…");
   const [tableText, setTableText] = useState(SAMPLE_TABLE);
   const [kicker, setKicker] = useState("GMC");
@@ -548,6 +548,8 @@ export default function App() {
         uploadedAt: Date.now(),
         updatedAt: Date.now(),
         url,
+        hasOriginal: false,
+        hasPrevious: false,
       }));
     return [
       ...views.map((view) => {
@@ -574,13 +576,15 @@ export default function App() {
         uploadedAt: Date.now(),
         updatedAt: Date.now(),
         url,
+        hasOriginal: false,
+        hasPrevious: false,
       };
       const idx = prev.findIndex(
         (item) => item.id === id || keys.has(normalizeLogoName(item.name)) || item.aliases.some((alias) => keys.has(normalizeLogoName(alias))),
       );
       if (idx < 0) return [row, ...prev];
       const next = prev.slice();
-      next[idx] = { ...prev[idx], ...row, id: id || prev[idx].id, tags: prev[idx].tags };
+      next[idx] = { ...prev[idx], ...row, id: id || prev[idx].id, tags: prev[idx].tags, hasOriginal: prev[idx].hasOriginal, hasPrevious: prev[idx].hasPrevious };
       return next;
     });
   }
@@ -654,10 +658,11 @@ export default function App() {
   async function upsertLogoEntry(
     entry: LogoEntry,
     patch: { name?: string; aliases?: string[]; tags?: string[]; image?: Blob },
+    history?: LogoHistory,
   ) {
     const name = patch.name ?? entry.name;
     const aliases = aliasesAfterRename(entry.name, name, patch.aliases ?? entry.aliases);
-    const next = { ...patch, name, aliases };
+    const next = { ...patch, name, aliases, history };
     if (next.image) paintLogoNow(name, aliases, next.image, entry.libraryId ?? undefined);
     try {
       if (entry.libraryId) {
@@ -665,15 +670,43 @@ export default function App() {
       } else {
         const image = next.image ?? (entry.url ? await blobFromUrl(entry.url) : null);
         if (!image) return;
+        const original = entry.packUrl ? await blobFromUrl(entry.packUrl) : image;
         await addLogo({
           name,
           aliases,
           tags: (next.tags ?? entry.tags).filter((tag) => tag !== "Sample" && tag !== "Upload"),
           image,
+          original,
         });
       }
       const mode = await refreshLogos();
       setStatus(shareStatus(`Updated ${name}`, mode));
+      return true;
+    } catch (err) {
+      reportLogoError(err);
+      return false;
+    }
+  }
+
+  async function restoreCrest(entry: LogoEntry, to: "original" | "previous") {
+    try {
+      let blob: Blob | null = null;
+      if (entry.libraryId) {
+        try {
+          await revertLogo(entry.libraryId, to);
+        } catch (err) {
+          if (to !== "original" || !entry.packUrl) throw err;
+          blob = await blobFromUrl(entry.packUrl);
+          await updateLogo(entry.libraryId, { image: blob, history: "none" });
+        }
+      } else if (to === "original" && entry.packUrl) {
+        blob = await blobFromUrl(entry.packUrl);
+        paintLogoNow(entry.name, entry.aliases, blob);
+      } else {
+        throw new Error(to === "original" ? "No original crest is stored for that school" : "Nothing left to undo");
+      }
+      const mode = await refreshLogos();
+      setStatus(shareStatus(to === "original" ? `Restored original · ${entry.name}` : `Undid last crop · ${entry.name}`, mode));
     } catch (err) {
       reportLogoError(err);
     }
@@ -1099,36 +1132,40 @@ export default function App() {
                 });
             }}
             onUpload={(files) => void ingestLibrary(files)}
-            onSaveMeta={(entry, name, aliases, tags) => {
-              void upsertLogoEntry(entry, {
-                name,
-                aliases: parseTagList(aliases),
-                tags: parseTagList(tags),
-              });
-            }}
-            onSaveBar={(entry, primary, secondary) => {
-              paintBarNow(entry.name, entry.aliases, primary, secondary);
-              if (barSaveTimer.current) window.clearTimeout(barSaveTimer.current);
-              barSaveTimer.current = window.setTimeout(() => {
-                void saveBar({
-                  id: findBar(bars, entry.name, ...entry.aliases)?.id || barIdFor(entry.name),
-                  name: entry.name,
-                  aliases: entry.aliases,
-                  primary,
-                  secondary,
-                })
-                  .then((saved) => {
-                    paintBarNow(saved.name, saved.aliases, saved.primary, saved.secondary, saved.id);
-                    setStatus(shareStatus(`Bar color saved · ${entry.name}`));
-                  })
-                  .catch(reportLogoError);
-              }, 280);
+            onSaveDraft={(entry, draft) => {
+              const aliases = parseTagList(draft.aliases);
+              const tags = parseTagList(draft.tags);
+              const metaChanged =
+                draft.name !== entry.name ||
+                aliases.join("|") !== entry.aliases.join("|") ||
+                tags.join("|") !== entry.tags.filter((tag) => tag !== "Sample" && tag !== "Upload").join("|");
+              void (async () => {
+                if (metaChanged || entry.libraryId) {
+                  const ok = await upsertLogoEntry(entry, { name: draft.name, aliases, tags });
+                  if (!ok) return;
+                }
+                const saved = await saveBar({
+                  id: findBar(bars, entry.name, ...entry.aliases)?.id || barIdFor(draft.name),
+                  name: draft.name,
+                  aliases: aliases.length ? aliases : entry.aliases,
+                  primary: draft.primary,
+                  secondary: draft.secondary,
+                });
+                paintBarNow(saved.name, saved.aliases, saved.primary, saved.secondary, saved.id);
+                setStatus(shareStatus(`Saved ${draft.name}`));
+              })().catch(reportLogoError);
             }}
             onReplace={(entry, file) => {
-              void upsertLogoEntry(entry, { image: file });
+              void upsertLogoEntry(entry, { image: file }, "replace");
             }}
             onCrop={(entry, blob) => {
-              void upsertLogoEntry(entry, { image: blob });
+              void upsertLogoEntry(entry, { image: blob }, "crop");
+            }}
+            onUndoCrop={(entry) => {
+              void restoreCrest(entry, "previous");
+            }}
+            onRevertOriginal={(entry) => {
+              void restoreCrest(entry, "original");
             }}
             onDelete={(entry) => {
               if (!entry.libraryId) return;

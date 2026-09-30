@@ -145,6 +145,18 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+}
+
+.logo-row-save:not(:disabled) {
+  background: var(--ui-accent-fill);
+  border-color: var(--ui-accent);
+}
+
+.logo-db-actions .ghost-btn:disabled,
+.logo-db-actions .link-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .logo-db-more {
@@ -188,7 +200,7 @@
 }
 
 .logo-desk .logo-row {
-  grid-template-columns: 96px minmax(140px, 1.1fr) minmax(140px, 1fr) minmax(110px, 0.7fr) minmax(150px, 0.8fr) 170px;
+  grid-template-columns: 96px minmax(140px, 1.1fr) minmax(140px, 1fr) minmax(110px, 0.7fr) minmax(150px, 0.8fr) minmax(220px, 1fr);
   align-items: end;
 }
 

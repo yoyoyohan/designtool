@@ -6,7 +6,9 @@ import {
   patchSharedLogo,
   postSharedLogo,
   pushLocalIfMissing,
+  revertSharedLogo,
   type DeskMode,
+  type LogoHistory,
 } from "./logoApi";
 
 const DB_NAME = "ranking-studio-logos";
@@ -19,11 +21,17 @@ export type LogoRecord = {
   aliases: string[];
   tags: string[];
   image: Blob;
+  original?: Blob;
+  previous?: Blob;
   uploadedAt: number;
   updatedAt: number;
 };
 
-export type LogoView = Omit<LogoRecord, "image"> & { url: string };
+export type LogoView = Omit<LogoRecord, "image" | "original" | "previous"> & {
+  url: string;
+  hasOriginal?: boolean;
+  hasPrevious?: boolean;
+};
 
 export function normalizeLogoName(value: string): string {
   return value
@@ -78,6 +86,7 @@ export async function getLogo(id: string): Promise<LogoRecord | null> {
 export async function addLogo(input: {
   name: string;
   image: Blob;
+  original?: Blob;
   aliases?: string[];
   tags?: string[];
 }): Promise<LogoRecord> {
@@ -88,12 +97,13 @@ export async function addLogo(input: {
     aliases: input.aliases ?? [],
     tags: input.tags ?? [],
     image: input.image,
+    original: input.original ?? input.image,
     uploadedAt: now,
     updatedAt: now,
   };
   await run("readwrite", (store) => store.put(record));
   try {
-    const shared = await postSharedLogo(record);
+    const shared = await postSharedLogo({ ...record, original: record.original });
     return { ...record, id: shared.id, name: shared.name, aliases: shared.aliases, tags: shared.tags };
   } catch (err) {
     if ((await fetchDeskStatus()).available) throw err;
@@ -103,24 +113,56 @@ export async function addLogo(input: {
 
 export async function updateLogo(
   id: string,
-  patch: Partial<Pick<LogoRecord, "name" | "aliases" | "tags" | "image">>,
+  patch: Partial<Pick<LogoRecord, "name" | "aliases" | "tags" | "image">> & { history?: LogoHistory },
 ): Promise<LogoRecord | null> {
   const current = await getLogo(id);
-  const fallback: LogoRecord | null = current
-    ? {
-        ...current,
-        ...patch,
-        name: (patch.name ?? current.name).trim() || current.name,
-        updatedAt: Date.now(),
-      }
-    : null;
-  if (fallback) await run("readwrite", (store) => store.put(fallback));
+  const history = patch.history ?? (patch.image ? "crop" : "none");
+  let fallback: LogoRecord | null = null;
+  if (current) {
+    fallback = {
+      ...current,
+      ...patch,
+      name: (patch.name ?? current.name).trim() || current.name,
+      updatedAt: Date.now(),
+    };
+    if (patch.image && history === "crop") {
+      fallback.original = current.original ?? current.image;
+      fallback.previous = current.image;
+      fallback.image = patch.image;
+    } else if (patch.image && history === "replace") {
+      fallback.original = patch.image;
+      fallback.previous = undefined;
+      fallback.image = patch.image;
+    }
+    await run("readwrite", (store) => store.put(fallback));
+  }
   try {
     await patchSharedLogo(id, patch);
   } catch (err) {
     if ((await fetchDeskStatus()).available) throw err;
   }
   return fallback;
+}
+
+export async function revertLogo(id: string, to: "original" | "previous"): Promise<LogoRecord | null> {
+  const current = await getLogo(id);
+  const blob = to === "original" ? current?.original : current?.previous;
+  if (current && blob) {
+    const next: LogoRecord = {
+      ...current,
+      image: blob,
+      previous: to === "previous" ? undefined : current.previous,
+      updatedAt: Date.now(),
+    };
+    await run("readwrite", (store) => store.put(next));
+  }
+  try {
+    await revertSharedLogo(id, to);
+  } catch (err) {
+    if ((await fetchDeskStatus()).available) throw err;
+    if (!blob) throw new Error(to === "original" ? "No original crest is stored for that school" : "Nothing left to undo");
+  }
+  return current ? getLogo(id) : null;
 }
 
 export async function deleteLogo(id: string): Promise<void> {
@@ -143,7 +185,14 @@ export async function loadLogoLibrary(): Promise<{
   if (remote) {
     if (!remote.error) await pushLocalIfMissing(local, remote.views);
     const latest = remote.error ? remote : ((await fetchSharedViews()) ?? remote);
-    const views = latest.views;
+    const views = latest.views.map((view) => {
+      const loc = local.find((row) => row.id === view.id);
+      return {
+        ...view,
+        hasOriginal: view.hasOriginal || Boolean(loc?.original),
+        hasPrevious: view.hasPrevious || Boolean(loc?.previous),
+      };
+    });
     const status = await fetchDeskStatus();
     const seen = new Set(views.flatMap((row) => [row.id, row.name.toLowerCase()]));
     const pending = local.filter((row) => !seen.has(row.id) && !seen.has(row.name.toLowerCase()));
@@ -175,6 +224,8 @@ export function viewsFromRecords(records: LogoRecord[]): { views: LogoView[]; re
     uploadedAt: record.uploadedAt,
     updatedAt: record.updatedAt,
     url: URL.createObjectURL(record.image),
+    hasOriginal: Boolean(record.original),
+    hasPrevious: Boolean(record.previous),
   }));
   return {
     views,
