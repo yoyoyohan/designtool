@@ -83,6 +83,7 @@ create table if not exists public.bars (
   aliases text[] not null default '{}',
   bar_fill text not null,
   name_ink text not null,
+  accent text not null default '',
   updated_at bigint not null
 );
 

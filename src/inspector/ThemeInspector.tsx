@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { FONT_OPTIONS, TOKEN_DEFS, TOKEN_GROUPS, SIMPLE_LOOK_IDS } from "../theme/tokenMeta";
 import type { ExtraFont } from "../theme/extraFonts";
+import { CANVA_FONTS } from "../theme/canvaFonts";
 import type { TokenDef } from "../engine/types";
 import "./ThemeInspector.css";
 
@@ -136,13 +137,30 @@ function FontAdder({
   return (
     <div className="font-adder">
       <p className="inspector-help">
-        Add a Google Font by name, or upload a .woff / .ttf. Fonts stay in this browser and export with the PNG — there
-        is no separate server.
+        These are the Google Fonts Canva uses for sports graphics. Canva-only faces like Canva Sans cannot be shipped.
+        Upload a .woff / .ttf if you have an exact file. Fonts stay in this browser and export with the PNG.
       </p>
+      <div className="font-adder-row">
+        <select
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          aria-label="Canva Google Font"
+        >
+          <option value="">Canva / Google font…</option>
+          {CANVA_FONTS.map((font) => (
+            <option key={font.family} value={font.family}>
+              {font.family}
+            </option>
+          ))}
+        </select>
+        <button type="button" className="layer-btn" disabled={busy || !name.trim()} onClick={() => void addGoogle()}>
+          Add font
+        </button>
+      </div>
       <div className="font-adder-row">
         <input
           value={name}
-          placeholder="e.g. Barlow Condensed"
+          placeholder="Or type any Google Font name"
           onChange={(event) => setName(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {

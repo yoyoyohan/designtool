@@ -399,7 +399,7 @@
   grid-template-columns: var(--grid);
   align-items: stretch;
   height: var(--row-height);
-  border-left: var(--row-edge) solid var(--team-primary);
+  border-left: var(--row-edge) solid var(--team-accent, var(--team-primary));
   border-radius: var(--row-radius);
 }
 

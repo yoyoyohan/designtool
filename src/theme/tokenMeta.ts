@@ -1,4 +1,5 @@
 import type { TokenDef } from "../engine/types";
+import { CANVA_FONT_STACKS } from "./canvaFonts";
 
 /** Defaults Demi can also see in tokens.css. Inspector starts here. */
 export const DEFAULT_TOKENS: Record<string, string> = {
@@ -336,14 +337,12 @@ export const TEMPLATE_TOKEN_IDS: Record<string, string[]> = {
 export const FONT_OPTIONS = [
   '"Luckiest Guy", Impact, sans-serif',
   '"Permanent Marker", "Comic Sans MS", cursive',
-  '"Oswald", "Arial Narrow", sans-serif',
-  '"Bebas Neue", Impact, sans-serif',
-  '"Anton", Impact, sans-serif',
   '"Playfair Display", Georgia, serif',
   '"Fraunces", Georgia, serif',
   '"IBM Plex Sans", sans-serif',
+  ...CANVA_FONT_STACKS,
   "Georgia, serif",
   "system-ui, sans-serif",
-];
+].filter((stack, index, all) => all.indexOf(stack) === index);
 
 export const TOKEN_GROUPS = ["Color", "Type", "Rows", "Photo", "Stickers", "Place"];

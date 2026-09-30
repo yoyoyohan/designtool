@@ -191,6 +191,20 @@ export async function deleteLogo(id: string): Promise<void> {
   }
 }
 
+export async function replaceLogoLibrary(files: File[]): Promise<number> {
+  const remote = await fetchSharedViews();
+  const local = await listLogos();
+  const ids = [...new Set([...local.map((row) => row.id), ...(remote?.views ?? []).map((view) => view.id)])];
+  for (const id of ids) {
+    await deleteLogo(id);
+  }
+  const images = files.filter((file) => /\.(svg|png|jpe?g|webp)$/i.test(file.name));
+  for (const file of images) {
+    await addLogo({ name: titleFromFile(file), image: file, tags: [] });
+  }
+  return images.length;
+}
+
 export async function loadLogoLibrary(): Promise<{
   views: LogoView[];
   mode: DeskMode;
@@ -275,6 +289,7 @@ export function applyLogoLibrary(teams: TeamRecord[], logos: LogoView[]): TeamRe
       aliases: logo.aliases,
       primary: "#4a4a4a",
       secondary: "#f3ead8",
+      accent: "",
       logoUrl: logo.url,
       logoFile: logo.name,
       source: "upload",

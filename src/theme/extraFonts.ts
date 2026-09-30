@@ -1,3 +1,5 @@
+import { canvaFontsHref } from "./canvaFonts";
+
 export type ExtraFont = {
   id: string;
   family: string;
@@ -42,6 +44,13 @@ export function saveExtraFonts(fonts: ExtraFont[]): void {
 export function applyExtraFonts(fonts: ExtraFont[]): void {
   document.getElementById("ranking-google-fonts")?.remove();
   document.getElementById("ranking-file-fonts")?.remove();
+  document.getElementById("ranking-canva-fonts")?.remove();
+
+  const canva = document.createElement("link");
+  canva.id = "ranking-canva-fonts";
+  canva.rel = "stylesheet";
+  canva.href = canvaFontsHref();
+  document.head.appendChild(canva);
 
   const href = googleFontHref(fonts);
   if (href) {

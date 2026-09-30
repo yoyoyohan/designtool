@@ -170,18 +170,20 @@ function graphicTone(
   primary: string | undefined,
   secondary: string | undefined,
   statTint: number,
+  accent?: string,
 ): { fill: string; ink: string; soft: string; plateInk: string; statFill: string; lightBar: boolean } {
   const fill = parseHex(primary) ?? "2a2a32";
   const lightBar = hexLuminance(fill) > 0.4;
   const secondaryHex = parseHex(secondary);
   const ink = secondaryHex ? `#${secondaryHex}` : lightBar ? "var(--bar-ink-on-light)" : "var(--bar-ink)";
+  const accentHex = parseHex(accent);
 
   return {
     fill: `#${fill}`,
     ink,
     soft: lightBar ? "rgba(26, 39, 72, 0.8)" : "rgba(255, 255, 255, 0.8)",
     plateInk: "var(--plate-ink)",
-    statFill: mixHex(fill, "808080", clamp(statTint / 100, 0, 0.7)),
+    statFill: accentHex ? `#${accentHex}` : mixHex(fill, "808080", clamp(statTint / 100, 0, 0.7)),
     lightBar,
   };
 }
@@ -689,7 +691,8 @@ function PosterRow({
   const graphic = graphicBarFor(row.teamQuery, row.team?.name);
   const primary = row.team?.primary ?? graphic?.primary ?? "#3a3a40";
   const secondary = row.team?.secondary ?? graphic?.secondary ?? "#111111";
-  const tone = graphicSkin ? graphicTone(primary, secondary, statTint) : barTone(primary, secondary);
+  const accent = row.team?.accent || primary;
+  const tone = graphicSkin ? graphicTone(primary, secondary, statTint, row.team?.accent) : barTone(primary, secondary);
   const graphicVars: Record<string, string> = graphicSkin
     ? {
         "--plate-team-ink": (tone as ReturnType<typeof graphicTone>).plateInk,
@@ -710,6 +713,7 @@ function PosterRow({
         {
           "--team-primary": primary,
           "--team-secondary": secondary,
+          "--team-accent": accent,
           "--team-fill": tone.fill,
           "--team-ink": tone.ink,
           "--team-ink-soft": tone.soft,

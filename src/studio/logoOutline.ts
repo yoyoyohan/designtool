@@ -230,3 +230,10 @@ export function canvasPng(canvas: HTMLCanvasElement): Promise<Blob> {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Could not save that crest"))), "image/png", 1);
   });
 }
+
+export function blankCrestPng(): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = OUT;
+  canvas.height = OUT;
+  return canvasPng(canvas);
+}

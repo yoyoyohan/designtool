@@ -1,4 +1,4 @@
-import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Component, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import type { TeamRecord } from "../engine/types";
 import { graphicBarFor } from "../theme/graphicBars";
 import { colorSwatch, findBar, normalizeHex, type BarRecord } from "./barStore";
@@ -51,6 +51,7 @@ export type LogoEntry = {
   source: "library" | "sample";
   primary: string;
   secondary: string;
+  accent: string;
   hasOriginal: boolean;
   hasPrevious: boolean;
   packUrl: string | null;
@@ -69,7 +70,9 @@ type Props = {
   onDeskClose: () => void;
   onUnlock: (key: string) => void;
   onUpload: (files: FileList | File[]) => void;
-  onSaveDraft: (entry: LogoEntry, draft: { name: string; aliases: string; tags: string; primary: string; secondary: string }) => void;
+  onAddTeam: () => void;
+  onReplaceLibrary: (files: FileList | File[]) => void;
+  onSaveDraft: (entry: LogoEntry, draft: { name: string; aliases: string; tags: string; primary: string; secondary: string; accent: string }) => void;
   onReplace: (entry: LogoEntry, file: File) => void;
   onCrop: (entry: LogoEntry, blob: Blob) => void;
   onUndoCrop: (entry: LogoEntry) => void;
@@ -83,6 +86,7 @@ function colorsFor(name: string, aliases: string[], bars: BarRecord[], team?: Te
   return {
     primary: desk?.primary ?? graphic?.primary ?? team?.primary ?? "#3a3a40",
     secondary: desk?.secondary ?? graphic?.secondary ?? team?.secondary ?? "#ffffff",
+    accent: desk?.accent ?? team?.accent ?? "",
   };
 }
 
@@ -101,16 +105,91 @@ function DeskCrest({ src }: { src: string }) {
   return <img src={url} alt="" />;
 }
 
+function hexFromPixel(data: Uint8ClampedArray, i: number) {
+  const to = (n: number) => n.toString(16).padStart(2, "0");
+  return `#${to(data[i])}${to(data[i + 1])}${to(data[i + 2])}`;
+}
+
+function LogoDropper({
+  src,
+  name,
+  target,
+  onPick,
+  onClose,
+}: {
+  src: string;
+  name: string;
+  target: string;
+  onPick: (hex: string) => void;
+  onClose: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      const size = 360;
+      canvas.width = size;
+      canvas.height = size;
+      ctx.clearRect(0, 0, size, size);
+      const scale = Math.min(size / Math.max(image.naturalWidth, 1), size / Math.max(image.naturalHeight, 1));
+      const dw = image.naturalWidth * scale;
+      const dh = image.naturalHeight * scale;
+      ctx.drawImage(image, (size - dw) / 2, (size - dh) / 2, dw, dh);
+      setReady(true);
+    };
+    image.onerror = () => setReady(false);
+    image.src = src;
+  }, [src]);
+
+  function pick(event: MouseEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx || !ready) return;
+    const box = canvas.getBoundingClientRect();
+    const x = Math.floor(((event.clientX - box.left) / box.width) * canvas.width);
+    const y = Math.floor(((event.clientY - box.top) / box.height) * canvas.height);
+    const pixel = ctx.getImageData(Math.max(0, Math.min(canvas.width - 1, x)), Math.max(0, Math.min(canvas.height - 1, y)), 1, 1).data;
+    if (pixel[3] < 12) return;
+    onPick(hexFromPixel(pixel, 0));
+  }
+
+  return (
+    <div className="logo-drop-mask" role="dialog" aria-modal="true" aria-label={`Eyedrop ${name}`}>
+      <div className="logo-drop">
+        <p className="logo-crop-title">Eyedrop {name}</p>
+        <p className="logo-crop-help">
+          Click the crest to fill {target}. The browser color picker’s eyedropper also works on this bigger logo.
+        </p>
+        <canvas ref={canvasRef} className="logo-drop-canvas" onClick={pick} />
+        <div className="logo-crop-actions">
+          <button type="button" className="ghost-btn" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ColorField({
   label,
   value,
   canEdit,
   onCommit,
+  onActivate,
 }: {
   label: string;
   value: string;
   canEdit: boolean;
   onCommit: (next: string) => void;
+  onActivate?: () => void;
 }) {
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
@@ -130,6 +209,7 @@ function ColorField({
         <input
           type="color"
           value={hex}
+          onFocus={onActivate}
           onChange={(event) => {
             setText(event.target.value);
             onCommit(event.target.value);
@@ -140,6 +220,7 @@ function ColorField({
           value={text}
           spellCheck={false}
           autoComplete="off"
+          onFocus={onActivate}
           onChange={(event) => {
             const next = event.target.value;
             setText(next);
@@ -229,6 +310,7 @@ function LogoRow({
   canEdit,
   onSaveDraft,
   onCrop,
+  onEyedrop,
   onReplaceClick,
   onUndoCrop,
   onRevertOriginal,
@@ -238,6 +320,7 @@ function LogoRow({
   canEdit: boolean;
   onSaveDraft: Props["onSaveDraft"];
   onCrop: (entry: LogoEntry) => void;
+  onEyedrop: (entry: LogoEntry, field: "primary" | "secondary" | "accent", apply: (hex: string) => void) => void;
   onReplaceClick: (entry: LogoEntry) => void;
   onUndoCrop: Props["onUndoCrop"];
   onRevertOriginal: Props["onRevertOriginal"];
@@ -248,22 +331,26 @@ function LogoRow({
   const [tags, setTags] = useState(visibleTags(entry.tags));
   const [primary, setPrimary] = useState(entry.primary);
   const [secondary, setSecondary] = useState(entry.secondary);
+  const [accent, setAccent] = useState(entry.accent || entry.primary);
+  const [colorTarget, setColorTarget] = useState<"primary" | "secondary" | "accent">("primary");
 
-  const savedKey = `${entry.name}|${entry.aliases.join(",")}|${visibleTags(entry.tags)}|${entry.primary}|${entry.secondary}`;
+  const savedKey = `${entry.name}|${entry.aliases.join(",")}|${visibleTags(entry.tags)}|${entry.primary}|${entry.secondary}|${entry.accent}`;
   useEffect(() => {
     setName(entry.name);
     setAliases(entry.aliases.join(", "));
     setTags(visibleTags(entry.tags));
     setPrimary(entry.primary);
     setSecondary(entry.secondary);
-  }, [entry.key, savedKey, entry.name, entry.aliases, entry.primary, entry.secondary, entry.tags]);
+    setAccent(entry.accent || entry.primary);
+  }, [entry.key, savedKey, entry.name, entry.aliases, entry.primary, entry.secondary, entry.accent, entry.tags]);
 
   const dirty =
     name.trim() !== entry.name ||
     aliases !== entry.aliases.join(", ") ||
     tags !== visibleTags(entry.tags) ||
     normalizeHex(primary, entry.primary) !== normalizeHex(entry.primary) ||
-    normalizeHex(secondary, entry.secondary) !== normalizeHex(entry.secondary);
+    normalizeHex(secondary, entry.secondary) !== normalizeHex(entry.secondary) ||
+    normalizeHex(accent, entry.accent || entry.primary) !== normalizeHex(entry.accent || entry.primary);
 
   function discard() {
     setName(entry.name);
@@ -271,7 +358,14 @@ function LogoRow({
     setTags(visibleTags(entry.tags));
     setPrimary(entry.primary);
     setSecondary(entry.secondary);
+    setAccent(entry.accent || entry.primary);
   }
+
+  const applyDrop = (hex: string) => {
+    if (colorTarget === "secondary") setSecondary(hex);
+    else if (colorTarget === "accent") setAccent(hex);
+    else setPrimary(hex);
+  };
 
   return (
     <article className={entry.used ? "logo-row is-used" : "logo-row"}>
@@ -319,8 +413,9 @@ function LogoRow({
         )}
       </label>
       <div className="logo-row-tones">
-        <ColorField label="Bar" value={primary} canEdit={canEdit} onCommit={setPrimary} />
-        <ColorField label="Name" value={secondary} canEdit={canEdit} onCommit={setSecondary} />
+        <ColorField label="Bar" value={primary} canEdit={canEdit} onCommit={setPrimary} onActivate={() => setColorTarget("primary")} />
+        <ColorField label="Text" value={secondary} canEdit={canEdit} onCommit={setSecondary} onActivate={() => setColorTarget("secondary")} />
+        <ColorField label="Secondary" value={accent} canEdit={canEdit} onCommit={setAccent} onActivate={() => setColorTarget("accent")} />
       </div>
       <div className="logo-row-side">
         <span>
@@ -339,6 +434,7 @@ function LogoRow({
                   tags,
                   primary: normalizeHex(primary, entry.primary),
                   secondary: normalizeHex(secondary, entry.secondary),
+                  accent: normalizeHex(accent, entry.accent || entry.primary),
                 })
               }
             >
@@ -346,6 +442,9 @@ function LogoRow({
             </button>
             <button type="button" className="link-btn" disabled={!dirty} onClick={discard}>
               Discard
+            </button>
+            <button type="button" className="link-btn" onClick={() => onEyedrop(entry, colorTarget, applyDrop)}>
+              Eyedrop
             </button>
             <button type="button" className="link-btn" onClick={() => onCrop(entry)}>
               Crop / outline
@@ -394,6 +493,8 @@ export function LogoDatabase({
   onDeskClose,
   onUnlock,
   onUpload,
+  onAddTeam,
+  onReplaceLibrary,
   onSaveDraft,
   onReplace,
   onCrop,
@@ -403,18 +504,24 @@ export function LogoDatabase({
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
+  const folderReplaceRef = useRef<HTMLInputElement>(null);
   const pendingReplace = useRef<LogoEntry | null>(null);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("");
   const [deskKey, setDeskKeyDraft] = useState("");
   const [cropping, setCropping] = useState<LogoEntry | null>(null);
+  const [dropper, setDropper] = useState<{ entry: LogoEntry; target: string; apply: (hex: string) => void } | null>(null);
   const [dropHot, setDropHot] = useState(false);
 
   const entries = useMemo(() => buildEntries(logos, teams, bars, usedNames), [logos, teams, bars, usedNames]);
   const shown = useMemo(() => filterEntries(entries, query, tag), [entries, query, tag]);
   const tags = useMemo(() => {
     const set = new Set<string>();
-    entries.forEach((entry) => entry.tags.forEach((item) => set.add(item)));
+    entries.forEach((entry) =>
+      entry.tags.forEach((item) => {
+        if (item !== CLEAR_BG_TAG && item !== "Sample" && item !== "Upload") set.add(item);
+      }),
+    );
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [entries]);
   const posterCount = entries.filter((entry) => entry.used).length;
@@ -479,9 +586,26 @@ export function LogoDatabase({
       ) : null}
       <div className="row-btns">
         {canEdit ? (
-          <button type="button" className="ghost-btn" onClick={() => fileRef.current?.click()}>
-            Upload logos
-          </button>
+          <>
+            <button type="button" className="ghost-btn" onClick={onAddTeam}>
+              Add team
+            </button>
+            <button type="button" className="ghost-btn" onClick={() => fileRef.current?.click()}>
+              Upload logos
+            </button>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => {
+                const ok = window.confirm(
+                  "This deletes every crest in the logo library and loads a folder in its place. School colors stay. Continue?",
+                );
+                if (ok) folderReplaceRef.current?.click();
+              }}
+            >
+              Replace library with folder
+            </button>
+          </>
         ) : null}
         {!deskOpen ? (
           <button type="button" className="ghost-btn" onClick={onDeskOpen}>
@@ -540,6 +664,18 @@ export function LogoDatabase({
           event.target.value = "";
         }}
       />
+      <input
+        ref={folderReplaceRef}
+        className="hidden-file"
+        type="file"
+        multiple
+        accept="image/png,image/svg+xml,image/jpeg,image/webp"
+        {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
+        onChange={(event) => {
+          if (event.target.files?.length) onReplaceLibrary(event.target.files);
+          event.target.value = "";
+        }}
+      />
     </>
   );
 
@@ -551,6 +687,10 @@ export function LogoDatabase({
         canEdit={canEdit}
         onSaveDraft={onSaveDraft}
         onCrop={setCropping}
+        onEyedrop={(item, field, apply) => {
+          const target = field === "secondary" ? "Text" : field === "accent" ? "Secondary" : "Bar";
+          setDropper({ entry: item, target, apply });
+        }}
         onReplaceClick={(item) => {
           pendingReplace.current = item;
           replaceRef.current?.click();
@@ -612,6 +752,15 @@ export function LogoDatabase({
             }}
           />
         </CropSafe>
+      ) : null}
+      {canEdit && dropper ? (
+        <LogoDropper
+          src={dropper.entry.url}
+          name={dropper.entry.name}
+          target={dropper.target}
+          onPick={dropper.apply}
+          onClose={() => setDropper(null)}
+        />
       ) : null}
     </div>
   );

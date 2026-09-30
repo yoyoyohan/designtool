@@ -228,7 +228,8 @@
   gap: 6px;
 }
 
-.font-adder-row input {
+.font-adder-row input,
+.font-adder-row select {
   width: 100%;
   border: 1px solid var(--ui-line);
   background: var(--ui-fill);

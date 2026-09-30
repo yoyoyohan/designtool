@@ -89,6 +89,7 @@ export function catalogBars(teams: TeamRecord[]): BarRecord[] {
       aliases: team.aliases,
       primary: normalizeHex(team.primary),
       secondary: normalizeHex(team.secondary, "#f3ead8"),
+      accent: team.accent ? normalizeHex(team.accent) : "",
       updatedAt: 0,
     });
   }
@@ -101,6 +102,7 @@ export function catalogBars(teams: TeamRecord[]): BarRecord[] {
       aliases: prev?.aliases ?? [],
       primary: school.primary,
       secondary: school.secondary,
+      accent: prev?.accent ?? "",
       updatedAt: 0,
     });
   }
@@ -131,11 +133,12 @@ export function applyDeskColorsToRows(rows: RankingRow[], bars: BarRecord[]): Ra
       aliases: desk.aliases,
       primary: desk.primary,
       secondary: desk.secondary,
+      accent: desk.accent,
       logoUrl: "",
       logoFile: "",
       source: "upload" as const,
     };
-    return { ...row, team: { ...team, primary: desk.primary, secondary: desk.secondary } };
+    return { ...row, team: { ...team, primary: desk.primary, secondary: desk.secondary, accent: desk.accent } };
   });
 }
 
@@ -148,6 +151,7 @@ export function applyBarColors(teams: TeamRecord[], bars: BarRecord[]): TeamReco
       ...team,
       primary: desk?.primary ?? graphic?.primary ?? team.primary,
       secondary: desk?.secondary ?? graphic?.secondary ?? team.secondary,
+      accent: desk?.accent ?? team.accent ?? "",
     };
   });
   const covered = new Set(next.flatMap((team) => [team.name, ...team.aliases].map(normalizeLogoName)));
@@ -160,6 +164,7 @@ export function applyBarColors(teams: TeamRecord[], bars: BarRecord[]): TeamReco
       aliases: bar.aliases,
       primary: bar.primary,
       secondary: bar.secondary,
+      accent: bar.accent,
       logoUrl: "",
       logoFile: "",
       source: "upload",
@@ -192,6 +197,7 @@ export async function saveBar(input: {
   aliases: string[];
   primary: string;
   secondary: string;
+  accent: string;
   id?: string;
 }): Promise<BarRecord> {
   const record: BarRecord = {
@@ -200,6 +206,7 @@ export async function saveBar(input: {
     aliases: input.aliases,
     primary: normalizeHex(input.primary),
     secondary: normalizeHex(input.secondary, "#ffffff"),
+    accent: input.accent.trim() ? normalizeHex(input.accent) : "",
     updatedAt: Date.now(),
   };
   await putBar(record);

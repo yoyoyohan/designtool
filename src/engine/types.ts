@@ -4,6 +4,7 @@ export type TeamRecord = {
   aliases: string[];
   primary: string;
   secondary: string;
+  accent: string;
   logoUrl: string;
   logoFile: string;
   source: "sample" | "upload";

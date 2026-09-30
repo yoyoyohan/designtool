@@ -118,6 +118,9 @@ function writeFailed(message?: string): never {
   if (message?.toLowerCase().includes("row-level security") || message?.includes("401") || message?.includes("JWT")) {
     throw new DeskAuthError();
   }
+  if (message?.includes("schema cache") && message.toLowerCase().includes("accent")) {
+    throw new Error("Run the accent SQL in Supabase (supabase/accent.sql), then unlock again");
+  }
   if (message?.includes("schema cache") && message.toLowerCase().includes("bars")) {
     throw new Error("Run the bars SQL in Supabase (supabase/schema.sql), then unlock again");
   }
@@ -330,6 +333,7 @@ export type SharedBar = {
   aliases: string[];
   primary: string;
   secondary: string;
+  accent: string;
   updatedAt: number;
 };
 
@@ -339,6 +343,7 @@ type BarRow = {
   aliases: string[] | null;
   bar_fill: string;
   name_ink: string;
+  accent?: string | null;
   updated_at: number;
 };
 
@@ -349,6 +354,7 @@ function asBar(row: BarRow): SharedBar {
     aliases: row.aliases ?? [],
     primary: row.bar_fill,
     secondary: row.name_ink,
+    accent: row.accent ?? "",
     updatedAt: Number(row.updated_at),
   };
 }
@@ -356,6 +362,11 @@ function asBar(row: BarRow): SharedBar {
 export async function fetchSharedBars(): Promise<{ bars: SharedBar[]; error?: string } | null> {
   const supabase = getClient();
   if (!supabase) return null;
+  const full = await supabase
+    .from("bars")
+    .select("id,name,aliases,bar_fill,name_ink,accent,updated_at")
+    .order("name");
+  if (!full.error) return { bars: (full.data ?? []).map((row) => asBar(row as BarRow)) };
   const { data, error } = await supabase
     .from("bars")
     .select("id,name,aliases,bar_fill,name_ink,updated_at")
@@ -372,11 +383,16 @@ export async function upsertSharedBar(input: SharedBar): Promise<SharedBar> {
     aliases: input.aliases,
     bar_fill: input.primary,
     name_ink: input.secondary,
+    accent: input.accent || "",
     updated_at: Date.now(),
   };
   const { data, error } = await supabase.from("bars").upsert(row).select().single();
-  if (error) writeFailed(error.message);
-  return asBar(data as BarRow);
+  if (!error) return asBar(data as BarRow);
+  if (!String(error.message).toLowerCase().includes("accent")) writeFailed(error.message);
+  const { accent: _accent, ...plain } = row;
+  const retry = await supabase.from("bars").upsert(plain).select().single();
+  if (retry.error) writeFailed(retry.error.message);
+  return asBar({ ...(retry.data as BarRow), accent: input.accent });
 }
 
 export async function pushBarsIfMissing(catalog: SharedBar[], remote: SharedBar[]): Promise<boolean> {

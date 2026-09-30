@@ -30,6 +30,7 @@ import {
   revertLogo,
   titleFromFile,
   updateLogo,
+  replaceLogoLibrary,
   type LogoView,
 } from "./studio/logoStore";
 import { DeskAuthError, deskBuildNote, setDeskKey, type DeskMode, type LogoHistory } from "./studio/logoApi";
@@ -62,6 +63,7 @@ import {
   type BarRecord,
 } from "./studio/barStore";
 import { persistTransparentCrests } from "./studio/transparentCrest";
+import { blankCrestPng } from "./studio/logoOutline";
 import { graphicBarFor } from "./theme/graphicBars";
 import { DEFAULT_TOKENS } from "./theme/tokenMeta";
 
@@ -628,7 +630,7 @@ export default function App() {
     return loaded.mode;
   }
 
-  function paintBarNow(name: string, aliases: string[], primary: string, secondary: string, id?: string) {
+  function paintBarNow(name: string, aliases: string[], primary: string, secondary: string, accent: string, id?: string) {
     setBars((prev) => {
       const keys = new Set([name, ...aliases].map(normalizeLogoName));
       const idx = prev.findIndex(
@@ -640,6 +642,7 @@ export default function App() {
         aliases,
         primary,
         secondary,
+        accent,
         updatedAt: Date.now(),
       };
       if (idx < 0) return [row, ...prev];
@@ -1171,6 +1174,41 @@ export default function App() {
                 });
             }}
             onUpload={(files) => void ingestLibrary(files)}
+            onAddTeam={() => {
+              void (async () => {
+                const taken = new Set(
+                  [...logoViews.map((item) => item.name), ...teams.map((item) => item.name)].map((item) =>
+                    item.toLowerCase(),
+                  ),
+                );
+                let name = "New team";
+                let n = 2;
+                while (taken.has(name.toLowerCase())) {
+                  name = `New team ${n}`;
+                  n += 1;
+                }
+                const image = await blankCrestPng();
+                paintLogoNow(name, [], image);
+                await addLogo({ name, image, tags: [] });
+                const saved = await saveBar({
+                  name,
+                  aliases: [],
+                  primary: "#3a3a40",
+                  secondary: "#ffffff",
+                  accent: "#3a3a40",
+                });
+                paintBarNow(saved.name, saved.aliases, saved.primary, saved.secondary, saved.accent, saved.id);
+                await refreshLogos();
+                setLogoDeskOpen(true);
+                setStatus(shareStatus(`Added ${name}`));
+              })().catch(reportLogoError);
+            }}
+            onReplaceLibrary={(files) => {
+              void replaceLogoLibrary(Array.from(files))
+                .then((count) => refreshLogos().then((mode) => ({ count, mode })))
+                .then(({ count, mode }) => setStatus(shareStatus(`Replaced library · ${count} crests`, mode)))
+                .catch(reportLogoError);
+            }}
             onSaveDraft={(entry, draft) => {
               const aliases = parseTagList(draft.aliases);
               const tags = parseTagList(draft.tags);
@@ -1189,8 +1227,9 @@ export default function App() {
                   aliases: aliases.length ? aliases : entry.aliases,
                   primary: draft.primary,
                   secondary: draft.secondary,
+                  accent: draft.accent,
                 });
-                paintBarNow(saved.name, saved.aliases, saved.primary, saved.secondary, saved.id);
+                paintBarNow(saved.name, saved.aliases, saved.primary, saved.secondary, saved.accent, saved.id);
                 setStatus(shareStatus(`Saved ${draft.name}`));
               })().catch(reportLogoError);
             }}
