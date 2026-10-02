@@ -122,6 +122,7 @@ export const DEFAULT_TOKENS: Record<string, string> = {
   "--name-line": "1.05",
   "--mark-pad-x": "12px",
   "--mark-pad-y": "4px",
+  "--mark-plate": "#ffffff",
   "--meta-y": "0px",
 };
 
@@ -142,6 +143,7 @@ export const TOKEN_DEFS: TokenDef[] = [
   { id: "--header-bar", label: "Header bar", group: "Color", kind: "color" },
   { id: "--col-head-fg", label: "Column labels", group: "Color", kind: "color" },
   { id: "--plate-bg", label: "Plate fill", group: "Color", kind: "color" },
+  { id: "--mark-plate", label: "Crest backing", group: "Color", kind: "color" },
   { id: "--plate-ink", label: "Plate text", group: "Color", kind: "color" },
   { id: "--move-up", label: "Moved up", group: "Color", kind: "color" },
   { id: "--move-down", label: "Moved down", group: "Color", kind: "color" },

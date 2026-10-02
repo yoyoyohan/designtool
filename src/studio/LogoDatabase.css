@@ -87,7 +87,7 @@
   height: 86px;
   padding: 0;
   border: 0;
-  background: #1a2748;
+  background: #fff;
   cursor: pointer;
 }
 
@@ -100,6 +100,7 @@
   height: 100%;
   object-fit: contain;
   padding: 3px;
+  background: #fff;
 }
 
 .logo-row label {

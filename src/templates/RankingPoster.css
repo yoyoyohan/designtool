@@ -448,6 +448,7 @@
   width: 86%;
   height: 86%;
   object-fit: contain;
+  background: var(--mark-plate);
 }
 
 .lettermark {
@@ -950,7 +951,7 @@
   max-width: 100%;
   max-height: var(--row-height);
   border-radius: 0;
-  background: transparent;
+  background: var(--mark-plate);
   object-fit: contain;
   padding: var(--mark-pad-y) var(--mark-pad-x);
   isolation: isolate;
