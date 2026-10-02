@@ -168,7 +168,7 @@ async function rasterizePoster(node: HTMLElement, pixelRatio: number): Promise<H
   await inlineImages(clone);
 
   const style = document.createElement("style");
-  style.textContent = `${await fontEmbedCSS()}\n${collectDocumentCSS()}`;
+  style.textContent = `${await fontEmbedCSS()}\n${await inlineCssUrls(collectDocumentCSS(), document.baseURI)}`;
   clone.insertBefore(style, clone.firstChild);
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");

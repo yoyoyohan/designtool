@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { FONT_OPTIONS, TOKEN_DEFS, TOKEN_GROUPS, SIMPLE_LOOK_IDS } from "../theme/tokenMeta";
+import { FONT_OPTIONS, TEXT_FONT_OPTIONS, TITLE_FONT_OPTIONS, TOKEN_DEFS, TOKEN_GROUPS, SIMPLE_LOOK_IDS } from "../theme/tokenMeta";
 import type { ExtraFont } from "../theme/extraFonts";
 import { CANVA_FONTS } from "../theme/canvaFonts";
 import type { TokenDef } from "../engine/types";
@@ -213,10 +213,25 @@ export function ThemeInspector({
   const [query, setQuery] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ Color: true });
   const needle = query.trim().toLowerCase();
-  const fontOptions = useMemo(() => {
-    const extra = extraFonts.map((font) => font.stack);
-    return [...FONT_OPTIONS, ...extra.filter((stack) => !FONT_OPTIONS.includes(stack))];
-  }, [extraFonts]);
+  const extraStacks = useMemo(() => extraFonts.map((font) => font.stack), [extraFonts]);
+  const titleFonts = useMemo(
+    () => [...TITLE_FONT_OPTIONS, ...extraStacks.filter((stack) => !TITLE_FONT_OPTIONS.includes(stack))],
+    [extraStacks],
+  );
+  const textFonts = useMemo(
+    () => [...TEXT_FONT_OPTIONS, ...extraStacks.filter((stack) => !TEXT_FONT_OPTIONS.includes(stack))],
+    [extraStacks],
+  );
+  const fontOptions = useMemo(
+    () => [...FONT_OPTIONS, ...extraStacks.filter((stack) => !FONT_OPTIONS.includes(stack))],
+    [extraStacks],
+  );
+
+  function fontsFor(id: string) {
+    if (id === "--font-display") return titleFonts;
+    if (id === "--font-body" || id === "--font-footer") return textFonts;
+    return fontOptions;
+  }
 
   const simpleDefs = SIMPLE_LOOK_IDS.map((id) => {
     const def = TOKEN_DEFS.find((item) => item.id === id);
@@ -261,7 +276,7 @@ export function ThemeInspector({
           key={def.id}
           def={def}
           value={tokens[def.id] ?? ""}
-          fontOptions={fontOptions}
+          fontOptions={fontsFor(def.id)}
           onChange={(value) => onChange(def.id, value)}
         />
       ))}
@@ -298,7 +313,7 @@ export function ThemeInspector({
                     key={def.id}
                     def={def}
                     value={tokens[def.id] ?? ""}
-                    fontOptions={fontOptions}
+                    fontOptions={fontsFor(def.id)}
                     onChange={(value) => onChange(def.id, value)}
                   />
                 ))}

@@ -1,0 +1,7 @@
+@font-face {
+  font-family: "Gagalin";
+  src: url("/fonts/Gagalin-Regular.woff") format("woff");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}

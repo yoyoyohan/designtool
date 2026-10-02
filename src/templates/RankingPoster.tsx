@@ -6,6 +6,7 @@ import { graphicBarFor } from "../theme/graphicBars";
 import { transparentSrc } from "../studio/transparentCrest";
 import "./RankingPoster.css";
 import "../theme/tokens.css";
+import "../theme/localFonts.css";
 
 export type PosterDecor = {
   id: OrnamentId;

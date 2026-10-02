@@ -3,6 +3,8 @@
   Inspector sliders write these same names. Add a token instead of one-off CSS.
 */
 
+@import "./localFonts.css";
+
 .poster {
   --poster-bg: #07080c;
   --poster-fg: #ffffff;

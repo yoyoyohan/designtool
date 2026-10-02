@@ -175,7 +175,7 @@ export const TOKEN_DEFS: TokenDef[] = [
   { id: "--footer-size", label: "Footer size", group: "Type", kind: "px", min: 8, max: 40, step: 1 },
   { id: "--footer-tracking", label: "Footer tracking", group: "Type", kind: "em", min: 0, max: 0.5, step: 0.02 },
   { id: "--font-display", label: "Title / names", group: "Type", kind: "font" },
-  { id: "--font-body", label: "Stats", group: "Type", kind: "font" },
+  { id: "--font-body", label: "Text", group: "Type", kind: "font" },
   { id: "--font-footer", label: "Footer", group: "Type", kind: "font" },
 
   // Rows
@@ -315,6 +315,8 @@ export const TEMPLATE_TOKEN_IDS: Record<string, string[]> = {
     "--row-gap",
     "--bar-ink",
     "--bar-ink-on-light",
+    "--font-display",
+    "--font-body",
   ],
   movers: [
     "--title-outline",
@@ -333,18 +335,34 @@ export const TEMPLATE_TOKEN_IDS: Record<string, string[]> = {
     "--row-gap",
     "--bar-ink",
     "--bar-ink-on-light",
+    "--font-display",
+    "--font-body",
   ],
 };
 
-export const FONT_OPTIONS = [
+const GAGALIN = '"Gagalin", Impact, sans-serif';
+const BARLOW = '"Barlow Condensed", "Arial Narrow", sans-serif';
+
+export const TITLE_FONT_OPTIONS = [
+  GAGALIN,
   '"Luckiest Guy", Impact, sans-serif',
   '"Permanent Marker", "Comic Sans MS", cursive',
   '"Playfair Display", Georgia, serif',
   '"Fraunces", Georgia, serif',
-  '"IBM Plex Sans", sans-serif',
   ...CANVA_FONT_STACKS,
   "Georgia, serif",
+].filter((stack, index, all) => all.indexOf(stack) === index);
+
+export const TEXT_FONT_OPTIONS = [
+  BARLOW,
+  '"Oswald", "Arial Narrow", sans-serif',
+  '"IBM Plex Sans", sans-serif',
+  ...CANVA_FONT_STACKS,
   "system-ui, sans-serif",
 ].filter((stack, index, all) => all.indexOf(stack) === index);
+
+export const FONT_OPTIONS = [...TITLE_FONT_OPTIONS, ...TEXT_FONT_OPTIONS].filter(
+  (stack, index, all) => all.indexOf(stack) === index,
+);
 
 export const TOKEN_GROUPS = ["Color", "Type", "Rows", "Photo", "Stickers", "Place"];
