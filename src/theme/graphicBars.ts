@@ -1,3 +1,5 @@
+import { normalizeSchoolName } from "../engine/schoolName";
+
 /** Bar fills sampled from the State Top 15 reference graphics. */
 
 export type GraphicBar = {
@@ -6,11 +8,7 @@ export type GraphicBar = {
 };
 
 function norm(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+  return normalizeSchoolName(value);
 }
 
 /** Published State/Movers bar colours. Seed the shared desk with these first. */

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { FONT_OPTIONS, TEXT_FONT_OPTIONS, TITLE_FONT_OPTIONS, TOKEN_DEFS, TOKEN_GROUPS, SIMPLE_LOOK_IDS, fontFamilyName } from "../theme/tokenMeta";
+import { FONT_OPTIONS, TEXT_FONT_OPTIONS, TITLE_FONT_OPTIONS, TOKEN_DEFS, TOKEN_GROUPS, SIMPLE_LOOK_IDS, fontFamilyName, lookTokenIds } from "../theme/tokenMeta";
 import type { ExtraFont } from "../theme/extraFonts";
 import { CANVA_FONTS } from "../theme/canvaFonts";
 import type { TokenDef } from "../engine/types";
@@ -7,9 +7,11 @@ import "./ThemeInspector.css";
 
 type Props = {
   tokens: Record<string, string>;
+  templateId: string;
   extraFonts: ExtraFont[];
   onChange: (id: string, value: string) => void;
   onReset: () => void;
+  onSaveLook: () => void;
   onAddGoogleFont: (family: string) => Promise<void>;
   onUploadFont: (file: File) => Promise<void>;
   onHide?: () => void;
@@ -203,9 +205,11 @@ function FontAdder({
 
 export function ThemeInspector({
   tokens,
+  templateId,
   extraFonts,
   onChange,
   onReset,
+  onSaveLook,
   onAddGoogleFont,
   onUploadFont,
   onHide,
@@ -213,6 +217,7 @@ export function ThemeInspector({
   const [query, setQuery] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ Color: true });
   const needle = query.trim().toLowerCase();
+  const allowed = useMemo(() => lookTokenIds(templateId), [templateId]);
   const extraStacks = useMemo(() => extraFonts.map((font) => font.stack), [extraFonts]);
   const titleFonts = useMemo(
     () => [...TITLE_FONT_OPTIONS, ...extraStacks.filter((stack) => !TITLE_FONT_OPTIONS.includes(stack))],
@@ -234,6 +239,7 @@ export function ThemeInspector({
   }
 
   const simpleDefs = SIMPLE_LOOK_IDS.map((id) => {
+    if (!allowed.has(id)) return null;
     const def = TOKEN_DEFS.find((item) => item.id === id);
     if (!def) return null;
     if (id === "--poster-accent") return { ...def, label: "Accent" };
@@ -241,6 +247,8 @@ export function ThemeInspector({
     if (id === "--font-body") return { ...def, label: "Text font" };
     if (id === "--title-y") return { ...def, label: "Title position" };
     if (id === "--name-pad") return { ...def, label: "Name start" };
+    if (id === "--logo-size") return { ...def, label: "Crest column" };
+    if (id === "--logo-scale") return { ...def, label: "Crest size" };
     if (id === "--row-gap") return { ...def, label: "Space between rows" };
     return def;
   }).filter((def): def is TokenDef => Boolean(def));
@@ -248,18 +256,22 @@ export function ThemeInspector({
   const matches = useMemo(() => {
     const simple = new Set<string>(SIMPLE_LOOK_IDS);
     return TOKEN_DEFS.filter((def) => {
+      if (!allowed.has(def.id)) return false;
       if (needle) {
         return def.label.toLowerCase().includes(needle) || def.id.toLowerCase().includes(needle);
       }
       return !simple.has(def.id);
     });
-  }, [needle]);
+  }, [allowed, needle]);
 
   return (
     <aside className="inspector">
       <div className="inspector-top">
         <h2>Look</h2>
         <div className="inspector-top-actions">
+          <button type="button" className="text-btn" onClick={onSaveLook}>
+            Save look
+          </button>
           <button type="button" className="text-btn" onClick={onReset}>
             Reset
           </button>
@@ -271,7 +283,7 @@ export function ThemeInspector({
         </div>
       </div>
       <p className="inspector-help">
-        Click anything on the poster to type. Drag the title or photo to move it. Team name size and Name start sit at the top — pull Name start left to tuck type closer to the crest.
+        These controls change this layout. Save look keeps them for next time you open it. Reset puts the published defaults back.
       </p>
       {simpleDefs.map((def) => (
         <Control

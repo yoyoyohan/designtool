@@ -42,13 +42,13 @@ function isPaperColor(p: { r: number; g: number; b: number; a: number }) {
   return max - min < 34 && (lum > 210 || lum < 28);
 }
 
-/** Tight plate test so only the backing box keys out, not the drawing. */
+/** Near-white or near-black backing. Tight enough to leave ink and enclosed letters alone. */
 function isPlateColor(p: { r: number; g: number; b: number; a: number }) {
   if (p.a < 12) return true;
   const max = Math.max(p.r, p.g, p.b);
   const min = Math.min(p.r, p.g, p.b);
   const lum = (p.r + p.g + p.b) / 3;
-  return max - min < 18 && (lum > 246 || lum < 12);
+  return max - min < 24 && (lum > 228 || lum < 14);
 }
 
 function paperBackground(samples: { r: number; g: number; b: number; a: number }[]) {
@@ -217,8 +217,13 @@ export function keyPlateInPlace(image: HTMLImageElement): HTMLCanvasElement | nu
     [w - 1, 0],
     [0, h - 1],
     [w - 1, h - 1],
+    [Math.floor(w / 2), 0],
+    [Math.floor(w / 2), h - 1],
+    [0, Math.floor(h / 2)],
+    [w - 1, Math.floor(h / 2)],
   ].map(([x, y]) => pixel(data, (y * w + x) * 4));
-  if (!samples.every((p) => isPlateColor(p))) return null;
+  const plateCorners = samples.filter((p) => isPlateColor(p)).length;
+  if (plateCorners < 6) return null;
   const before = opaqueCount(data);
   const seen = new Uint8Array(w * h);
   const queue: number[] = [];

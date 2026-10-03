@@ -66,6 +66,7 @@ import { persistTransparentCrests } from "./studio/transparentCrest";
 import { blankCrestPng } from "./studio/logoOutline";
 import { graphicBarFor } from "./theme/graphicBars";
 import { DEFAULT_TOKENS } from "./theme/tokenMeta";
+import { clearTemplateLook, readTemplateLook, writeTemplateLook } from "./studio/lookStore";
 
 const STICKER_SLOTS = ["a", "b", "c", "d"] as const;
 type StickerSlot = (typeof STICKER_SLOTS)[number];
@@ -833,6 +834,7 @@ export default function App() {
     if (templateId !== "board") setTemplateId("board");
     setTokens({
       ...tokensForTemplate("board"),
+      ...readTemplateLook("board"),
       "--poster-accent": accent,
       "--col-head-fg": accent,
     });
@@ -853,8 +855,9 @@ export default function App() {
     const def = TEMPLATES.find((item) => item.id === id);
     if (!def || id === templateId) return;
     remember();
+    writeTemplateLook(templateId, tokens);
     setTemplateId(id);
-    setTokens(tokensForTemplate(id));
+    setTokens({ ...tokensForTemplate(id), ...readTemplateLook(id) });
     if (
       id === "board" &&
       (tableText === SAMPLE_TABLE || tableText === SAMPLE_RANKING_TABLE)
@@ -1378,7 +1381,7 @@ export default function App() {
         <div className="panel-block">
           <h2 className="panel-label">Keep this week</h2>
           <p className="panel-hint">
-            This browser keeps your last edit automatically. Name a week to open it again later, or download a file to take home.
+            This browser keeps your last edit, including Look. Name a week to open the rankings and settings again, or download a file to take home.
           </p>
           <div className="save-row">
             <input
@@ -1721,6 +1724,7 @@ export default function App() {
       <div className="inspector-slot">
         <ThemeInspector
           tokens={tokens}
+          templateId={templateId}
           extraFonts={extraFonts}
           onChange={(id, value) => {
             rememberTokens();
@@ -1730,8 +1734,19 @@ export default function App() {
               return next;
             });
           }}
+          onSaveLook={() => {
+            if (!writeTemplateLook(templateId, tokens)) {
+              setStatus("Could not save look — the browser is out of storage room");
+              return;
+            }
+            writeAutosave(projectRef.current);
+            setAutosavedAt(Date.now());
+            const layout = TEMPLATES.find((item) => item.id === templateId)?.name ?? "this layout";
+            setStatus(`Look saved for ${layout}`);
+          }}
           onReset={() => {
             remember();
+            clearTemplateLook(templateId);
             setTokens(tokensForTemplate(templateId));
           }}
           onAddGoogleFont={async (family) => {

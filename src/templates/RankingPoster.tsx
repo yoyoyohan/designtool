@@ -291,9 +291,6 @@ function fitListToCanvas(
     "--title-size": `${titleSize}px`,
     "--col-head-size": `${clamp(Math.round(Math.min(colSizePref, Math.max(9, rowH * colHeadCap))), 8, colSizePref)}px`,
   };
-  // Keep the crest cell as tall as the bar so oversized marks fill the row instead of sitting
-  // in a leftover well when the fitter has to shrink fifteen boards.
-  fitted["--logo-size"] = `${rowH}px`;
   return fitted;
 }
 

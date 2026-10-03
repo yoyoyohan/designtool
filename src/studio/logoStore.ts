@@ -1,3 +1,4 @@
+import { normalizeSchoolName } from "../engine/schoolName";
 import type { TeamRecord } from "../engine/types";
 import {
   deleteSharedLogo,
@@ -34,12 +35,7 @@ export type LogoView = Omit<LogoRecord, "image" | "original" | "previous"> & {
 };
 
 export function normalizeLogoName(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+  return normalizeSchoolName(value);
 }
 
 /** Three-letter codes like SHS collide across dozens of schools. Do not treat them as names. */
@@ -48,7 +44,7 @@ export function isSchoolCode(value: string): boolean {
   return Boolean(key) && key.length <= 4 && !key.includes(" ");
 }
 
-/** "Summit" hits "Summit" and "Summit High School", but not "Westfield". */
+/** "Summit" hits "Summit High School". "Bernards" does not steal "Gill St. Bernards". */
 export function schoolNameHits(a: string, b: string): boolean {
   const left = normalizeLogoName(a);
   const right = normalizeLogoName(b);
@@ -56,7 +52,8 @@ export function schoolNameHits(a: string, b: string): boolean {
   if (left === right) return true;
   const [short, long] = left.length <= right.length ? [left, right] : [right, left];
   if (isSchoolCode(short) && short !== long) return false;
-  return ` ${long} `.includes(` ${short} `);
+  if (long.startsWith(`${short} `)) return true;
+  return short.includes(" ") && ` ${long} `.includes(` ${short} `);
 }
 
 function openDb(): Promise<IDBDatabase> {

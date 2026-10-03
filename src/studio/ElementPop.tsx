@@ -310,6 +310,9 @@ export function ElementPop({ part, tokens, stageRef, onChange, onPatch, onClose,
           <div className="element-pop-label">Layout</div>
           <SliderRow id="--board-width" tokens={tokens} onChange={onChange} />
           <SliderRow id="--name-size" tokens={tokens} onChange={onChange} />
+          <SliderRow id="--name-pad" tokens={tokens} onChange={onChange} />
+          <SliderRow id="--logo-size" tokens={tokens} onChange={onChange} />
+          <SliderRow id="--logo-scale" tokens={tokens} onChange={onChange} />
           <SliderRow id="--row-height" tokens={tokens} onChange={onChange} />
         </>
       ) : null}

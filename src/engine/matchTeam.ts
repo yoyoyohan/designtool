@@ -1,16 +1,17 @@
 import Fuse from "fuse.js";
 import { cellByRole, extraCells } from "./parseTable";
+import { nameMatchScore, normalizeSchoolName } from "./schoolName";
 import type { ParsedTable, RankingRow, TeamRecord } from "./types";
 
 function normalize(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, " ")
+  return normalizeSchoolName(value)
     .replace(/\b(the|fc|cf|sc|university|univ|u|college)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function teamNames(team: TeamRecord): string[] {
+  return [team.name, team.logoFile.replace(/\.[^.]+$/, ""), ...team.aliases];
 }
 
 function parseNumber(value: string): number | null {
@@ -62,15 +63,32 @@ export function matchTeam(
   const nq = normalize(q);
 
   for (const team of teams) {
-    const names = [team.name, team.logoFile.replace(/\.[^.]+$/, ""), ...team.aliases];
-    if (names.some((name) => normalize(name) === nq)) return team;
+    if (teamNames(team).some((name) => normalize(name) === nq)) return team;
   }
 
+  let best: TeamRecord | null = null;
+  let bestScore = 0;
+  for (const team of teams) {
+    const score = Math.max(...teamNames(team).map((name) => nameMatchScore(q, name)));
+    if (score > bestScore) {
+      best = team;
+      bestScore = score;
+    }
+  }
+  if (best && bestScore >= 15) return best;
+
   if (!fuse) return null;
-  const hits = fuse.search(q, { limit: 1 });
+  const hits = fuse.search(q, { limit: 3 });
   const top = hits[0];
-  if (top && top.score !== undefined && top.score <= 0.34) return top.item;
-  return null;
+  if (!top || top.score === undefined || top.score > 0.34) return null;
+  const ranked = hits
+    .filter((hit) => hit.score !== undefined && hit.score <= 0.34)
+    .map((hit) => ({
+      team: hit.item,
+      score: Math.max(...teamNames(hit.item).map((name) => nameMatchScore(q, name)), 0),
+    }))
+    .sort((a, b) => b.score - a.score);
+  return ranked[0]?.score ? ranked[0].team : top.item;
 }
 
 export function buildFuse(teams: TeamRecord[]): Fuse<TeamRecord> | null {

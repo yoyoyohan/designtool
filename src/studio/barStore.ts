@@ -7,6 +7,7 @@ import {
   upsertSharedBar,
   type SharedBar,
 } from "./logoApi";
+import { nameMatchScore } from "../engine/schoolName";
 import { isSchoolCode, normalizeLogoName, schoolNameHits } from "./logoStore";
 
 const DB_NAME = "ranking-studio-bars";
@@ -109,17 +110,31 @@ export function catalogBars(teams: TeamRecord[]): BarRecord[] {
   return [...map.values()];
 }
 
+function bestBarHit(bars: BarRecord[], nameKeys: string[], pickName: (bar: BarRecord) => string[]): BarRecord | null {
+  let best: BarRecord | null = null;
+  let bestScore = 0;
+  for (const bar of bars) {
+    const score = Math.max(0, ...pickName(bar).flatMap((name) => nameKeys.map((key) => nameMatchScore(key, name))));
+    if (score > bestScore) {
+      best = bar;
+      bestScore = score;
+    }
+  }
+  return bestScore >= 15 ? best : null;
+}
+
 export function findBar(bars: BarRecord[], ...names: string[]): BarRecord | null {
   const keys = names.map((name) => name.trim()).filter(Boolean);
   if (keys.length === 0) return null;
   const fullKeys = keys.filter((key) => !isSchoolCode(key));
   const nameKeys = fullKeys.length ? fullKeys : keys;
-  const byName = bars.find((bar) => nameKeys.some((key) => schoolNameHits(key, bar.name)));
+  const byName = bestBarHit(bars, nameKeys, (bar) => [bar.name]);
   if (byName) return byName;
   const aliasHits = bars.filter((bar) =>
     bar.aliases.some((alias) => nameKeys.some((key) => schoolNameHits(key, alias))),
   );
-  return aliasHits.length === 1 ? aliasHits[0] : null;
+  if (aliasHits.length === 1) return aliasHits[0];
+  return bestBarHit(aliasHits, nameKeys, (bar) => bar.aliases);
 }
 
 /** Paint the desk colours onto ranking rows so a pasted name uses that school's bar, not a colliding alias. */

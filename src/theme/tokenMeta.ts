@@ -187,8 +187,9 @@ export const TOKEN_DEFS: TokenDef[] = [
   { id: "--trend-gap", label: "Arrow / number gap", group: "Rows", kind: "px", min: 0, max: 32, step: 1 },
   { id: "--mark-pad-x", label: "Crest side padding", group: "Rows", kind: "px", min: 0, max: 48, step: 1 },
   { id: "--mark-pad-y", label: "Crest top padding", group: "Rows", kind: "px", min: 0, max: 32, step: 1 },
-  { id: "--name-pad", label: "Name start", group: "Rows", kind: "px", min: -40, max: 48, step: 1 },
+  { id: "--name-pad", label: "Name start", group: "Rows", kind: "px", min: -40, max: 80, step: 1 },
   { id: "--name-skew", label: "Name slant", group: "Rows", kind: "number", min: -20, max: 20, step: 1 },
+  { id: "--logo-size", label: "Crest column", group: "Rows", kind: "px", min: 40, max: 240, step: 2 },
   { id: "--logo-scale", label: "Crest size %", group: "Rows", kind: "number", min: 30, max: 100, step: 1 },
   { id: "--rank-width", label: "Rank column", group: "Rows", kind: "px", min: 26, max: 160, step: 2 },
   { id: "--trend-width", label: "Trend column", group: "Rows", kind: "px", min: 0, max: 160, step: 2 },
@@ -272,75 +273,167 @@ export const SIMPLE_LOOK_IDS = [
   "--title-y",
   "--name-size",
   "--name-pad",
+  "--logo-size",
+  "--logo-scale",
   "--row-gap",
 ] as const;
 
-/** Extra Look controls shown after More look. Simple colors/title stay at the top. */
-export const ESSENTIAL_TOKEN_IDS = new Set([
+/** Tokens every layout actually reads. */
+const CORE_LOOK_IDS = [
   "--poster-bg",
   "--poster-accent",
   "--poster-fg",
+  "--poster-muted",
+  "--title-outline",
+  "--title-shade",
   "--title-size",
-  "--title-y",
+  "--title-tracking",
+  "--outline-width",
+  "--title-shade-depth",
+  "--kicker-size",
+  "--kicker-tracking",
+  "--meta-size",
   "--name-size",
-  "--name-pad",
+  "--rank-size",
+  "--stat-size",
+  "--col-head-size",
+  "--footer-size",
+  "--footer-tracking",
   "--font-display",
   "--font-body",
+  "--font-footer",
   "--row-height",
   "--row-gap",
+  "--mark-pad-x",
+  "--mark-pad-y",
+  "--name-pad",
+  "--logo-size",
+  "--logo-scale",
+  "--rank-width",
+  "--stat-col-width",
+  "--metric-gap",
+  "--pts-box",
+  "--poster-pad",
+  "--list-x",
+  "--list-y",
+  "--board-width",
+  "--header-height",
+  "--header-pad",
+  "--title-x",
+  "--title-y",
+  "--col-head-height",
+  "--cols-y",
+  "--meta-y",
+  "--footer-height",
+];
+
+/** State and Movers only — photo, stickers, and diagonal cutouts do nothing here. */
+const GRAPHIC_LOOK_IDS = [
+  "--col-head-fg",
+  "--plate-bg",
+  "--plate-ink",
+  "--move-up",
+  "--move-down",
+  "--move-flat",
+  "--stat-tint",
+  "--bar-ink",
+  "--bar-ink-on-light",
+  "--eyebrow-size",
+  "--eyebrow-outline",
+  "--col-head-outline",
+  "--name-line",
+  "--move-size",
+  "--seg-gap",
+  "--plate-inset",
+  "--trend-gap",
+  "--trend-width",
+  "--arrow-size",
+  "--hot-edge",
+  "--rule-width",
+  "--rule-height",
+  "--highlight-rank",
+];
+
+const PHOTO_LOOK_IDS = [
   "--hero-x",
   "--hero-y",
   "--hero-size",
-  "--poster-pad",
-  "--board-width",
-]);
+  "--hero-h",
+  "--hero-focus-x",
+  "--hero-focus-y",
+  "--cut-top",
+  "--cut-left",
+  "--cut-lean",
+  "--cut-pad",
+  "--photo-contrast",
+  "--photo-saturate",
+  "--bg-dim",
+  "--watermark-size",
+  "--watermark-opacity",
+  "--header-mark-size",
+  "--footer-badge-size",
+];
 
-/** Extra essentials that only matter on specific layouts. */
-export const TEMPLATE_TOKEN_IDS: Record<string, string[]> = {
-  split: ["--row-stagger", "--split-cut", "--split-gutter", "--split-edge", "--hero-focus-x", "--hero-focus-y"],
-  power: ["--header-bar", "--cut-top", "--cut-left", "--cut-lean", "--hero-focus-x", "--hero-focus-y"],
-  board: [
-    "--title-outline",
-    "--eyebrow-outline",
-    "--col-head-outline",
-    "--stat-tint",
-    "--seg-gap",
-    "--plate-inset",
-    "--name-line",
-    "--trend-gap",
-    "--mark-pad-x",
-    "--meta-y",
-    "--cols-y",
-    "--header-pad",
-    "--title-y",
-    "--name-pad",
-    "--row-gap",
-    "--bar-ink",
-    "--bar-ink-on-light",
-    "--font-display",
-    "--font-body",
-  ],
-  movers: [
-    "--title-outline",
-    "--eyebrow-outline",
-    "--col-head-outline",
-    "--stat-tint",
-    "--seg-gap",
-    "--move-size",
-    "--name-line",
-    "--trend-gap",
-    "--mark-pad-x",
-    "--meta-y",
-    "--cols-y",
-    "--header-pad",
-    "--name-pad",
-    "--row-gap",
-    "--bar-ink",
-    "--bar-ink-on-light",
-    "--font-display",
-    "--font-body",
-  ],
-};
+const STICKER_LOOK_IDS = [
+  "--sparkle-color",
+  "--deco-opacity",
+  "--sparkle-opacity",
+  "--deco-a-x",
+  "--deco-a-y",
+  "--deco-a-size",
+  "--deco-a-rotate",
+  "--deco-b-x",
+  "--deco-b-y",
+  "--deco-b-size",
+  "--deco-b-rotate",
+  "--deco-c-x",
+  "--deco-c-y",
+  "--deco-c-size",
+  "--deco-c-rotate",
+  "--deco-d-x",
+  "--deco-d-y",
+  "--deco-d-size",
+  "--deco-d-rotate",
+];
+
+const BAR_LOOK_IDS = [
+  "--rank-fg",
+  "--pts-bg",
+  "--pts-fg",
+  "--stat-fg",
+  "--header-bar",
+  "--col-head-fg",
+  "--mark-plate",
+  "--row-radius",
+  "--row-edge",
+  "--name-skew",
+  "--pts-badge",
+  "--ghost-size",
+  "--ghost-opacity",
+  "--hot-edge",
+];
+
+const SPLIT_LOOK_IDS = ["--row-stagger", "--split-cut", "--split-gutter", "--split-edge"];
+const POWER_LOOK_IDS = ["--header-bar", "--cut-top", "--cut-left", "--cut-lean", "--cut-pad"];
+
+function addAll(into: Set<string>, ids: string[]) {
+  ids.forEach((id) => into.add(id));
+}
+
+/** Only tokens the current layout actually paints. */
+export function lookTokenIds(templateId: string): Set<string> {
+  const ids = new Set(CORE_LOOK_IDS);
+  if (templateId === "board" || templateId === "movers") {
+    addAll(ids, GRAPHIC_LOOK_IDS);
+    return ids;
+  }
+  addAll(ids, BAR_LOOK_IDS);
+  addAll(ids, STICKER_LOOK_IDS);
+  addAll(ids, PHOTO_LOOK_IDS);
+  if (templateId === "split") addAll(ids, SPLIT_LOOK_IDS);
+  if (templateId === "power") addAll(ids, POWER_LOOK_IDS);
+  return ids;
+}
 
 const GAGALIN = '"Gagalin", Impact, sans-serif';
 const BARLOW = '"Barlow Condensed", "Arial Narrow", sans-serif';
