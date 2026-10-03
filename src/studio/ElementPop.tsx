@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from "react";
-import { TOKEN_DEFS } from "../theme/tokenMeta";
+import { TEXT_FONT_OPTIONS, TITLE_FONT_OPTIONS, TOKEN_DEFS, fontFamilyName } from "../theme/tokenMeta";
 import "./ElementPop.css";
 
 type Props = {
@@ -101,6 +101,35 @@ function SliderRow({
         onInput={(event) => onChange(id, `${(event.target as HTMLInputElement).value}${unit}`)}
       />
     </div>
+  );
+}
+
+function FontRow({
+  id,
+  label,
+  options,
+  tokens,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  options: string[];
+  tokens: Record<string, string>;
+  onChange: (id: string, value: string) => void;
+}) {
+  const value = tokens[id] ?? options[0] ?? "";
+  const list = options.includes(value) ? options : [value, ...options];
+  return (
+    <label className="element-pop-font">
+      <span>{label}</span>
+      <select value={value} onChange={(event) => onChange(id, event.target.value)}>
+        {list.map((font) => (
+          <option key={font} value={font} style={{ fontFamily: font }}>
+            {fontFamilyName(font)}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -276,6 +305,8 @@ export function ElementPop({ part, tokens, stageRef, onChange, onPatch, onClose,
             ))}
           </div>
           <ColorGrid ids={BOARD_COLORS} tokens={tokens} onChange={onChange} />
+          <div className="element-pop-label">Type</div>
+          <FontRow id="--font-body" label="Text font" options={TEXT_FONT_OPTIONS} tokens={tokens} onChange={onChange} />
           <div className="element-pop-label">Layout</div>
           <SliderRow id="--board-width" tokens={tokens} onChange={onChange} />
           <SliderRow id="--name-size" tokens={tokens} onChange={onChange} />
@@ -288,6 +319,7 @@ export function ElementPop({ part, tokens, stageRef, onChange, onPatch, onClose,
           <div className="element-pop-label">Color</div>
           <ColorGrid ids={HEADER_COLORS} tokens={tokens} onChange={onChange} />
           <div className="element-pop-label">Type</div>
+          <FontRow id="--font-display" label="Title font" options={TITLE_FONT_OPTIONS} tokens={tokens} onChange={onChange} />
           <SliderRow id="--title-size" tokens={tokens} onChange={onChange} />
           <SliderRow id="--outline-width" tokens={tokens} onChange={onChange} />
           <SliderRow id="--header-height" tokens={tokens} onChange={onChange} />

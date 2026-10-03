@@ -1638,7 +1638,11 @@ export default function App() {
             stageRef={stageRef}
             onChange={(id, value) => {
               rememberTokens();
-              setTokens((prev) => ({ ...prev, [id]: value }));
+              setTokens((prev) => {
+                const next = { ...prev, [id]: value };
+                if (id === "--font-body") next["--font-footer"] = value;
+                return next;
+              });
             }}
             onPatch={patchTokens}
             onClose={() => setPicked(null)}
@@ -1720,7 +1724,11 @@ export default function App() {
           extraFonts={extraFonts}
           onChange={(id, value) => {
             rememberTokens();
-            setTokens((prev) => ({ ...prev, [id]: value }));
+            setTokens((prev) => {
+              const next = { ...prev, [id]: value };
+              if (id === "--font-body") next["--font-footer"] = value;
+              return next;
+            });
           }}
           onReset={() => {
             remember();

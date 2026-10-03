@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { FONT_OPTIONS, TEXT_FONT_OPTIONS, TITLE_FONT_OPTIONS, TOKEN_DEFS, TOKEN_GROUPS, SIMPLE_LOOK_IDS } from "../theme/tokenMeta";
+import { FONT_OPTIONS, TEXT_FONT_OPTIONS, TITLE_FONT_OPTIONS, TOKEN_DEFS, TOKEN_GROUPS, SIMPLE_LOOK_IDS, fontFamilyName } from "../theme/tokenMeta";
 import type { ExtraFont } from "../theme/extraFonts";
 import { CANVA_FONTS } from "../theme/canvaFonts";
 import type { TokenDef } from "../engine/types";
@@ -72,8 +72,8 @@ function Control({
         <label htmlFor={def.id}>{def.label}</label>
         <select id={def.id} value={value} onChange={(e) => onChange(e.target.value)}>
           {options.map((font) => (
-            <option key={font} value={font}>
-              {font.replace(/"/g, "")}
+            <option key={font} value={font} style={{ fontFamily: font }}>
+              {fontFamilyName(font)}
             </option>
           ))}
         </select>
@@ -237,6 +237,8 @@ export function ThemeInspector({
     const def = TOKEN_DEFS.find((item) => item.id === id);
     if (!def) return null;
     if (id === "--poster-accent") return { ...def, label: "Accent" };
+    if (id === "--font-display") return { ...def, label: "Title font" };
+    if (id === "--font-body") return { ...def, label: "Text font" };
     if (id === "--title-y") return { ...def, label: "Title position" };
     if (id === "--name-pad") return { ...def, label: "Name start" };
     if (id === "--row-gap") return { ...def, label: "Space between rows" };

@@ -166,6 +166,28 @@
   cursor: pointer;
 }
 
+.element-pop-font {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.element-pop-font span {
+  font-size: 11px;
+  color: var(--ui-muted);
+}
+
+.element-pop-font select {
+  width: 100%;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 6px;
+  background: var(--ui-fill);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
 .element-pop-slider {
   margin-bottom: 8px;
 }

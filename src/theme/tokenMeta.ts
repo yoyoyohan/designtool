@@ -1,5 +1,4 @@
 import type { TokenDef } from "../engine/types";
-import { CANVA_FONT_STACKS } from "./canvaFonts";
 
 /** Defaults Demi can also see in tokens.css. Inspector starts here. */
 export const DEFAULT_TOKENS: Record<string, string> = {
@@ -174,7 +173,7 @@ export const TOKEN_DEFS: TokenDef[] = [
   { id: "--col-head-size", label: "Column label size", group: "Type", kind: "px", min: 8, max: 34, step: 1 },
   { id: "--footer-size", label: "Footer size", group: "Type", kind: "px", min: 8, max: 40, step: 1 },
   { id: "--footer-tracking", label: "Footer tracking", group: "Type", kind: "em", min: 0, max: 0.5, step: 0.02 },
-  { id: "--font-display", label: "Title / names", group: "Type", kind: "font" },
+  { id: "--font-display", label: "Title", group: "Type", kind: "font" },
   { id: "--font-body", label: "Text", group: "Type", kind: "font" },
   { id: "--font-footer", label: "Footer", group: "Type", kind: "font" },
 
@@ -267,6 +266,8 @@ export const TOKEN_DEFS: TokenDef[] = [
 export const SIMPLE_LOOK_IDS = [
   "--poster-bg",
   "--poster-accent",
+  "--font-display",
+  "--font-body",
   "--title-size",
   "--title-y",
   "--name-size",
@@ -284,6 +285,7 @@ export const ESSENTIAL_TOKEN_IDS = new Set([
   "--name-size",
   "--name-pad",
   "--font-display",
+  "--font-body",
   "--row-height",
   "--row-gap",
   "--hero-x",
@@ -343,26 +345,32 @@ export const TEMPLATE_TOKEN_IDS: Record<string, string[]> = {
 const GAGALIN = '"Gagalin", Impact, sans-serif';
 const BARLOW = '"Barlow Condensed", "Arial Narrow", sans-serif';
 
+/** Title faces: the published graphic (Gagalin) plus the studio originals. */
 export const TITLE_FONT_OPTIONS = [
   GAGALIN,
   '"Luckiest Guy", Impact, sans-serif',
   '"Permanent Marker", "Comic Sans MS", cursive',
   '"Playfair Display", Georgia, serif',
   '"Fraunces", Georgia, serif',
-  ...CANVA_FONT_STACKS,
-  "Georgia, serif",
+  '"Anton", Impact, sans-serif',
+  '"Bebas Neue", Impact, sans-serif',
 ].filter((stack, index, all) => all.indexOf(stack) === index);
 
+/** Board text: the published condensed face plus the original body fonts. */
 export const TEXT_FONT_OPTIONS = [
   BARLOW,
   '"Oswald", "Arial Narrow", sans-serif',
   '"IBM Plex Sans", sans-serif',
-  ...CANVA_FONT_STACKS,
-  "system-ui, sans-serif",
 ].filter((stack, index, all) => all.indexOf(stack) === index);
 
 export const FONT_OPTIONS = [...TITLE_FONT_OPTIONS, ...TEXT_FONT_OPTIONS].filter(
   (stack, index, all) => all.indexOf(stack) === index,
 );
+
+export function fontFamilyName(stack: string) {
+  const named = stack.match(/"([^"]+)"/);
+  if (named?.[1]) return named[1];
+  return stack.split(",")[0]?.trim() || stack;
+}
 
 export const TOKEN_GROUPS = ["Color", "Type", "Rows", "Photo", "Stickers", "Place"];
