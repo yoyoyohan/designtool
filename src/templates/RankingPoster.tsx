@@ -1052,10 +1052,11 @@ export function RankingPoster({
   if (!hasMovement) style["--trend-width"] = "0px";
 
   const liveText = { live, onText };
+  const titleCentered = Math.abs(parsePx(tokens["--title-x"], 0)) < 1;
 
   return (
     <article
-      className={`poster is-${mode} tmpl-${templateId}${graphicSkin ? " is-graphic" : ""}${heroFront ? " is-hero-front" : " is-hero-behind"}${media.hero ? " has-hero" : ""}${heroH > 0 ? " has-hero-h" : ""}${hasMovement ? "" : " is-no-trend"}${live ? " is-live" : ""}${selected ? ` is-picked-${selected}` : ""}`}
+      className={`poster is-${mode} tmpl-${templateId}${graphicSkin ? " is-graphic" : ""}${heroFront ? " is-hero-front" : " is-hero-behind"}${media.hero ? " has-hero" : ""}${heroH > 0 ? " has-hero-h" : ""}${hasMovement ? "" : " is-no-trend"}${live ? " is-live" : ""}${selected ? ` is-picked-${selected}` : ""}${live && selected === "header" && titleCentered ? " is-title-centered" : ""}`}
       id={artboardId}
       style={style}
     >
@@ -1067,6 +1068,7 @@ export function RankingPoster({
       ) : null}
       <div className="poster-glow" aria-hidden />
       <div className="poster-glitter" aria-hidden />
+      {live && selected === "header" && titleCentered ? <div className="poster-center-guide" aria-hidden /> : null}
       <div className="poster-hero-panel" aria-hidden />
       {media.hero ? (
         <div className="poster-hero-wrap">

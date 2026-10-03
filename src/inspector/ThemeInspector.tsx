@@ -245,6 +245,7 @@ export function ThemeInspector({
     if (id === "--poster-accent") return { ...def, label: "Accent" };
     if (id === "--font-display") return { ...def, label: "Title font" };
     if (id === "--font-body") return { ...def, label: "Text font" };
+    if (id === "--title-x") return { ...def, label: "Title left / right" };
     if (id === "--title-y") return { ...def, label: "Title position" };
     if (id === "--name-pad") return { ...def, label: "Name start" };
     if (id === "--logo-size") return { ...def, label: "Crest column" };

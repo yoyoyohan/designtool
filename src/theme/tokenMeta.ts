@@ -270,6 +270,7 @@ export const SIMPLE_LOOK_IDS = [
   "--font-display",
   "--font-body",
   "--title-size",
+  "--title-x",
   "--title-y",
   "--name-size",
   "--name-pad",

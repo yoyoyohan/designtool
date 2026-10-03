@@ -130,9 +130,13 @@ export function usePosterDrag(
       }
       const move = MOVE[drag.part];
       if (!move) return;
+      let nextX = Math.round(drag.origX + dx);
+      const nextY = Math.round(drag.origY + dy);
+      // Title-x 0 is the template's designed center. Snap so the dashed guide can catch.
+      if (drag.part === "header" && Math.abs(nextX) <= 8) nextX = 0;
       onTokens({
-        [move.x]: `${Math.round(drag.origX + dx)}px`,
-        [move.y]: `${Math.round(drag.origY + dy)}px`,
+        [move.x]: `${nextX}px`,
+        [move.y]: `${nextY}px`,
       });
     };
 
