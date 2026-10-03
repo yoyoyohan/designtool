@@ -151,7 +151,7 @@ export const TOKEN_DEFS: TokenDef[] = [
   { id: "--title-outline", label: "Title outline", group: "Color", kind: "color" },
   { id: "--title-shade", label: "Title shadow", group: "Color", kind: "color" },
   { id: "--sparkle-color", label: "Sparkle", group: "Color", kind: "color" },
-  { id: "--stat-tint", label: "Stat panel tint", group: "Color", kind: "number", min: 0, max: 60, step: 1 },
+  { id: "--stat-tint", label: "Stat panel fade", group: "Color", kind: "number", min: 0, max: 60, step: 1 },
   { id: "--bar-ink", label: "Bar text (dark rows)", group: "Color", kind: "color" },
   { id: "--bar-ink-on-light", label: "Bar text (light rows)", group: "Color", kind: "color" },
 

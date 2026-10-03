@@ -164,27 +164,24 @@ function barTone(
 }
 
 /*
-  Graphic skins (State, Movers) paint the desk colours exactly: bar fill and name ink.
-  Rank and movement stay on the white plate. The stat panel is the bar pulled toward grey.
+  Graphic skins (State, Movers) paint the desk bar and name ink exactly.
+  Rank and movement stay on the white plate. The stat panel is the same bar
+  shown a little transparent over the field — never the Secondary colour.
 */
 function graphicTone(
   primary: string | undefined,
   secondary: string | undefined,
-  statTint: number,
-  accent?: string,
-): { fill: string; ink: string; soft: string; plateInk: string; statFill: string; lightBar: boolean } {
+): { fill: string; ink: string; soft: string; plateInk: string; lightBar: boolean } {
   const fill = parseHex(primary) ?? "2a2a32";
   const lightBar = hexLuminance(fill) > 0.4;
   const secondaryHex = parseHex(secondary);
   const ink = secondaryHex ? `#${secondaryHex}` : lightBar ? "var(--bar-ink-on-light)" : "var(--bar-ink)";
-  const accentHex = parseHex(accent);
 
   return {
     fill: `#${fill}`,
     ink,
     soft: lightBar ? "rgba(26, 39, 72, 0.8)" : "rgba(255, 255, 255, 0.8)",
     plateInk: "var(--plate-ink)",
-    statFill: accentHex ? `#${accentHex}` : mixHex(fill, "808080", clamp(statTint / 100, 0, 0.7)),
     lightBar,
   };
 }
@@ -664,7 +661,6 @@ function PosterRow({
   compactName = false,
   unsignedTrend = false,
   graphicSkin = false,
-  statTint = 0,
   live,
   onRowEdit,
   onLogoPick,
@@ -677,7 +673,6 @@ function PosterRow({
   compactName?: boolean;
   unsignedTrend?: boolean;
   graphicSkin?: boolean;
-  statTint?: number;
   live?: boolean;
   onRowEdit?: (rowIndex: number, field: TableColumnRole, value: string) => void;
   onLogoPick?: (teamId: string | null, teamQuery: string) => void;
@@ -693,11 +688,10 @@ function PosterRow({
   const primary = row.team?.primary ?? graphic?.primary ?? "#3a3a40";
   const secondary = row.team?.secondary ?? graphic?.secondary ?? "#111111";
   const accent = row.team?.accent || primary;
-  const tone = graphicSkin ? graphicTone(primary, secondary, statTint, row.team?.accent) : barTone(primary, secondary);
+  const tone = graphicSkin ? graphicTone(primary, secondary) : barTone(primary, secondary);
   const graphicVars: Record<string, string> = graphicSkin
     ? {
         "--plate-team-ink": (tone as ReturnType<typeof graphicTone>).plateInk,
-        "--stat-fill": (tone as ReturnType<typeof graphicTone>).statFill,
       }
     : {};
   return (
@@ -973,9 +967,8 @@ export function RankingPoster({
   const compactList = templateId === "power" || templateId === "split";
   const metaBar = templateId === "board" || templateId === "movers";
   // State and Movers are the published Instagram graphics: exact team colours, title-case
-  // names, unsigned movement, and a stat panel tinted off the bar.
+  // names, unsigned movement, and a stat panel faded over the field.
   const graphicSkin = templateId === "board" || templateId === "movers";
-  const statTint = parsePx(tokens["--stat-tint"], 0);
   const headVariant =
     templateId === "power"
       ? "power"
@@ -1147,7 +1140,6 @@ export function RankingPoster({
                 compactName={compactList}
                 unsignedTrend={graphicSkin}
                 graphicSkin={graphicSkin}
-                statTint={statTint}
                 live={live}
                 onRowEdit={onRowEdit}
                 onLogoPick={onLogoPick}

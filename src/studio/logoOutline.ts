@@ -42,6 +42,15 @@ function isPaperColor(p: { r: number; g: number; b: number; a: number }) {
   return max - min < 34 && (lum > 210 || lum < 28);
 }
 
+/** Tight plate test so only the backing box keys out, not the drawing. */
+function isPlateColor(p: { r: number; g: number; b: number; a: number }) {
+  if (p.a < 12) return true;
+  const max = Math.max(p.r, p.g, p.b);
+  const min = Math.min(p.r, p.g, p.b);
+  const lum = (p.r + p.g + p.b) / 3;
+  return max - min < 18 && (lum > 246 || lum < 12);
+}
+
 function paperBackground(samples: { r: number; g: number; b: number; a: number }[]) {
   const paper = samples.filter((p) => isPaperColor(p));
   return paper.length >= Math.max(1, samples.length - 1);
@@ -191,6 +200,57 @@ export function autoOutline(image: HTMLImageElement, tolerance: number): HTMLCan
   const box = bounds(cut.data, drawn.canvas.width, drawn.canvas.height);
   if (!box) return fitTransparent(image, image.naturalWidth, image.naturalHeight);
   return fitTransparent(drawn.canvas, box.maxX - box.minX, box.maxY - box.minY, box.minX, box.minY);
+}
+
+/**
+ * Key only the outer paper plate to transparent. Same size, no crop, no fringe chew —
+ * the original drawing stays put so it can sit on the team bar.
+ */
+export function keyPlateInPlace(image: HTMLImageElement): HTMLCanvasElement | null {
+  const drawn = drawSource(image);
+  if (!drawn) return null;
+  const { width: w, height: h } = drawn.canvas;
+  const snap = drawn.ctx.getImageData(0, 0, w, h);
+  const { data } = snap;
+  const samples = [
+    [0, 0],
+    [w - 1, 0],
+    [0, h - 1],
+    [w - 1, h - 1],
+  ].map(([x, y]) => pixel(data, (y * w + x) * 4));
+  if (!samples.every((p) => isPlateColor(p))) return null;
+  const before = opaqueCount(data);
+  const seen = new Uint8Array(w * h);
+  const queue: number[] = [];
+  const push = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= w || y >= h) return;
+    const idx = y * w + x;
+    if (seen[idx]) return;
+    if (!isPlateColor(pixel(data, idx * 4))) return;
+    seen[idx] = 1;
+    queue.push(idx);
+  };
+  for (let x = 0; x < w; x += 1) {
+    push(x, 0);
+    push(x, h - 1);
+  }
+  for (let y = 0; y < h; y += 1) {
+    push(0, y);
+    push(w - 1, y);
+  }
+  while (queue.length) {
+    const idx = queue.pop() as number;
+    const x = idx % w;
+    const y = (idx - x) / w;
+    data[idx * 4 + 3] = 0;
+    push(x + 1, y);
+    push(x - 1, y);
+    push(x, y + 1);
+    push(x, y - 1);
+  }
+  if (before - opaqueCount(data) < w * h * 0.008) return null;
+  drawn.ctx.putImageData(snap, 0, 0);
+  return drawn.canvas;
 }
 
 /** Drop a white or black box behind a real crest so it sits clean on a team bar. */

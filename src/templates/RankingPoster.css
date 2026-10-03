@@ -951,7 +951,7 @@
   max-width: 100%;
   max-height: var(--row-height);
   border-radius: 0;
-  background: var(--mark-plate);
+  background: var(--team-fill, var(--team-primary));
   object-fit: contain;
   padding: var(--mark-pad-y) var(--mark-pad-x);
   isolation: isolate;
@@ -1008,7 +1008,12 @@
 }
 
 .poster.is-graphic .poster-metrics {
-  background: var(--stat-fill, var(--team-fill, var(--team-primary)));
+  /* Same bar as the name, just a little see-through over the field. */
+  background: color-mix(
+    in srgb,
+    var(--team-fill, var(--team-primary)) calc(100% - var(--stat-tint) * 1%),
+    var(--poster-bg)
+  );
 }
 
 .poster.is-graphic .poster-stat,
