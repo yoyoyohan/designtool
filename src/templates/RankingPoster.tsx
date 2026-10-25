@@ -734,7 +734,7 @@ function PosterRow({
       <span
         className="poster-mark"
         data-logo=""
-        title={live ? "Click to change logo" : undefined}
+        title={live ? "Click to check this school, its crest, and colors" : undefined}
         onPointerDown={(event) => {
           if (live) event.stopPropagation();
         }}
@@ -770,7 +770,7 @@ function PosterRow({
             className="poster-name-ghost"
             data-logo=""
             src={row.team.logoUrl}
-            title={live ? "Click to change logo" : undefined}
+            title={live ? "Click to check this school, its crest, and colors" : undefined}
             onPointerDown={(event) => {
               if (live) event.stopPropagation();
             }}

@@ -1,6 +1,8 @@
 import type { OrnamentId } from "../templates/ornaments";
 import type { PosterHeadLabels } from "../templates/RankingPoster";
 import type { TemplateId } from "../templates/catalog";
+import type { ColumnOverrides } from "../engine/types";
+import { cleanFixes, type RowFixes } from "./rowFixes";
 
 export type StickerSlot = "a" | "b" | "c" | "d";
 export type MediaSlot = "background" | "header" | "watermark" | "footer" | "hero";
@@ -24,6 +26,8 @@ export type Project = {
   ornaments: Record<StickerSlot, OrnamentId>;
   stickerSrc: Record<StickerSlot, string>;
   media: Record<MediaSlot, string>;
+  columns: ColumnOverrides;
+  rowFixes: RowFixes;
 };
 
 export type SaveMeta = {
@@ -33,6 +37,7 @@ export type SaveMeta = {
 };
 
 const AUTOSAVE_KEY = "ranking-studio:autosave";
+const AUTOSAVE_AT_KEY = "ranking-studio:autosave-at";
 const INDEX_KEY = "ranking-studio:saves";
 const SAVE_PREFIX = "ranking-studio:save:";
 
@@ -103,6 +108,43 @@ function normalize(raw: Project): Project {
     ornaments: raw.ornaments ?? { a: "none", b: "none", c: "none", d: "none" },
     stickerSrc: raw.stickerSrc ?? { a: "", b: "", c: "", d: "" },
     media: raw.media ?? { background: "", header: "", watermark: "", footer: "", hero: "" },
+    columns:
+      raw.columns && typeof raw.columns === "object" && raw.columns.roles
+        ? { roles: { ...raw.columns.roles }, ...(typeof raw.columns.header === "boolean" ? { header: raw.columns.header } : {}) }
+        : { roles: {} },
+    rowFixes: cleanFixes(raw.rowFixes),
+  };
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read the image"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function inlineSlots<T extends string>(slots: Record<T, string>): Promise<Record<T, string>> {
+  const out = { ...slots };
+  for (const key of Object.keys(slots) as T[]) {
+    const value = slots[key];
+    if (!value || !isTransient(value)) continue;
+    try {
+      out[key] = await blobToDataUrl(await (await fetch(value)).blob());
+    } catch {
+      out[key] = "";
+    }
+  }
+  return out;
+}
+
+/** Turn this-tab-only photo links into real image data so a save or file keeps them. */
+export async function withInlineImages(project: Project): Promise<Project> {
+  return {
+    ...project,
+    media: await inlineSlots(project.media),
+    stickerSrc: await inlineSlots(project.stickerSrc),
   };
 }
 
@@ -129,13 +171,21 @@ export function readAutosave(): Project | null {
   return raw && isProject(raw) ? normalize(raw) : null;
 }
 
+export function readAutosaveTime(): number | null {
+  const at = readJson<number>(AUTOSAVE_AT_KEY);
+  return typeof at === "number" ? at : null;
+}
+
 export function writeAutosave(project: Project): boolean {
-  return writeJson(AUTOSAVE_KEY, trimForStorage(project).project);
+  const ok = writeJson(AUTOSAVE_KEY, trimForStorage(project).project);
+  if (ok) writeJson(AUTOSAVE_AT_KEY, Date.now());
+  return ok;
 }
 
 export function clearAutosave(): void {
   try {
     window.localStorage.removeItem(AUTOSAVE_KEY);
+    window.localStorage.removeItem(AUTOSAVE_AT_KEY);
   } catch {
     // Nothing to clean up if storage is unavailable.
   }
@@ -187,8 +237,9 @@ export function projectFromJson(text: string): Project | null {
   }
 }
 
+/** Files have no storage budget, so photos travel with them; pass a project from `withInlineImages`. */
 export function downloadProject(project: Project, name: string): void {
-  const blob = new Blob([JSON.stringify(trimForStorage(project).project, null, 2)], {
+  const blob = new Blob([JSON.stringify(project, null, 2)], {
     type: "application/json",
   });
   const url = URL.createObjectURL(blob);

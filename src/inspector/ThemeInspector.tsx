@@ -48,6 +48,7 @@ function Control({
     return (
       <div className="token-control">
         <label htmlFor={def.id}>{def.label}</label>
+        {def.hint ? <p className="token-hint">{def.hint}</p> : null}
         <div className="token-color">
           <input
             id={def.id}
@@ -72,6 +73,7 @@ function Control({
     return (
       <div className="token-control">
         <label htmlFor={def.id}>{def.label}</label>
+        {def.hint ? <p className="token-hint">{def.hint}</p> : null}
         <select id={def.id} value={value} onChange={(e) => onChange(e.target.value)}>
           {options.map((font) => (
             <option key={font} value={font} style={{ fontFamily: font }}>
@@ -94,6 +96,7 @@ function Control({
           {unit}
         </span>
       </div>
+      {def.hint ? <p className="token-hint">{def.hint}</p> : null}
       <input
         id={def.id}
         type="range"
@@ -242,15 +245,6 @@ export function ThemeInspector({
     if (!allowed.has(id)) return null;
     const def = TOKEN_DEFS.find((item) => item.id === id);
     if (!def) return null;
-    if (id === "--poster-accent") return { ...def, label: "Accent" };
-    if (id === "--font-display") return { ...def, label: "Title font" };
-    if (id === "--font-body") return { ...def, label: "Text font" };
-    if (id === "--title-x") return { ...def, label: "Title left / right" };
-    if (id === "--title-y") return { ...def, label: "Title position" };
-    if (id === "--name-pad") return { ...def, label: "Name start" };
-    if (id === "--logo-size") return { ...def, label: "Crest column" };
-    if (id === "--logo-scale") return { ...def, label: "Crest size" };
-    if (id === "--row-gap") return { ...def, label: "Space between rows" };
     return def;
   }).filter((def): def is TokenDef => Boolean(def));
 
@@ -259,7 +253,11 @@ export function ThemeInspector({
     return TOKEN_DEFS.filter((def) => {
       if (!allowed.has(def.id)) return false;
       if (needle) {
-        return def.label.toLowerCase().includes(needle) || def.id.toLowerCase().includes(needle);
+        return (
+          def.label.toLowerCase().includes(needle) ||
+          (def.hint ?? "").toLowerCase().includes(needle) ||
+          def.id.toLowerCase().includes(needle)
+        );
       }
       return !simple.has(def.id);
     });
@@ -270,8 +268,8 @@ export function ThemeInspector({
       <div className="inspector-top">
         <h2>Look</h2>
         <div className="inspector-top-actions">
-          <button type="button" className="text-btn" onClick={onSaveLook}>
-            Save look
+          <button type="button" className="text-btn" onClick={onSaveLook} title="New posters in this layout start with this look">
+            Make default
           </button>
           <button type="button" className="text-btn" onClick={onReset}>
             Reset
@@ -284,7 +282,7 @@ export function ThemeInspector({
         </div>
       </div>
       <p className="inspector-help">
-        These controls change this layout. Save look keeps them for next time you open it. Reset puts the published defaults back.
+        Changes here are part of this poster and are kept when you Save. Make default starts every new poster in this layout with this look. Reset puts the published look back.
       </p>
       {simpleDefs.map((def) => (
         <Control

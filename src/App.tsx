@@ -4,7 +4,7 @@ import { loadSampleRegistry, loadUploadedRegistry } from "./engine/loadRegistry"
 import { decorateRows } from "./engine/matchTeam";
 import { parseTable, patchTableCell } from "./engine/parseTable";
 import { SIZE_PRESETS } from "./engine/presets";
-import type { TableColumnRole, TeamRecord } from "./engine/types";
+import type { ColumnOverrides, TableColumnRole, TeamRecord } from "./engine/types";
 import { ThemeInspector } from "./inspector/ThemeInspector";
 import { SAMPLE_BOYS_LAX, SAMPLE_GIRLS_LAX, SAMPLE_RANKING_TABLE, SAMPLE_TABLE } from "./sampleTable";
 import { TEMPLATES, tokensForTemplate, SAMPLE_HERO, type TemplateId } from "./templates/catalog";
@@ -43,13 +43,19 @@ import {
   listSaves,
   projectFromJson,
   readAutosave,
+  readAutosaveTime,
   readSave,
   savedAgo,
+  withInlineImages,
   writeAutosave,
   writeSave,
   type Project,
   type SaveMeta,
 } from "./studio/projectStore";
+import { ColumnReader } from "./studio/ColumnReader";
+import { MatchChecker } from "./studio/MatchChecker";
+import { applyRowFixes, rowKey, type RowFix, type RowFixes } from "./studio/rowFixes";
+import { ToastStack, useToasts } from "./studio/Toasts";
 import { ORNAMENT_IDS, ORNAMENT_LABELS, type OrnamentId } from "./templates/ornaments";
 import { addFileFont, addGoogleFont, applyExtraFonts, loadExtraFonts, saveExtraFonts, type ExtraFont } from "./theme/extraFonts";
 import {
@@ -64,7 +70,6 @@ import {
 } from "./studio/barStore";
 import { persistTransparentCrests } from "./studio/transparentCrest";
 import { blankCrestPng } from "./studio/logoOutline";
-import { graphicBarFor } from "./theme/graphicBars";
 import { DEFAULT_TOKENS } from "./theme/tokenMeta";
 import { clearTemplateLook, readTemplateLook, writeTemplateLook } from "./studio/lookStore";
 
@@ -168,13 +173,38 @@ type HistoryShot = {
   ornaments: Record<StickerSlot, OrnamentId>;
   stickerSrc: Record<StickerSlot, string>;
   media: Record<MediaSlot, string>;
+  columns: ColumnOverrides;
+  rowFixes: RowFixes;
   teams: TeamRecord[];
   assetNote: string;
 };
 
+function projectFingerprint(p: Project): string {
+  return JSON.stringify([
+    p.tableText,
+    p.kicker,
+    p.title,
+    p.subtitle,
+    p.handle,
+    p.heads,
+    p.presetId,
+    p.templateId,
+    p.tokens,
+    p.ornaments,
+    p.stickerSrc,
+    p.media,
+    p.columns,
+    p.rowFixes,
+  ]);
+}
+
+const SAMPLE_TABLES = new Set([SAMPLE_TABLE, SAMPLE_RANKING_TABLE, SAMPLE_BOYS_LAX, SAMPLE_GIRLS_LAX]);
+
 function cloneShot(shot: HistoryShot): HistoryShot {
   return {
     ...shot,
+    columns: { ...shot.columns, roles: { ...shot.columns.roles } },
+    rowFixes: Object.fromEntries(Object.entries(shot.rowFixes).map(([key, fix]) => [key, { ...fix }])),
     heads: { ...shot.heads },
     tokens: { ...shot.tokens },
     ornaments: { ...shot.ornaments },
@@ -207,7 +237,10 @@ export default function App() {
     applyExtraFonts(fonts);
     return fonts;
   });
-  const [status, setStatus] = useState("");
+  const { toasts, notify: setStatus, dismiss: dismissToast } = useToasts();
+  const [columns, setColumns] = useState<ColumnOverrides>({ roles: {} });
+  const [rowFixes, setRowFixes] = useState<RowFixes>({});
+  const [matchFocus, setMatchFocus] = useState<{ key: string; nonce: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState(0.4);
   const [lockFit, setLockFit] = useState(true);
@@ -266,6 +299,8 @@ export default function App() {
     ornaments,
     stickerSrc,
     media,
+    columns,
+    rowFixes,
     teams,
     assetNote,
   });
@@ -282,6 +317,8 @@ export default function App() {
     ornaments,
     stickerSrc,
     media,
+    columns,
+    rowFixes,
     teams,
     assetNote,
   };
@@ -329,6 +366,8 @@ export default function App() {
     setOrnaments(shot.ornaments);
     setStickerSrc(shot.stickerSrc);
     setMedia(shot.media);
+    setColumns(shot.columns);
+    setRowFixes(shot.rowFixes);
     setTeams(shot.teams);
     setAssetNote(shot.assetNote);
     queueMicrotask(() => {
@@ -378,15 +417,20 @@ export default function App() {
     ornaments,
     stickerSrc,
     media,
+    columns,
+    rowFixes,
   };
   const projectRef = useRef(project);
   projectRef.current = project;
+  const projectJson = projectFingerprint(project);
 
   const [saves, setSaves] = useState<SaveMeta[]>([]);
   const [saveName, setSaveName] = useState("");
-  const [autosavedAt, setAutosavedAt] = useState<number | null>(null);
+  const [lastSaved, setLastSaved] = useState<{ name: string; json: string } | null>(null);
+  const [resume, setResume] = useState<{ title: string; at: number | null } | null>(null);
   const restoredRef = useRef(false);
   const projectFileRef = useRef<HTMLInputElement>(null);
+  const dirty = lastSaved ? lastSaved.json !== projectJson : true;
 
   const applyProject = useCallback((next: Project) => {
     restoringRef.current = true;
@@ -402,46 +446,87 @@ export default function App() {
     setOrnaments(next.ornaments);
     setStickerSrc(next.stickerSrc);
     setMedia(next.media);
+    setColumns(next.columns);
+    setRowFixes(next.rowFixes);
     queueMicrotask(() => {
       restoringRef.current = false;
     });
   }, []);
 
-  // Pick up where the last visit left off, so closing the tab is never destructive.
+  // Reopen the last poster, but say so on the stage so it never looks like a mystery.
   useEffect(() => {
     const saved = readAutosave();
+    const list = listSaves();
     if (saved) {
       applyProject(saved);
-      setStatus("Picked up where you left off");
+      setResume({ title: saved.title.trim() || saved.subtitle.trim(), at: readAutosaveTime() });
+      const print = projectFingerprint(saved);
+      const same = list.find((meta) => {
+        const found = readSave(meta.id);
+        return found ? projectFingerprint(found) === print : false;
+      });
+      if (same) {
+        setSaveName(same.name);
+        setLastSaved({ name: same.name, json: print });
+      }
     }
     restoredRef.current = true;
-    setSaves(listSaves());
+    setSaves(list);
   }, [applyProject]);
 
   // Autosave trails the edits rather than firing on every keystroke.
   useEffect(() => {
     if (!restoredRef.current) return;
     const timer = window.setTimeout(() => {
-      if (writeAutosave(projectRef.current)) setAutosavedAt(Date.now());
+      writeAutosave(projectRef.current);
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [tableText, kicker, title, subtitle, handle, heads, presetId, templateId, tokens, ornaments, stickerSrc, media]);
+  }, [projectJson]);
 
-  const onSaveRankings = useCallback(() => {
-    const name = saveName.trim() || title.trim() || "Untitled rankings";
-    const result = writeSave(name, projectRef.current);
+  const onSaveRankings = useCallback(async () => {
+    const name = saveName.trim() || lastSaved?.name || title.trim() || "Untitled rankings";
+    const snapshot = projectFingerprint(projectRef.current);
+    const result = writeSave(name, await withInlineImages(projectRef.current));
     if (!result.ok) {
-      setStatus("Could not save — the browser is out of storage room");
+      setStatus("Could not save — the browser is out of storage room. Use Download file instead.");
       return;
     }
+    writeTemplateLook(projectRef.current.templateId, projectRef.current.tokens);
     setSaves(listSaves());
-    setSaveName("");
+    setSaveName(name);
+    setLastSaved({ name, json: snapshot });
+    setResume(null);
     setStatus(
       result.droppedImages > 0
-        ? `Saved "${name}" — uploaded photos were too large to keep`
+        ? `Saved "${name}", but ${result.droppedImages === 1 ? "a photo was" : "photos were"} too large for this browser to keep. Download file keeps them.`
         : `Saved "${name}"`,
     );
-  }, [saveName, title]);
+  }, [saveName, lastSaved, title, setStatus]);
+
+  const onDownloadProject = useCallback(async () => {
+    const name = saveName.trim() || lastSaved?.name || title.trim() || "rankings";
+    downloadProject(await withInlineImages(projectRef.current), name);
+    setStatus("Downloaded. Open it on any computer with Open a file.");
+  }, [saveName, lastSaved, title, setStatus]);
+
+  const startFresh = useCallback(() => {
+    remember();
+    setTableText("");
+    setKicker("");
+    setTitle("");
+    setSubtitle("");
+    setHeads({});
+    setColumns({ roles: {} });
+    setRowFixes({});
+    setMedia({ background: "", header: "", watermark: "", footer: "", hero: "" });
+    setStickerSrc({ a: "", b: "", c: "", d: "" });
+    setTokens({ ...tokensForTemplate(templateId), ...readTemplateLook(templateId) });
+    setSaveName("");
+    setLastSaved(null);
+    setResume(null);
+    setLeftOpen(true);
+    setStatus("Fresh poster. Paste your rankings on the left. Undo brings the old one back.");
+  }, [remember, templateId, setStatus]);
 
   const onOpenSave = useCallback(
     (meta: SaveMeta) => {
@@ -453,9 +538,11 @@ export default function App() {
       remember();
       applyProject(found);
       setSaveName(meta.name);
+      setLastSaved({ name: meta.name, json: projectFingerprint(found) });
+      setResume(null);
       setStatus(`Opened "${meta.name}"`);
     },
-    [applyProject, remember],
+    [applyProject, remember, setStatus],
   );
 
   const onDeleteSave = useCallback((meta: SaveMeta) => {
@@ -473,9 +560,11 @@ export default function App() {
       }
       remember();
       applyProject(found);
-      setStatus(`Loaded ${file.name}`);
+      setLastSaved(null);
+      setResume(null);
+      setStatus(`Opened ${file.name}. Press Save to keep it in this browser.`);
     },
-    [applyProject, remember],
+    [applyProject, remember, setStatus],
   );
 
   useEffect(() => {
@@ -495,22 +584,52 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [previewOpen, logoDeskOpen]);
 
+  const graphicLayout = templateId === "board" || templateId === "movers";
   const preset = SIZE_PRESETS.find((item) => item.id === presetId) ?? SIZE_PRESETS[0];
   const previewFrame = PREVIEW_FORMATS.find((item) => item.id === previewFormat) ?? PREVIEW_FORMATS[0];
-  const parsed = useMemo(() => parseTable(tableText), [tableText]);
+  const parsed = useMemo(() => parseTable(tableText, columns), [tableText, columns]);
   const matchedTeams = useMemo(
     () => applyBarColors(applyLogoLibrary(teams, logoViews), bars),
     [teams, logoViews, bars],
   );
   const rows = useMemo(
-    () => applyDeskColorsToRows(decorateRows(parsed, matchedTeams), bars),
-    [parsed, matchedTeams, bars],
+    () => applyRowFixes(applyDeskColorsToRows(decorateRows(parsed, matchedTeams), bars), rowFixes, matchedTeams),
+    [parsed, matchedTeams, bars, rowFixes],
+  );
+  const schoolNames = useMemo(
+    () => [...new Set(matchedTeams.map((team) => team.name))].sort((a, b) => a.localeCompare(b)),
+    [matchedTeams],
   );
   const usedLogoNames = useMemo(() => rows.map((row) => row.teamQuery), [rows]);
-  const unmatched = rows.filter(
-    (row) => !row.team && !graphicBarFor(row.teamQuery) && !findBar(bars, row.teamQuery),
-  );
   const headFields = useMemo(() => visibleHeadFields(rows), [rows]);
+
+  const fixRow = useCallback(
+    (key: string, fix: RowFix | null, batch?: string) => {
+      if (batch) touchField(`fix:${batch}`);
+      else {
+        remember();
+        fieldTouchRef.current = null;
+      }
+      setRowFixes((prev) => {
+        const next = { ...prev };
+        if (fix && (fix.team || fix.primary || fix.secondary)) next[key] = fix;
+        else delete next[key];
+        return next;
+      });
+    },
+    [remember, touchField],
+  );
+
+  const focusMatch = useCallback((teamQuery: string) => {
+    setLeftOpen(true);
+    setMatchFocus({ key: rowKey(teamQuery), nonce: Date.now() });
+  }, []);
+
+  /** Samples replace the whole table, so ask first unless the table is empty or already a sample. */
+  const okToReplaceTable = useCallback(() => {
+    if (!tableText.trim() || SAMPLE_TABLES.has(tableText)) return true;
+    return window.confirm("Replace your rankings with the sample? Undo brings yours back.");
+  }, [tableText]);
 
   useEffect(() => {
     applyExtraFonts(extraFonts);
@@ -828,16 +947,27 @@ export default function App() {
     setZoom(fitScale.current);
   }
 
+  function loadSample(text: string, words: { kicker: string; title: string; subtitle: string }) {
+    setTableText(text);
+    setColumns({ roles: {} });
+    setKicker(words.kicker);
+    setTitle(words.title);
+    setSubtitle(words.subtitle);
+  }
+
   function applyStateSample(kind: "boys" | "girls") {
+    if (!okToReplaceTable()) return;
     remember();
     const accent = kind === "boys" ? "#b4caef" : "#e6d09a";
-    if (templateId !== "board") setTemplateId("board");
-    setTokens({
-      ...tokensForTemplate("board"),
-      ...readTemplateLook("board"),
-      "--poster-accent": accent,
-      "--col-head-fg": accent,
-    });
+    const accents = { "--poster-accent": accent, "--col-head-fg": accent };
+    if (templateId !== "board") {
+      writeTemplateLook(templateId, tokens);
+      setTemplateId("board");
+      setTokens({ ...tokensForTemplate("board"), ...readTemplateLook("board"), ...accents });
+    } else {
+      setTokens((prev) => ({ ...prev, ...accents }));
+    }
+    setColumns({ roles: {} });
     if (kind === "boys") {
       setTableText(SAMPLE_BOYS_LAX);
       setKicker("FOR GAMES THROUGH 6.18.2026");
@@ -992,12 +1122,16 @@ export default function App() {
         >
           Ranking <span>Studio</span>
         </button>
-        <div className={status.toLowerCase().includes("fail") || status.toLowerCase().includes("could not") ? "topbar-status is-error" : "topbar-status"}>
-          {status || "Paste rankings, click the poster to edit, then Save or Export PNG"}
+        <div className="topbar-status" />
+        <div
+          className={dirty ? "save-flag is-dirty" : "save-flag"}
+          title="Your last edit is always kept in this browser. Save names it so you can come back to it."
+        >
+          {lastSaved ? (dirty ? `Unsaved changes · ${lastSaved.name}` : `Saved · ${lastSaved.name}`) : "Not saved yet"}
         </div>
-        <div className="save-flag" title="Your work is kept in this browser automatically">
-          {autosavedAt ? `Kept ${savedAgo(autosavedAt)}` : "Keeping your work"}
-        </div>
+        <button type="button" className="preview-btn save-top" onClick={() => void onSaveRankings()} disabled={!dirty && !!lastSaved}>
+          Save
+        </button>
         <label className="size-field">
           <span>Size</span>
           <select
@@ -1049,14 +1183,14 @@ export default function App() {
           </button>
         </div>
         <ol className="coach-steps">
+          <li>Pick a layout</li>
           <li>Paste rankings</li>
-          <li>Pick a look</li>
-          <li>Click the poster to edit</li>
-          <li>Fix crests in Logos</li>
-          <li>Save or export</li>
+          <li>Check columns and schools</li>
+          <li>Click the poster to fine-tune</li>
+          <li>Save, then Export PNG</li>
         </ol>
         <div className="panel-block">
-          <h2 className="panel-label">Look</h2>
+          <h2 className="panel-label">Layout</h2>
           <div className="template-pills">
             {TEMPLATES.map((item) => (
               <button
@@ -1074,7 +1208,7 @@ export default function App() {
 
         <div className="panel-block">
           <h2 className="panel-label">Rankings</h2>
-          <p className="panel-hint">Paste from Sheets, or start from a sample. Missing Off or Def columns stay hidden.</p>
+          <p className="panel-hint">Copy the rows from Sheets or Excel and paste here, labels row included if you have one.</p>
           <div
             className="field"
             onBlur={(event) => {
@@ -1095,28 +1229,25 @@ export default function App() {
               }}
               extras={
                 <>
+                  <span className="sample-label">Samples:</span>
                   <button
                     type="button"
                     className="link-btn"
                     onClick={() => {
+                      if (!okToReplaceTable()) return;
                       remember();
-                      setTableText(SAMPLE_TABLE);
-                      setKicker("GMC");
-                      setTitle("Group B");
-                      setSubtitle("2025 GMC Boys Soccer Tournament");
+                      loadSample(SAMPLE_TABLE, { kicker: "GMC", title: "Group B", subtitle: "2025 GMC Boys Soccer Tournament" });
                     }}
                   >
-                    GMC sample
+                    GMC
                   </button>
                   <button
                     type="button"
                     className="link-btn"
                     onClick={() => {
+                      if (!okToReplaceTable()) return;
                       remember();
-                      setTableText(SAMPLE_RANKING_TABLE);
-                      setKicker("");
-                      setTitle("NJ Boys Soccer");
-                      setSubtitle("Statewide rankings");
+                      loadSample(SAMPLE_RANKING_TABLE, { kicker: "", title: "NJ Boys Soccer", subtitle: "Statewide rankings" });
                     }}
                   >
                     Top 20
@@ -1127,23 +1258,58 @@ export default function App() {
                   <button type="button" className="link-btn" onClick={() => applyStateSample("girls")}>
                     Girls Top 15
                   </button>
+                  {tableText.trim() ? (
+                    <button
+                      type="button"
+                      className="link-btn"
+                      onClick={() => {
+                        remember();
+                        setTableText("");
+                        setColumns({ roles: {} });
+                        setStatus("Table cleared. Undo brings it back.");
+                      }}
+                    >
+                      Clear
+                    </button>
+                  ) : null}
                 </>
               }
             />
           </div>
-          {teams.length > 0 && unmatched.length > 0 && (
-            <ul className="warn-list">
-              {unmatched.map((row) => (
-                <li key={`${row.rank}-${row.teamQuery}`}>
-                  No logo/color for “{row.teamQuery}”
-                </li>
-              ))}
-            </ul>
-          )}
+          {tableText.trim() && parsed.rows.length === 0 ? (
+            <p className="panel-warn">We could not find any rows. Put one school per line, with a tab or comma between columns.</p>
+          ) : null}
+          <ColumnReader
+            table={parsed}
+            overrides={columns}
+            onChange={(next) => {
+              remember();
+              fieldTouchRef.current = null;
+              setColumns(next);
+            }}
+          />
+          <MatchChecker
+            rows={teams.length > 0 ? rows : []}
+            fixes={rowFixes}
+            schoolNames={schoolNames}
+            canUploadCrest={logoMode !== "locked"}
+            focus={matchFocus}
+            onFix={fixRow}
+            onUploadCrest={(row) => pickRowLogo(row.team?.id ?? null, row.team?.name ?? row.teamQuery)}
+          />
         </div>
 
-        <div className="panel-block">
-          <h2 className="panel-label">Logo library</h2>
+        <PanelFold
+          title="Logos and team colors"
+          closedHint={
+            logoMode === "shared"
+              ? "Shared crest library · changes show for everyone"
+              : logoMode === "locked"
+                ? "Shared crest library · desk key needed to change"
+                : "Crest library on this computer"
+          }
+          openHint="Changes here affect every poster. For one poster only, use Schools above."
+        >
           <p className="panel-hint">
             {logoMode === "shared"
               ? "Shared desk. A replace here shows up for every sports business computer."
@@ -1305,7 +1471,7 @@ export default function App() {
               e.target.value = "";
             }}
           />
-        </div>
+        </PanelFold>
 
         <div className="panel-block">
           <h2 className="panel-label">Words on the poster</h2>
@@ -1379,9 +1545,9 @@ export default function App() {
         </div>
 
         <div className="panel-block">
-          <h2 className="panel-label">Keep this week</h2>
+          <h2 className="panel-label">Saves</h2>
           <p className="panel-hint">
-            This browser keeps your last edit, including Look. Name a week to open the rankings and settings again, or download a file to take home.
+            Save keeps this poster and its look in this browser. To use it on another computer, download a file and open it there.
           </p>
           <div className="save-row">
             <input
@@ -1393,21 +1559,26 @@ export default function App() {
               onKeyDown={(event) => {
                 if (event.key !== "Enter") return;
                 event.preventDefault();
-                onSaveRankings();
+                void onSaveRankings();
               }}
             />
-            <button type="button" className="save-btn" onClick={onSaveRankings}>
+            <button type="button" className="save-btn" onClick={() => void onSaveRankings()}>
               Save
             </button>
           </div>
           {saves.length > 0 ? (
             <ul className="save-list">
               {saves.map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className={lastSaved?.name === item.name ? "is-current" : undefined}>
                   <button
                     type="button"
                     className="save-open"
-                    onClick={() => onOpenSave(item)}
+                    onClick={() => {
+                      if (dirty && lastSaved?.name !== item.name && tableText.trim()) {
+                        if (!window.confirm(`Open "${item.name}"? Unsaved changes here can still be undone.`)) return;
+                      }
+                      onOpenSave(item);
+                    }}
                     title={`Open "${item.name}"`}
                   >
                     <span className="save-open-name">{item.name}</span>
@@ -1416,7 +1587,9 @@ export default function App() {
                   <button
                     type="button"
                     className="save-delete"
-                    onClick={() => onDeleteSave(item)}
+                    onClick={() => {
+                      if (window.confirm(`Delete "${item.name}"? This cannot be undone.`)) onDeleteSave(item);
+                    }}
                     aria-label={`Delete ${item.name}`}
                     title={`Delete "${item.name}"`}
                   >
@@ -1427,15 +1600,14 @@ export default function App() {
             </ul>
           ) : null}
           <div className="save-extras">
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => downloadProject(projectRef.current, saveName || title)}
-            >
-              Download a copy
+            <button type="button" className="link-btn" onClick={() => void onDownloadProject()}>
+              Download file
             </button>
             <button type="button" className="link-btn" onClick={() => projectFileRef.current?.click()}>
               Open a file
+            </button>
+            <button type="button" className="link-btn" onClick={startFresh}>
+              New poster
             </button>
           </div>
           <input
@@ -1451,6 +1623,8 @@ export default function App() {
           />
         </div>
 
+        {graphicLayout ? null : (
+          <>
         <div className="panel-block photo-block">
           <h2 className="panel-label">Photo</h2>
           <ImageTile
@@ -1560,6 +1734,8 @@ export default function App() {
             </div>
           ))}
         </PanelFold>
+          </>
+        )}
         <input
           ref={mediaFileRef}
           className="hidden-file"
@@ -1624,6 +1800,20 @@ export default function App() {
             Fit
           </button>
         </div>
+        {resume ? (
+          <div className="resume-banner" role="status">
+            <span>
+              Picked up your last poster{resume.title ? ` “${resume.title}”` : ""}
+              {resume.at ? ` from ${savedAgo(resume.at)}` : ""}.
+            </span>
+            <button type="button" onClick={() => setResume(null)}>
+              Keep going
+            </button>
+            <button type="button" className="is-quiet" onClick={startFresh}>
+              Start fresh
+            </button>
+          </div>
+        ) : null}
         {!leftOpen ? (
           <button type="button" className="sheet-tab is-left" onClick={() => setLeftOpen(true)}>
             Setup
@@ -1699,12 +1889,12 @@ export default function App() {
                 setHeads((prev) => ({ ...prev, [field]: value }));
               }}
               onRowEdit={(rowIndex: number, field: TableColumnRole, value: string) => {
-                const next = patchTableCell(tableText, rowIndex, field, value);
+                const next = patchTableCell(tableText, rowIndex, field, value, columns);
                 if (next === tableText) return;
                 remember();
                 setTableText(next);
               }}
-              onLogoPick={logoMode === "locked" ? undefined : pickRowLogo}
+              onLogoPick={(_teamId, teamQuery) => focusMatch(teamQuery)}
               media={{
                 background: media.background || undefined,
                 header: media.header || undefined,
@@ -1736,13 +1926,11 @@ export default function App() {
           }}
           onSaveLook={() => {
             if (!writeTemplateLook(templateId, tokens)) {
-              setStatus("Could not save look — the browser is out of storage room");
+              setStatus("Could not keep this look — the browser is out of storage room");
               return;
             }
-            writeAutosave(projectRef.current);
-            setAutosavedAt(Date.now());
             const layout = TEMPLATES.find((item) => item.id === templateId)?.name ?? "this layout";
-            setStatus(`Look saved for ${layout}`);
+            setStatus(`New ${layout} posters will start with this look`);
           }}
           onReset={() => {
             remember();
@@ -1793,6 +1981,7 @@ export default function App() {
           />
         </PostPreview>
       ) : null}
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

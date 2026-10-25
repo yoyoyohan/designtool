@@ -41,8 +41,16 @@ export type ParsedTable = {
   headers: string[];
   rows: string[][];
   roles: TableColumnRole[];
+  /** What the reader guessed before the coach changed anything. */
+  guessedRoles: TableColumnRole[];
   hasHeader: boolean;
   delimiter: string;
+};
+
+/** Coach corrections to how a pasted table is read. Keys come from `columnKey`. */
+export type ColumnOverrides = {
+  header?: boolean;
+  roles: Record<string, TableColumnRole>;
 };
 
 export type RankingStats = {
@@ -84,4 +92,6 @@ export type TokenDef = {
   min?: number;
   max?: number;
   step?: number;
+  /** One plain sentence: what moves on the poster. */
+  hint?: string;
 };

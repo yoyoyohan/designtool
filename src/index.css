@@ -746,6 +746,71 @@ textarea {
   font-size: 11px;
   color: var(--ui-muted);
   white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.save-flag.is-dirty {
+  color: var(--ui-accent);
+  font-weight: 600;
+}
+
+.save-top:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.save-list li.is-current .save-open {
+  border-color: var(--ui-ink);
+}
+
+.panel-warn {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ui-danger);
+}
+
+.sample-label {
+  font-size: 11px;
+  color: var(--ui-muted);
+}
+
+.resume-banner {
+  position: sticky;
+  top: 12px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 10px auto 0;
+  padding: 8px 10px 8px 14px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.08);
+  font-size: 12px;
+  color: var(--ui-ink);
+}
+
+.resume-banner button {
+  border: 1px solid var(--ui-ink);
+  border-radius: 4px;
+  background: var(--ui-ink);
+  color: var(--ui-panel);
+  font: inherit;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.resume-banner button.is-quiet {
+  background: transparent;
+  color: var(--ui-ink);
+  border-color: var(--ui-line-strong);
 }
 
 .save-row {

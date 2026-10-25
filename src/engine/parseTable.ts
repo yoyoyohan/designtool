@@ -1,24 +1,67 @@
-import type { ParsedTable, TableColumnRole } from "./types";
+import type { ColumnOverrides, ParsedTable, TableColumnRole } from "./types";
 
+/* Patterns run on a normalized header: lowercase, "_" and "." as spaces, single spaces. */
 const ROLE_PATTERNS: { role: TableColumnRole; pattern: RegExp }[] = [
-  { role: "rank", pattern: /^(rank|#|rk|pos|position|r)$/i },
-  { role: "team", pattern: /^(team|teamname|school|club|name|side)$/i },
-  { role: "record", pattern: /^(record|rec|w-l|wl|w_l)$/i },
-  { role: "prev", pattern: /^(prev|previous|last|old|lw|last\s*week)$/i },
-  { role: "movement", pattern: /^(move|movement|chg|change|delta|mover)$/i },
-  { role: "w", pattern: /^(w|win|wins)$/i },
-  { role: "l", pattern: /^(l|loss|losses)$/i },
-  { role: "d", pattern: /^(d|draw|draws|t|ties)$/i },
-  { role: "pts", pattern: /^(pts|pt|points)$/i },
-  { role: "gf", pattern: /^(gf|goals?\s*for|for)$/i },
-  { role: "ga", pattern: /^(ga|goals?\s*against|against)$/i },
-  { role: "gd", pattern: /^(gd|goal\s*diff(?:erential)?|diff)$/i },
-  { role: "rating", pattern: /^(rating|rtg|pwr|power|score)$/i },
-  { role: "off", pattern: /^(off|offrating|off\s*rating|offense|attack)$/i },
-  { role: "def", pattern: /^(def|defrating|def\s*rating|defense)$/i },
-  { role: "games", pattern: /^(games|gp|n|played)$/i },
-  { role: "date", pattern: /^(date|updated|as\s*of)$/i },
+  {
+    role: "rank",
+    pattern: /^(rank|ranking|#|no|rk|pos|position|r|place|seed|current rank|this week|this week rank|cur|now)$/,
+  },
+  {
+    role: "team",
+    pattern: /^(team|teams|teamname|team name|school|schools|school name|club|name|side|program|high school)$/,
+  },
+  { role: "record", pattern: /^(record|rec|w-l|wl|w l|w-l-t|w-l-d|overall|overall record)$/ },
+  {
+    role: "prev",
+    pattern:
+      /^(prev|previous|prev rank|previous rank|last|last rank|old|old rank|lw|lw rank|last week|last week rank|last week's rank|prior|prior rank|was)$/,
+  },
+  {
+    role: "movement",
+    pattern: /^(move|moves|movement|chg|change|rank change|delta|mover|trend|\+\/-|±|up\/down|up down)$/,
+  },
+  { role: "w", pattern: /^(w|win|wins)$/ },
+  { role: "l", pattern: /^(l|loss|losses)$/ },
+  { role: "d", pattern: /^(d|draw|draws|t|tie|ties)$/ },
+  { role: "pts", pattern: /^(pts|pt|points|table points)$/ },
+  { role: "gf", pattern: /^(gf|goals? for|for|pf|points for|scored)$/ },
+  { role: "ga", pattern: /^(ga|goals? against|against|pa|points against|allowed)$/ },
+  { role: "gd", pattern: /^(gd|goal diff|goal differential|goal difference|diff|differential|margin)$/ },
+  {
+    role: "rating",
+    pattern:
+      /^(rating|ratings|rtg|pwr|power|power rating|power score|score|overall rating|ovr|rating score|index|sbr|strength|team strength|srs|elo|net|net rating)$/,
+  },
+  {
+    role: "off",
+    pattern:
+      /^(off|offense|offence|offensive|offensive rating|off rating|offrating|off rtg|ortg|o rating|attack|attacking)$/,
+  },
+  {
+    role: "def",
+    pattern:
+      /^(def|defense|defence|defensive|defensive rating|def rating|defrating|def rtg|drtg|d rating|defending)$/,
+  },
+  { role: "games", pattern: /^(games|games played|gp|g|n|played|matches|mp)$/ },
+  { role: "date", pattern: /^(date|updated|last updated|as of|through)$/ },
 ];
+
+export function normalizeHeader(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[_.:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Key a column by its label when there is one, so a reorder in Sheets keeps the coach's choice. */
+export function columnKey(table: Pick<ParsedTable, "headers" | "hasHeader">, index: number): string {
+  if (table.hasHeader) {
+    const label = normalizeHeader(table.headers[index] ?? "");
+    if (label) return `h:${label}`;
+  }
+  return `i:${index}`;
+}
 
 function isRankCell(value: string): boolean {
   return /^\d{1,3}$/.test(value.trim());
@@ -206,17 +249,21 @@ function splitLine(line: string, delimiter: string): string[] {
 
 function looksLikeHeader(cells: string[]): boolean {
   const joined = cells.join(" ").toLowerCase();
+  if (cells.some((cell) => /^-?\d+(\.\d+)?$/.test(cell.trim()))) {
+    return /\b(rank|team|school|record|pts|points|rating)\b/.test(joined);
+  }
   return (
-    ROLE_PATTERNS.some(({ pattern }) => cells.some((cell) => pattern.test(cell))) ||
-    /\b(rank|team|school|record|pts|points)\b/.test(joined)
+    ROLE_PATTERNS.some(({ pattern }) => cells.some((cell) => pattern.test(normalizeHeader(cell)))) ||
+    /\b(rank|team|school|record|pts|points|rating)\b/.test(joined)
   );
 }
 
 export function detectRoles(headers: string[]): TableColumnRole[] {
   const used = new Set<TableColumnRole>();
   return headers.map((header) => {
+    const label = normalizeHeader(header);
     const match = ROLE_PATTERNS.find(
-      ({ role, pattern }) => !used.has(role) && pattern.test(header.trim()),
+      ({ role, pattern }) => !used.has(role) && pattern.test(label),
     );
     if (match) {
       used.add(match.role);
@@ -249,10 +296,32 @@ function joinLine(cells: string[], delimiter: string): string {
     .join(",");
 }
 
-export function parseTable(text: string): ParsedTable {
+/** The coach's column choices win. A role can only live on one column, so the old holder steps aside. */
+function applyOverrides(
+  roles: TableColumnRole[],
+  table: Pick<ParsedTable, "headers" | "hasHeader">,
+  overrides: ColumnOverrides | undefined,
+): { roles: TableColumnRole[]; guessed: TableColumnRole[] } {
+  const guessed = [...roles];
+  if (!overrides) return { roles, guessed };
+  const next = [...roles];
+  next.forEach((_, index) => {
+    const pick = overrides.roles[columnKey(table, index)];
+    if (!pick) return;
+    if (pick !== "extra") {
+      next.forEach((role, other) => {
+        if (other !== index && role === pick) next[other] = "extra";
+      });
+    }
+    next[index] = pick;
+  });
+  return { roles: next, guessed };
+}
+
+export function parseTable(text: string, overrides?: ColumnOverrides): ParsedTable {
   const trimmed = text.replace(/^\uFEFF/, "").trim();
   if (!trimmed) {
-    return { headers: [], rows: [], roles: [], hasHeader: false, delimiter: "\t" };
+    return { headers: [], rows: [], roles: [], guessedRoles: [], hasHeader: false, delimiter: "\t" };
   }
 
   const delimiter = detectDelimiter(trimmed);
@@ -265,15 +334,18 @@ export function parseTable(text: string): ParsedTable {
     return copy;
   });
 
-  const hasHeader = padded[0] ? looksLikeHeader(padded[0]) : false;
+  const hasHeader =
+    overrides?.header !== undefined ? overrides.header : padded[0] ? looksLikeHeader(padded[0]) : false;
   const body = hasHeader ? padded.slice(1) : padded;
   const sample = body[0] ?? padded[0] ?? [];
-  const roles = hasHeader
+  const inferred = hasHeader
     ? ensureTeamAndRank(detectRoles(padded[0]), sample)
     : ensureTeamAndRank(inferHeaderlessRoles(width, sample), sample);
+  const keyHeaders = hasHeader ? padded[0] : labelsForRoles(inferred);
+  const { roles, guessed } = applyOverrides(inferred, { headers: keyHeaders, hasHeader }, overrides);
   const headers = hasHeader ? padded[0] : labelsForRoles(roles);
 
-  return { headers, rows: body, roles, hasHeader, delimiter };
+  return { headers, rows: body, roles, guessedRoles: guessed, hasHeader, delimiter };
 }
 
 export function textToGrid(text: string): { grid: string[][]; delimiter: string } {
@@ -321,8 +393,9 @@ export function patchTableCell(
   rowIndex: number,
   role: TableColumnRole,
   value: string,
+  overrides?: ColumnOverrides,
 ): string {
-  const parsed = parseTable(text);
+  const parsed = parseTable(text, overrides);
   let headers = [...parsed.headers];
   let roles = [...parsed.roles];
   let rows = parsed.rows.map((row) => [...row]);
