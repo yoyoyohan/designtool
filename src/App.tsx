@@ -590,7 +590,7 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [previewOpen, logoDeskOpen]);
 
-  const graphicLayout = templateId === "board" || templateId === "movers";
+  const graphicLayout = templateId === "board" || templateId === "canva" || templateId === "movers";
   const preset = SIZE_PRESETS.find((item) => item.id === presetId) ?? SIZE_PRESETS[0];
   const previewFrame = PREVIEW_FORMATS.find((item) => item.id === previewFormat) ?? PREVIEW_FORMATS[0];
   const parsed = useMemo(() => parseTable(tableText, columns), [tableText, columns]);
@@ -970,9 +970,10 @@ export default function App() {
   function applyStateSample(kind: "boys" | "girls") {
     if (!okToReplaceTable()) return;
     remember();
-    const accent = kind === "boys" ? "#b4caef" : "#e6d09a";
+    const boysAccent = templateId === "canva" ? "#b8cce9" : "#b4caef";
+    const accent = kind === "boys" ? boysAccent : "#e6d09a";
     const accents = { "--poster-accent": accent, "--col-head-fg": accent };
-    if (templateId !== "board") {
+    if (templateId !== "board" && templateId !== "canva") {
       writeTemplateLook(templateId, tokens);
       setTemplateId("board");
       setTokens({ ...tokensForTemplate("board"), ...readTemplateLook("board"), ...accents });
@@ -1001,7 +1002,7 @@ export default function App() {
     setTemplateId(id);
     setTokens({ ...tokensForTemplate(id), ...readTemplateLook(id) });
     if (
-      id === "board" &&
+      (id === "board" || id === "canva") &&
       (tableText === SAMPLE_TABLE || tableText === SAMPLE_RANKING_TABLE)
     ) {
       setTableText(SAMPLE_BOYS_LAX);

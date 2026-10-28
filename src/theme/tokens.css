@@ -135,4 +135,12 @@
   --mark-pad-y: 4px;
   --mark-plate: #ffffff;
   --meta-y: 0px;
+  --meta-tracking: 0.08em;
+  --text-weight: 700;
+  --eyebrow-gap: 0px;
+  --eyebrow-tracking: 0.03em;
+  --plate-gap: 0px;
+  --stat-gap: 0px;
+  --trend-tint: 1;
+  --team-head-x: 0px;
 }

@@ -658,6 +658,7 @@ function PosterRow({
   compactName = false,
   unsignedTrend = false,
   graphicSkin = false,
+  arrowSet = "",
   live,
   onRowEdit,
   onLogoPick,
@@ -670,6 +671,8 @@ function PosterRow({
   compactName?: boolean;
   unsignedTrend?: boolean;
   graphicSkin?: boolean;
+  /** Prefix for the arrow art, e.g. "canva-" for the Canva copy. */
+  arrowSet?: string;
   live?: boolean;
   onRowEdit?: (rowIndex: number, field: TableColumnRole, value: string) => void;
   onLogoPick?: (teamId: string | null, teamQuery: string) => void;
@@ -716,10 +719,10 @@ function PosterRow({
     >
       <span className={`poster-trend ${moveClass}`} aria-hidden>
         {graphicSkin && moveClass === "is-up" ? (
-          <img className="poster-trend-arrow" src={`${import.meta.env.BASE_URL}arrows/up.png`} alt="" />
+          <img className="poster-trend-arrow" src={`${import.meta.env.BASE_URL}arrows/${arrowSet}up.png`} alt="" />
         ) : null}
         {graphicSkin && moveClass === "is-down" ? (
-          <img className="poster-trend-arrow" src={`${import.meta.env.BASE_URL}arrows/down.png`} alt="" />
+          <img className="poster-trend-arrow" src={`${import.meta.env.BASE_URL}arrows/${arrowSet}down.png`} alt="" />
         ) : null}
         {trendLabel(row.movement, unsignedTrend)}
       </span>
@@ -962,10 +965,10 @@ export function RankingPoster({
 
   const listRows = rows;
   const compactList = templateId === "power" || templateId === "split";
-  const metaBar = templateId === "board" || templateId === "movers";
+  const metaBar = templateId === "board" || templateId === "canva" || templateId === "movers";
   // State and Movers are the published Instagram graphics: exact team colours, title-case
   // names, unsigned movement, and a stat panel faded over the field.
-  const graphicSkin = templateId === "board" || templateId === "movers";
+  const graphicSkin = templateId === "board" || templateId === "canva" || templateId === "movers";
   const headVariant =
     templateId === "power"
       ? "power"
@@ -1054,8 +1057,31 @@ export function RankingPoster({
   const liveText = { live, onText };
   const titleCentered = Math.abs(parsePx(tokens["--title-x"], 0)) < 1;
 
+  // The published post shrinks a long school name to fit its bar rather than clipping it.
+  const articleRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const root = articleRef.current;
+    if (!root || templateId !== "canva") return;
+    const fit = () => {
+      root.querySelectorAll<HTMLElement>(".poster-name > span").forEach((span) => {
+        span.style.removeProperty("--name-fit");
+        const box = span.parentElement;
+        if (!box || document.activeElement === span.querySelector("[data-cell]")) return;
+        const css = getComputedStyle(box);
+        const room =
+          box.clientWidth - Number.parseFloat(css.paddingRight) - Number.parseFloat(getComputedStyle(span).marginLeft);
+        const used = Math.max(span.offsetWidth, span.scrollWidth);
+        if (room > 0 && used > room) span.style.setProperty("--name-fit", (room / used).toFixed(3));
+      });
+    };
+    fit();
+    document.fonts?.addEventListener("loadingdone", fit);
+    return () => document.fonts?.removeEventListener("loadingdone", fit);
+  });
+
   return (
     <article
+      ref={articleRef}
       className={`poster is-${mode} tmpl-${templateId}${graphicSkin ? " is-graphic" : ""}${heroFront ? " is-hero-front" : " is-hero-behind"}${media.hero ? " has-hero" : ""}${heroH > 0 ? " has-hero-h" : ""}${hasMovement ? "" : " is-no-trend"}${live ? " is-live" : ""}${selected ? ` is-picked-${selected}` : ""}${live && selected === "header" && titleCentered ? " is-title-centered" : ""}`}
       id={artboardId}
       style={style}
@@ -1139,6 +1165,7 @@ export function RankingPoster({
                 compactName={compactList}
                 unsignedTrend={graphicSkin}
                 graphicSkin={graphicSkin}
+                arrowSet={templateId === "canva" ? "canva-" : ""}
                 live={live}
                 onRowEdit={onRowEdit}
                 onLogoPick={onLogoPick}

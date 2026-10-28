@@ -123,6 +123,14 @@ export const DEFAULT_TOKENS: Record<string, string> = {
   "--mark-pad-y": "4px",
   "--mark-plate": "#ffffff",
   "--meta-y": "0px",
+  "--meta-tracking": "0.08em",
+  "--text-weight": "700",
+  "--eyebrow-gap": "0px",
+  "--eyebrow-tracking": "0.03em",
+  "--plate-gap": "0px",
+  "--stat-gap": "0px",
+  "--trend-tint": "1",
+  "--team-head-x": "0px",
 };
 
 /**
@@ -157,20 +165,24 @@ const RAW_TOKEN_DEFS: TokenDef[] = [
   // Type
   { id: "--title-size", label: "Title size", group: "Type", kind: "px", min: 40, max: 160, step: 2 },
   { id: "--title-tracking", label: "Title tracking", group: "Type", kind: "em", min: -0.04, max: 0.3, step: 0.01 },
-  { id: "--outline-width", label: "Title outline width", group: "Type", kind: "px", min: 0, max: 14, step: 1 },
+  { id: "--outline-width", label: "Title outline width", group: "Type", kind: "px", min: 0, max: 24, step: 1 },
   { id: "--title-shade-depth", label: "Title shadow depth", group: "Type", kind: "px", min: 0, max: 20, step: 1 },
   { id: "--eyebrow-size", label: "Sport line size", group: "Type", kind: "px", min: 14, max: 140, step: 1 },
   { id: "--eyebrow-outline", label: "Sport line outline", group: "Type", kind: "px", min: 0, max: 16, step: 1 },
+  { id: "--eyebrow-tracking", label: "Sport line tracking", group: "Type", kind: "em", min: -0.04, max: 0.3, step: 0.01 },
   { id: "--col-head-outline", label: "Column label outline", group: "Type", kind: "px", min: 0, max: 12, step: 1 },
   { id: "--name-line", label: "Name line height", group: "Type", kind: "number", min: 0.7, max: 1.6, step: 0.02 },
   { id: "--move-size", label: "Movement size", group: "Type", kind: "px", min: 10, max: 72, step: 1 },
   { id: "--kicker-size", label: "Kicker size", group: "Type", kind: "px", min: 8, max: 40, step: 1 },
   { id: "--kicker-tracking", label: "Kicker tracking", group: "Type", kind: "em", min: 0, max: 0.6, step: 0.02 },
   { id: "--meta-size", label: "Top note size", group: "Type", kind: "px", min: 9, max: 30, step: 1 },
+  { id: "--meta-tracking", label: "Top note tracking", group: "Type", kind: "em", min: 0, max: 0.3, step: 0.01 },
+  { id: "--text-weight", label: "Text weight", group: "Type", kind: "number", min: 400, max: 800, step: 100 },
+  { id: "--trend-tint", label: "Up / down number colour", group: "Type", kind: "number", min: 0, max: 1, step: 1 },
   { id: "--name-size", label: "Team name size", group: "Type", kind: "px", min: 12, max: 52, step: 1 },
   { id: "--rank-size", label: "Rank size", group: "Type", kind: "px", min: 10, max: 72, step: 1 },
   { id: "--stat-size", label: "Stat size", group: "Type", kind: "px", min: 9, max: 40, step: 1 },
-  { id: "--col-head-size", label: "Column label size", group: "Type", kind: "px", min: 8, max: 34, step: 1 },
+  { id: "--col-head-size", label: "Column label size", group: "Type", kind: "px", min: 8, max: 60, step: 1 },
   { id: "--footer-size", label: "Footer size", group: "Type", kind: "px", min: 8, max: 40, step: 1 },
   { id: "--footer-tracking", label: "Footer tracking", group: "Type", kind: "em", min: 0, max: 0.5, step: 0.02 },
   { id: "--font-display", label: "Title", group: "Type", kind: "font" },
@@ -183,6 +195,8 @@ const RAW_TOKEN_DEFS: TokenDef[] = [
   { id: "--row-radius", label: "Row corners", group: "Rows", kind: "px", min: 0, max: 40, step: 1 },
   { id: "--row-edge", label: "Team colour edge", group: "Rows", kind: "px", min: 0, max: 24, step: 1 },
   { id: "--seg-gap", label: "Segment gap", group: "Rows", kind: "px", min: 0, max: 32, step: 1 },
+  { id: "--plate-gap", label: "Plate gap", group: "Rows", kind: "px", min: 0, max: 24, step: 1 },
+  { id: "--stat-gap", label: "Stat panel gap", group: "Rows", kind: "px", min: 0, max: 24, step: 1 },
   { id: "--plate-inset", label: "Plate inset", group: "Rows", kind: "px", min: 0, max: 16, step: 1 },
   { id: "--trend-gap", label: "Arrow / number gap", group: "Rows", kind: "px", min: 0, max: 32, step: 1 },
   { id: "--mark-pad-x", label: "Crest side padding", group: "Rows", kind: "px", min: 0, max: 48, step: 1 },
@@ -197,7 +211,7 @@ const RAW_TOKEN_DEFS: TokenDef[] = [
   { id: "--metric-gap", label: "Space between stats", group: "Rows", kind: "px", min: 0, max: 28, step: 1 },
   { id: "--pts-box", label: "Rating column", group: "Rows", kind: "px", min: 40, max: 240, step: 2 },
   { id: "--pts-badge", label: "Rating badge", group: "Rows", kind: "px", min: 24, max: 120, step: 2 },
-  { id: "--arrow-size", label: "Arrow size", group: "Rows", kind: "px", min: 8, max: 48, step: 1 },
+  { id: "--arrow-size", label: "Arrow size", group: "Rows", kind: "px", min: 8, max: 80, step: 1 },
   { id: "--hot-edge", label: "Highlight edge", group: "Rows", kind: "px", min: 0, max: 12, step: 1 },
   { id: "--rule-width", label: "Title rule length", group: "Rows", kind: "px", min: 0, max: 280, step: 2 },
   { id: "--ghost-size", label: "Ghost rank size", group: "Rows", kind: "px", min: 40, max: 260, step: 4 },
@@ -257,6 +271,8 @@ const RAW_TOKEN_DEFS: TokenDef[] = [
   { id: "--title-y", label: "Title up / down", group: "Place", kind: "px", min: -80, max: 80, step: 1 },
   { id: "--col-head-height", label: "Column head height", group: "Place", kind: "px", min: 0, max: 90, step: 2 },
   { id: "--cols-y", label: "Labels above the board", group: "Place", kind: "px", min: 0, max: 48, step: 1 },
+  { id: "--team-head-x", label: "TEAM label left / right", group: "Place", kind: "px", min: -160, max: 160, step: 1 },
+  { id: "--eyebrow-gap", label: "Sport line to title", group: "Place", kind: "px", min: -40, max: 40, step: 1 },
   { id: "--meta-y", label: "Credit line up / down", group: "Place", kind: "px", min: -60, max: 120, step: 1 },
   { id: "--footer-height", label: "Footer height", group: "Place", kind: "px", min: 0, max: 200, step: 4 },
   { id: "--rule-height", label: "Divider rule", group: "Place", kind: "px", min: 0, max: 24, step: 1 },
@@ -289,12 +305,20 @@ const PLAIN: Record<string, { label?: string; hint?: string }> = {
   "--outline-width": { label: "Title outline thickness" },
   "--title-shade-depth": { label: "Title shadow distance" },
   "--eyebrow-outline": { label: "Sport line outline thickness" },
+  "--eyebrow-tracking": { label: "Sport line letter spacing" },
   "--col-head-outline": { label: "Column label outline thickness" },
   "--name-line": { label: "Space between name lines", hint: "For long names that wrap" },
   "--move-size": { label: "Up / down number size" },
   "--kicker-size": { label: "Date line size" },
   "--kicker-tracking": { label: "Date line letter spacing" },
   "--meta-size": { label: "Credit line size" },
+  "--meta-tracking": { label: "Credit line letter spacing" },
+  "--text-weight": { label: "Text boldness", hint: "School names, numbers, and the credit line" },
+  "--trend-tint": { label: "Color the up / down number", hint: "0 = same color as the rank, 1 = arrow color" },
+  "--plate-gap": { label: "Space after rank box", hint: "Gap between the white box and the team bar" },
+  "--stat-gap": { label: "Space before stats", hint: "Gap between the team name and the numbers" },
+  "--team-head-x": { label: "TEAM label left / right" },
+  "--eyebrow-gap": { label: "Sport line to title space", hint: "Negative pulls the title up under the sport line" },
   "--rank-size": { label: "Rank number size" },
   "--stat-size": { label: "Stat number size" },
   "--footer-size": { label: "Handle size" },
@@ -446,6 +470,14 @@ const GRAPHIC_LOOK_IDS = [
   "--rule-width",
   "--rule-height",
   "--highlight-rank",
+  "--meta-tracking",
+  "--text-weight",
+  "--trend-tint",
+  "--plate-gap",
+  "--stat-gap",
+  "--team-head-x",
+  "--eyebrow-gap",
+  "--eyebrow-tracking",
 ];
 
 const PHOTO_LOOK_IDS = [
@@ -517,7 +549,7 @@ function addAll(into: Set<string>, ids: string[]) {
 /** Only tokens the current layout actually paints. */
 export function lookTokenIds(templateId: string): Set<string> {
   const ids = new Set(CORE_LOOK_IDS);
-  if (templateId === "board" || templateId === "movers") {
+  if (templateId === "board" || templateId === "canva" || templateId === "movers") {
     addAll(ids, GRAPHIC_LOOK_IDS);
     return ids;
   }
@@ -531,6 +563,7 @@ export function lookTokenIds(templateId: string): Set<string> {
 
 const GAGALIN = '"Gagalin", Impact, sans-serif';
 const BARLOW = '"Barlow Condensed", "Arial Narrow", sans-serif';
+const BARLOW_SEMI = '"Barlow Semi Condensed", "Arial Narrow", sans-serif';
 
 /** Title faces: the published graphic (Gagalin) plus the studio originals. */
 export const TITLE_FONT_OPTIONS = [
@@ -545,6 +578,7 @@ export const TITLE_FONT_OPTIONS = [
 
 /** Board text: the published condensed face plus the original body fonts. */
 export const TEXT_FONT_OPTIONS = [
+  BARLOW_SEMI,
   BARLOW,
   '"Oswald", "Arial Narrow", sans-serif',
   '"IBM Plex Sans", sans-serif',

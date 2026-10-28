@@ -743,8 +743,17 @@
   display: flex;
   padding: 0;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--meta-tracking);
   color: var(--poster-fg);
+}
+
+.poster.is-graphic.tmpl-canva .poster-meta {
+  font-weight: var(--text-weight);
+}
+
+/* The Canva post prints the handle exactly as typed. */
+.poster.is-graphic.tmpl-canva .poster-meta-handle {
+  text-transform: none;
 }
 
 .poster.is-graphic .poster-header {
@@ -768,7 +777,8 @@
 }
 
 .poster.is-graphic .poster-eyebrow {
-  margin-bottom: 0;
+  margin-bottom: var(--eyebrow-gap);
+  letter-spacing: var(--eyebrow-tracking);
   -webkit-text-stroke-width: var(--eyebrow-outline);
 }
 
@@ -814,6 +824,7 @@
   justify-self: stretch;
   place-items: end center;
   padding-left: 0;
+  transform: translateX(var(--team-head-x));
 }
 
 .poster.is-graphic .poster-cols .col-team,
@@ -826,6 +837,11 @@
 .poster.is-graphic .poster-cols .poster-metrics {
   background: transparent;
   align-items: end;
+}
+
+/* Rows and labels share the gap so each label stays centred over its numbers. */
+.poster.is-graphic .poster-metrics {
+  margin-left: var(--stat-gap);
 }
 
 .poster.is-graphic .poster-cols .col-team,
@@ -860,7 +876,7 @@
   margin: var(--plate-inset) 0;
   color: var(--plate-team-ink, var(--plate-ink));
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: var(--text-weight);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
   text-shadow: none;
@@ -896,11 +912,11 @@
 }
 
 .poster.is-graphic .poster-trend.is-up {
-  color: var(--move-up);
+  color: color-mix(in srgb, var(--move-up) calc(var(--trend-tint) * 100%), var(--plate-team-ink, var(--plate-ink)));
 }
 
 .poster.is-graphic .poster-trend.is-down {
-  color: var(--move-down);
+  color: color-mix(in srgb, var(--move-down) calc(var(--trend-tint) * 100%), var(--plate-team-ink, var(--plate-ink)));
 }
 
 .poster.is-graphic .poster-trend.is-down::before {
@@ -936,6 +952,7 @@
   display: grid;
   place-items: center;
   background: var(--team-fill, var(--team-primary));
+  margin-left: var(--plate-gap);
   /* Cover the 1px grid seam so mark and name read as one bar. */
   margin-right: -1px;
   z-index: 1;
@@ -979,7 +996,7 @@
   color: var(--team-ink);
   margin-right: var(--seg-gap);
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: var(--text-weight);
   transform: none;
   padding: 0 8px 0 0;
   overflow: visible;
@@ -1002,7 +1019,8 @@
   overflow: visible;
   padding-block: 0;
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: var(--text-weight);
+  font-size: calc(var(--name-size) * var(--name-fit, 1));
   text-transform: none;
   line-height: var(--name-line);
 }
@@ -1026,9 +1044,29 @@
   background: transparent;
   color: var(--team-ink);
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: var(--text-weight);
   font-size: var(--stat-size);
   text-shadow: none;
+}
+
+/* Proportional digits, as the Canva post sets them: a "1" stays narrow. */
+.poster.is-graphic.tmpl-canva .poster-stat,
+.poster.is-graphic.tmpl-canva .poster-pts,
+.poster.is-graphic.tmpl-canva .poster-trend,
+.poster.is-graphic.tmpl-canva .poster-rank {
+  font-variant-numeric: normal;
+}
+
+/* The Canva arrow art is 3:5, so the size sets its height and the width follows. */
+.poster.is-graphic.tmpl-canva .poster-trend-arrow {
+  width: calc(var(--arrow-size) * 0.6);
+}
+
+/* A short hyphen sized off the movement digits, sitting where a typed hyphen does. */
+.poster.is-graphic.tmpl-canva .poster-trend.is-flat::before {
+  width: 0.3em;
+  height: max(3px, 0.1em);
+  translate: 0.07em 0.11em;
 }
 
 .poster.is-graphic .poster-move.is-up,

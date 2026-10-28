@@ -9,6 +9,7 @@ export const CANVA_FONTS: CanvaFont[] = [
   { family: "Anton", stack: '"Anton", Impact, sans-serif' },
   { family: "Archivo Black", stack: '"Archivo Black", Impact, sans-serif' },
   { family: "Barlow Condensed", stack: '"Barlow Condensed", "Arial Narrow", sans-serif' },
+  { family: "Barlow Semi Condensed", stack: '"Barlow Semi Condensed", "Arial Narrow", sans-serif' },
   { family: "Bebas Neue", stack: '"Bebas Neue", Impact, sans-serif' },
   { family: "Black Ops One", stack: '"Black Ops One", Impact, sans-serif' },
   { family: "DM Sans", stack: '"DM Sans", sans-serif' },
