@@ -948,7 +948,8 @@
    past the bar and got sliced by the overflow clip. object-fit letterboxes it instead. */
 .poster.is-graphic .poster-mark img {
   box-sizing: border-box;
-  width: min(100%, var(--mark-size));
+  /* The slot is wider than tall, so a wide crest may use the full column width. */
+  width: calc(100% * var(--logo-scale) / 100);
   height: min(100%, var(--mark-size));
   max-width: 100%;
   max-height: var(--row-height);

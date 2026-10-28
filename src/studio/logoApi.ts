@@ -302,6 +302,14 @@ export async function patchSharedLogo(
   return asView(await updateLogoRow(supabase, id, next));
 }
 
+/** The first upload of a crest, which crops always start from. Reading needs no desk key. */
+export async function fetchSharedOriginal(id: string): Promise<Blob | null> {
+  const supabase = getClient();
+  if (!supabase) return null;
+  const { data } = await supabase.from("logos").select("mime").eq("id", id).maybeSingle();
+  return downloadStored(supabase, id, "original", (data as { mime?: string } | null)?.mime || "image/png");
+}
+
 export async function revertSharedLogo(id: string, to: "original" | "previous"): Promise<LogoView> {
   const supabase = await requireClient();
   const { data: current, error: readError } = await supabase.from("logos").select("*").eq("id", id).maybeSingle();

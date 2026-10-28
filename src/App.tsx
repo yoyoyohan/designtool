@@ -179,6 +179,12 @@ type HistoryShot = {
   assetNote: string;
 };
 
+/** Shape of the crest slot on the live poster; the published State post is about 126.5 × 72.5. */
+function crestSlotAspect(): number {
+  const box = document.querySelector("#ranking-artboard .poster-mark")?.getBoundingClientRect();
+  return box && box.width > 0 && box.height > 0 ? box.width / box.height : 126.5 / 72.5;
+}
+
 function projectFingerprint(p: Project): string {
   return JSON.stringify([
     p.tableText,
@@ -841,11 +847,17 @@ export default function App() {
       let blob: Blob | null = null;
       if (entry.libraryId) {
         try {
-          await revertLogo(entry.libraryId, to);
+          const restored = await revertLogo(entry.libraryId, to);
+          if (restored?.image) {
+            paintLogoNow(entry.name, entry.aliases, restored.image, entry.libraryId);
+          } else {
+            [entry.name, ...entry.aliases].forEach((key) => delete logoOverrides.current[normalizeLogoName(key)]);
+          }
         } catch (err) {
           if (to !== "original" || !entry.packUrl) throw err;
           blob = await blobFromUrl(entry.packUrl);
           await updateLogo(entry.libraryId, { image: blob, history: "none" });
+          paintLogoNow(entry.name, entry.aliases, blob, entry.libraryId);
         }
       } else if (to === "original" && entry.packUrl) {
         blob = await blobFromUrl(entry.packUrl);
@@ -1405,6 +1417,7 @@ export default function App() {
             onReplace={(entry, file) => {
               void upsertLogoEntry(entry, { image: file }, "replace");
             }}
+            cropAspect={crestSlotAspect}
             onCrop={(entry, blob) => {
               void upsertLogoEntry(entry, { image: blob }, "crop");
             }}

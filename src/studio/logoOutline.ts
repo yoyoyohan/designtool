@@ -346,6 +346,55 @@ export function rasterizeFrameCrop(image: HTMLImageElement, crop: FrameCrop, out
   return canvas;
 }
 
+/** Same crop as `rasterizeFrameCrop`, into a box of any shape (the poster's crest slot is wide). */
+export function rasterizeFrameRect(image: HTMLImageElement, crop: FrameCrop, outW: number, outH: number): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(outW));
+  canvas.height = Math.max(1, Math.round(outH));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+  const imgW = crop.w * canvas.width;
+  const imgH = imgW * (image.naturalHeight / Math.max(image.naturalWidth, 1));
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(image, crop.cx * canvas.width - imgW / 2, crop.cy * canvas.height - imgH / 2, imgW, imgH);
+  return canvas;
+}
+
+/**
+ * Cut empty transparent margins so the visible crest, not the file's canvas, is what gets
+ * centered in the slot. Returns null when there is nothing worth trimming.
+ */
+export function trimToContent(source: HTMLCanvasElement | HTMLImageElement): HTMLCanvasElement | null {
+  let canvas: HTMLCanvasElement;
+  if (source instanceof HTMLCanvasElement) {
+    canvas = source;
+  } else {
+    const drawn = drawSource(source);
+    if (!drawn) return null;
+    canvas = drawn.canvas;
+  }
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+  const { width: w, height: h } = canvas;
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, w, h).data;
+  } catch {
+    return null;
+  }
+  const box = bounds(data, w, h);
+  if (!box) return null;
+  const slackX = Math.abs(box.minX - (w - box.maxX));
+  const slackY = Math.abs(box.minY - (h - box.maxY));
+  const trimmed = box.minX + (w - box.maxX) + box.minY + (h - box.maxY);
+  if (trimmed < (w + h) * 0.02 && slackX < w * 0.02 && slackY < h * 0.02) return null;
+  const out = document.createElement("canvas");
+  out.width = box.maxX - box.minX;
+  out.height = box.maxY - box.minY;
+  out.getContext("2d")?.drawImage(canvas, box.minX, box.minY, out.width, out.height, 0, 0, out.width, out.height);
+  return out;
+}
+
 export function canvasPng(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Could not save that crest"))), "image/png", 1);

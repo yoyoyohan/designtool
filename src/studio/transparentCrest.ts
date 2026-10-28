@@ -1,4 +1,4 @@
-import { canvasPng, keyPlateInPlace } from "./logoOutline";
+import { canvasPng, keyPlateInPlace, trimToContent } from "./logoOutline";
 import { type DeskMode } from "./logoApi";
 import type { LogoView } from "./logoStore";
 
@@ -23,7 +23,8 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 /**
  * Show the stored crest. If it still has a paper plate, key only that plate so the
- * drawing sits on the bar. The file in the desk is left as the original.
+ * drawing sits on the bar, then trim empty margins so it centers by what you see.
+ * The file in the desk is left as the original.
  */
 export async function transparentSrc(src: string): Promise<string> {
   if (!src || isSvg(src)) return src;
@@ -35,11 +36,12 @@ export async function transparentSrc(src: string): Promise<string> {
     try {
       const image = await loadImage(src);
       const keyed = keyPlateInPlace(image);
-      if (!keyed) {
+      const shown = trimToContent(keyed ?? image) ?? keyed;
+      if (!shown) {
         srcCache.set(src, src);
         return src;
       }
-      const url = URL.createObjectURL(await canvasPng(keyed));
+      const url = URL.createObjectURL(await canvasPng(shown));
       srcCache.set(src, url);
       return url;
     } catch {

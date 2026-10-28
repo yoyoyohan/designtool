@@ -4,23 +4,32 @@ import {
   canvasPng,
   containFrameCrop,
   freehandOutline,
-  rasterizeFrameCrop,
+  rasterizeFrameRect,
   type FrameCrop,
 } from "./logoOutline";
 
 type Props = {
   src: string;
   name: string;
+  /** Width ÷ height of the crest slot the crop is for. */
+  aspect?: number;
+  /** True when `src` is the first upload rather than the current, possibly cropped, crest. */
+  fromOriginal?: boolean;
+  initialCrop?: FrameCrop | null;
+  /** Bar color behind the crest on the poster, so the preview matches. */
+  fill?: string;
   onCancel: () => void;
-  onApply: (blob: Blob) => void;
+  onApply: (blob: Blob, crop?: FrameCrop) => void;
 };
 
 type Mode = "frame" | "auto" | "draw";
 
-const OUT = 512;
+const OUT_H = 400;
+const OUT_MAX_W = 1200;
 const VIEW = 280;
 
-export function LogoCropper({ src, name, onCancel, onApply }: Props) {
+export function LogoCropper({ src, name, aspect: aspectIn = 1, fromOriginal = false, initialCrop, fill, onCancel, onApply }: Props) {
+  const aspect = Number.isFinite(aspectIn) && aspectIn > 0.2 && aspectIn < 6 ? aspectIn : 1;
   const imgRef = useRef<HTMLImageElement | null>(null);
   const previewRef = useRef<HTMLCanvasElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -62,8 +71,8 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
     const layout = () => {
       const stageW = stage.clientWidth;
       const stageH = stage.clientHeight;
-      const frameH = Math.min(stageH * 0.62, stageW * 0.62);
-      const frameW = frameH;
+      const frameH = Math.min(stageH * 0.7, (stageW * 0.86) / aspect);
+      const frameW = frameH * aspect;
       const next = { left: (stageW - frameW) / 2, top: (stageH - frameH) / 2, w: frameW, h: frameH };
       setFrame((prev) =>
         prev.left === next.left && prev.top === next.top && prev.w === next.w && prev.h === next.h ? prev : next,
@@ -73,7 +82,7 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
     const observer = new ResizeObserver(layout);
     observer.observe(stage);
     return () => observer.disconnect();
-  }, [mode, ready]);
+  }, [mode, ready, aspect]);
 
   function onImageLoad(image: HTMLImageElement) {
     if (!image.naturalWidth) return;
@@ -85,7 +94,7 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
     );
     if (!sized.current) {
       sized.current = true;
-      setCrop(containFrameCrop(image.naturalWidth, image.naturalHeight));
+      setCrop(initialCrop ?? containFrameCrop(image.naturalWidth, image.naturalHeight, aspect, 1));
     }
     setFailed(false);
     setReady(true);
@@ -157,9 +166,10 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
         const cut = freehandOutline(image, points, VIEW);
         blob = cut ? await canvasPng(cut) : null;
       } else {
-        blob = await canvasPng(rasterizeFrameCrop(image, crop, OUT));
+        const outW = Math.min(OUT_MAX_W, OUT_H * aspect);
+        blob = await canvasPng(rasterizeFrameRect(image, crop, outW, outW / aspect));
       }
-      if (blob) onApply(blob);
+      if (blob) onApply(blob, mode === "frame" ? crop : undefined);
     } finally {
       setBusy(false);
     }
@@ -170,7 +180,7 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
       ? "Drops the flat background and keeps the crest. Raise Drop more if a halo stays."
       : mode === "draw"
         ? "Trace around the crest with your finger or mouse, then save."
-        : "Drag to move. Scale fills the bar the way the roster crop does. Outside the frame stays faded.";
+        : "The box is the crest's space on the poster. Drag to move, scroll or use Scale to size. Outside the box stays faded.";
 
   const imgW = crop.w * frame.w;
   const dimStyle = {
@@ -189,6 +199,11 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
       <div className="logo-crop">
         <p className="logo-crop-title">Crop {name}</p>
         <p className="logo-crop-help">{failed ? "That crest did not load. Close and try another file." : help}</p>
+        <p className="logo-crop-help">
+          {fromOriginal
+            ? "Working from the original upload, so nothing you cropped before is lost. Back to original in the library undoes every crop."
+            : "No original is stored for this crest, so this crop starts from the current image."}
+        </p>
         <div className="logo-crop-modes">
           <button type="button" className={mode === "frame" ? "is-on" : undefined} onClick={() => setMode("frame")}>
             Frame
@@ -214,7 +229,7 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
             <img className="logo-crop-placed is-dim" src={src} alt="" draggable={false} style={dimStyle} />
             <div
               className="logo-crop-frame"
-              style={{ left: frame.left, top: frame.top, width: frame.w, height: frame.h }}
+              style={{ left: frame.left, top: frame.top, width: frame.w, height: frame.h, background: fill }}
             >
               <img className="logo-crop-placed" src={src} alt="" draggable={false} style={fullStyle} />
             </div>
@@ -271,7 +286,7 @@ export function LogoCropper({ src, name, onCancel, onApply }: Props) {
             <button
               type="button"
               className="ghost-btn"
-              onClick={() => setCrop(containFrameCrop(natural.w, natural.h))}
+              onClick={() => setCrop(containFrameCrop(natural.w, natural.h, aspect, 1))}
             >
               Reset
             </button>

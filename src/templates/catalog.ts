@@ -199,7 +199,7 @@ export const TEMPLATES: TemplateDef[] = [
       "--stat-size": "34px",
       "--stat-col-width": "139px",
       "--pts-box": "140px",
-      "--logo-size": "74px",
+      "--logo-size": "126px",
       "--mark-pad-x": "3px",
       "--mark-pad-y": "2px",
       "--stat-tint": "26",

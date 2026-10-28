@@ -30,9 +30,19 @@ function writeAll(looks: Record<string, Record<string, string>>): boolean {
   }
 }
 
+/**
+ * State shipped with a square 74px crest column; the published post's slot is about
+ * 126.5 × 72.5. Saves holding that old default get the published width. Anything a coach
+ * set on purpose is left alone.
+ */
+export function upgradeLook(templateId: string, tokens: Record<string, string>): Record<string, string> {
+  if (templateId === "board" && tokens["--logo-size"] === "74px") return { ...tokens, "--logo-size": "126px" };
+  return tokens;
+}
+
 export function readTemplateLook(id: string): Record<string, string> | null {
   const saved = readAll()[id];
-  return saved && Object.keys(saved).length ? saved : null;
+  return saved && Object.keys(saved).length ? upgradeLook(id, saved) : null;
 }
 
 export function writeTemplateLook(id: string, tokens: Record<string, string>): boolean {

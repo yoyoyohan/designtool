@@ -3,6 +3,7 @@ import type { TeamRecord } from "../engine/types";
 import {
   deleteSharedLogo,
   fetchDeskStatus,
+  fetchSharedOriginal,
   fetchSharedViews,
   patchSharedLogo,
   postSharedLogo,
@@ -177,6 +178,19 @@ export async function revertLogo(id: string, to: "original" | "previous"): Promi
     if (!blob) throw new Error(to === "original" ? "No original crest is stored for that school" : "Nothing left to undo");
   }
   return current ? getLogo(id) : null;
+}
+
+/** The untouched first upload for a library crest, so a new crop never cuts into an old one. */
+export async function originalLogoBlob(id: string): Promise<Blob | null> {
+  const local = await getLogo(id).catch(() => null);
+  if (local?.original) return local.original;
+  try {
+    const shared = await fetchSharedOriginal(id);
+    if (shared) return shared;
+  } catch {
+    // Fall back to the local copy below.
+  }
+  return local?.image ?? null;
 }
 
 export async function deleteLogo(id: string): Promise<void> {

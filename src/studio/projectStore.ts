@@ -3,6 +3,7 @@ import type { PosterHeadLabels } from "../templates/RankingPoster";
 import type { TemplateId } from "../templates/catalog";
 import type { ColumnOverrides } from "../engine/types";
 import { cleanFixes, type RowFixes } from "./rowFixes";
+import { upgradeLook } from "./lookStore";
 
 export type StickerSlot = "a" | "b" | "c" | "d";
 export type MediaSlot = "background" | "header" | "watermark" | "footer" | "hero";
@@ -104,6 +105,7 @@ function normalize(raw: Project): Project {
   return {
     ...raw,
     version: 1,
+    tokens: upgradeLook(raw.templateId, raw.tokens),
     heads: raw.heads ?? {},
     ornaments: raw.ornaments ?? { a: "none", b: "none", c: "none", d: "none" },
     stickerSrc: raw.stickerSrc ?? { a: "", b: "", c: "", d: "" },

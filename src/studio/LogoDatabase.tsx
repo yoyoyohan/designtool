@@ -4,10 +4,12 @@ import type { TeamRecord } from "../engine/types";
 import { graphicBarFor } from "../theme/graphicBars";
 import { colorSwatch, findBar, normalizeHex, type BarRecord } from "./barStore";
 import { LogoCropper } from "./LogoCropper";
+import type { FrameCrop } from "./logoOutline";
 import type { DeskMode } from "./logoApi";
 import {
   logoIsInUse,
   normalizeLogoName,
+  originalLogoBlob,
   type LogoView,
 } from "./logoStore";
 import { CLEAR_BG_TAG, transparentSrc } from "./transparentCrest";
@@ -79,7 +81,29 @@ type Props = {
   onUndoCrop: (entry: LogoEntry) => void;
   onRevertOriginal: (entry: LogoEntry) => void;
   onDelete: (entry: LogoEntry) => void;
+  /** Width ÷ height of the crest slot on the current poster. */
+  cropAspect?: () => number;
 };
+
+/** Keyed by school name: a sample crest becomes a library crest on its first crop. */
+const CROP_KEY = "ranking-studio:crop:";
+
+function readCropFrame(key: string): FrameCrop | null {
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(CROP_KEY + key) ?? "null") as FrameCrop | null;
+    return raw && [raw.cx, raw.cy, raw.w].every((n) => typeof n === "number" && Number.isFinite(n)) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCropFrame(key: string, crop: FrameCrop) {
+  try {
+    window.localStorage.setItem(CROP_KEY + key, JSON.stringify(crop));
+  } catch {
+    // Remembering the framing is a convenience; the crop itself is already saved.
+  }
+}
 
 function colorsFor(name: string, aliases: string[], bars: BarRecord[], team?: TeamRecord) {
   const desk = findBar(bars, name, ...aliases);
@@ -464,7 +488,7 @@ function LogoRow({
               disabled={!entry.hasOriginal}
               onClick={() => onRevertOriginal(entry)}
             >
-              Original
+              Back to original
             </button>
             <button type="button" className="link-btn" onClick={() => onReplaceClick(entry)}>
               Replace
@@ -502,6 +526,7 @@ export function LogoDatabase({
   onUndoCrop,
   onRevertOriginal,
   onDelete,
+  cropAspect,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
@@ -511,6 +536,38 @@ export function LogoDatabase({
   const [tag, setTag] = useState("");
   const [deskKey, setDeskKeyDraft] = useState("");
   const [cropping, setCropping] = useState<LogoEntry | null>(null);
+  const [cropSource, setCropSource] = useState<{ src: string; aspect: number; fromOriginal: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!cropping) {
+      setCropSource(null);
+      return undefined;
+    }
+    let gone = false;
+    let made = "";
+    const aspect = cropAspect?.() ?? 1;
+    void (async () => {
+      let src = cropping.packUrl ?? cropping.url;
+      let fromOriginal = Boolean(cropping.packUrl);
+      if (cropping.libraryId) {
+        const blob = await originalLogoBlob(cropping.libraryId).catch(() => null);
+        if (blob) {
+          made = URL.createObjectURL(blob);
+          src = made;
+          fromOriginal = true;
+        }
+      }
+      if (gone) {
+        if (made) URL.revokeObjectURL(made);
+        return;
+      }
+      setCropSource({ src, aspect, fromOriginal });
+    })();
+    return () => {
+      gone = true;
+      if (made) URL.revokeObjectURL(made);
+    };
+  }, [cropping, cropAspect]);
   const [dropper, setDropper] = useState<{ entry: LogoEntry; target: string; apply: (hex: string) => void } | null>(null);
   const [dropHot, setDropHot] = useState(false);
 
@@ -741,13 +798,18 @@ export function LogoDatabase({
           </div>
         </div>
       ) : null}
-      {canEdit && cropping ? (
+      {canEdit && cropping && cropSource ? (
         <CropSafe onClose={() => setCropping(null)}>
           <LogoCropper
-            src={cropping.url}
+            src={cropSource.src}
             name={cropping.name}
+            aspect={cropSource.aspect}
+            fromOriginal={cropSource.fromOriginal}
+            fill={cropping.primary}
+            initialCrop={readCropFrame(normalizeLogoName(cropping.name))}
             onCancel={() => setCropping(null)}
-            onApply={(blob) => {
+            onApply={(blob, crop) => {
+              if (crop) writeCropFrame(normalizeLogoName(cropping.name), crop);
               onCrop(cropping, blob);
               setCropping(null);
             }}
