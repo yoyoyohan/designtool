@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Component, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import type { TeamRecord } from "../engine/types";
 import { graphicBarFor } from "../theme/graphicBars";
@@ -703,7 +704,7 @@ export function LogoDatabase({
 
   const panelRows = shown.slice(0, 8);
 
-  return (
+  const body = (
     <div className="logo-db">
       {deskOpen ? null : tools}
       {files}
@@ -764,4 +765,6 @@ export function LogoDatabase({
       ) : null}
     </div>
   );
+  // The sidebar copy can sit inside a closed fold, so the full library renders at page level.
+  return deskOpen ? createPortal(body, document.body) : body;
 }
